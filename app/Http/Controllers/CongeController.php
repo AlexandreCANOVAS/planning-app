@@ -1,0 +1,334 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Conge;
+use App\Models\Employe;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
+use App\Notifications\CongeStatusModifie;
+use Carbon\Carbon;
+use App\Events\CongeRequested;
+use App\Events\CongeStatusUpdated;
+
+class CongeController extends Controller
+{
+    public function index()
+    {
+        $societe = Auth::user()->societe;
+
+        $conges = Conge::query()
+            ->select('conges.*')
+            ->join('employes', 'conges.employe_id', '=', 'employes.id')
+            ->where('employes.societe_id', $societe->id)
+            ->with('employe') // Eager loading de la relation employe
+            ->orderBy('conges.date_debut', 'desc')
+            ->get();
+
+        return view('conges.index', compact('conges'));
+    }
+
+    public function create()
+    {
+        $employes = Auth::user()->societe->employes()->orderBy('nom')->get();
+        return view('conges.create', compact('employes'));
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'date_debut' => 'required|date',
+            'date_fin' => 'required|date|after_or_equal:date_debut',
+            'motif' => 'required|string',
+        ]);
+
+        $employe = auth()->user()->employe;
+        $conge = $employe->conges()->create([
+            'date_debut' => $validated['date_debut'],
+            'date_fin' => $validated['date_fin'],
+            'motif' => $validated['motif'],
+            'statut' => 'en_attente',
+        ]);
+
+        try {
+            broadcast(new CongeRequested($conge))->toOthers();
+        } catch (\Exception $e) {
+            \Log::error('Erreur de broadcast: ' . $e->getMessage());
+        }
+
+        return redirect()->route('conges.index')
+            ->with('success', 'Votre demande de congé a été envoyée.');
+    }
+
+    public function edit(Conge $conge)
+    {
+        $this->authorize('update', $conge);
+        
+        $employes = Auth::user()->societe->employes()->orderBy('nom')->get();
+        return view('conges.edit', compact('conge', 'employes'));
+    }
+
+    public function update(Request $request, Conge $conge)
+    {
+        $this->authorize('update', $conge);
+
+        $validated = $request->validate([
+            'employe_id' => 'required|exists:employes,id',
+            'date_debut' => 'required|date',
+            'date_fin' => 'required|date|after_or_equal:date_debut',
+            'statut' => 'required|in:en_attente,accepte,refuse'
+        ]);
+
+        $conge->update($validated);
+
+        return redirect()->route('conges.index')
+            ->with('success', 'Demande de congé mise à jour avec succès');
+    }
+
+    public function destroy(Conge $conge)
+    {
+        $this->authorize('delete', $conge);
+        
+        $conge->delete();
+
+        return redirect()->route('conges.index')
+            ->with('success', 'Demande de congé supprimée avec succès');
+    }
+
+    public function updateStatus(Request $request, Conge $conge)
+    {
+        // Vérifier que l'utilisateur est autorisé à modifier ce congé
+        if ($conge->employe->societe_id !== Auth::user()->societe->id) {
+            abort(403, 'Vous n\'êtes pas autorisé à modifier cette demande de congé.');
+        }
+
+        $validated = $request->validate([
+            'statut' => 'required|in:accepte,refuse'
+        ]);
+
+        $conge->update([
+            'statut' => $validated['statut']
+        ]);
+
+        try {
+            broadcast(new CongeStatusUpdated($conge))->toOthers();
+        } catch (\Exception $e) {
+            \Log::error('Erreur de broadcast: ' . $e->getMessage());
+        }
+
+        return redirect()->back()
+            ->with('success', 'Le statut de la demande de congé a été mis à jour.');
+    }
+
+    public function show(Conge $conge)
+    {
+        // Vérifier que l'utilisateur a le droit de voir ce congé
+        $societe = Auth::user()->societe;
+        if ($conge->employe->societe_id !== $societe->id) {
+            abort(403, 'Vous n\'êtes pas autorisé à voir cette demande de congé.');
+        }
+
+        return view('conges.show', compact('conge'));
+    }
+
+    public function mesConges()
+    {
+        $employe = Auth::user()->employe;
+        if (!$employe) {
+            return redirect()->route('dashboard')
+                ->with('error', 'Vous devez avoir un profil employé pour accéder à cette page.');
+        }
+
+        $conges = $employe->conges()
+            ->orderBy('date_debut', 'desc')
+            ->get();
+
+        return view('conges.mes-conges', compact('conges'));
+    }
+
+    public function demandeConge(Request $request)
+    {
+        $employe = Auth::user()->employe;
+        if (!$employe) {
+            return redirect()->route('dashboard')
+                ->with('error', 'Votre profil employé n\'est pas encore configuré.');
+        }
+
+        $validated = $request->validate([
+            'date_debut' => 'required|date|after_or_equal:today',
+            'date_fin' => 'required|date|after_or_equal:date_debut',
+            'motif' => 'required|string|max:255'
+        ]);
+
+        // Calcul de la durée en jours ouvrés
+        $debut = Carbon::parse($validated['date_debut']);
+        $fin = Carbon::parse($validated['date_fin']);
+        $duree = 0;
+        for ($date = $debut; $date->lte($fin); $date->addDay()) {
+            if (!$date->isWeekend()) {
+                $duree++;
+            }
+        }
+
+        $conge = $employe->conges()->create([
+            'date_debut' => $validated['date_debut'],
+            'date_fin' => $validated['date_fin'],
+            'motif' => $validated['motif'],
+            'duree' => $duree,
+            'statut' => 'en_attente'
+        ]);
+
+        return redirect()->route('employe.conges.index')
+            ->with('success', 'Votre demande de congé a été enregistrée.');
+    }
+
+    public function annulerConge(Conge $conge)
+    {
+        $employe = Auth::user()->employe;
+        if (!$employe || $conge->employe_id !== $employe->id) {
+            return redirect()->route('employe.conges.index')
+                ->with('error', 'Vous n\'êtes pas autorisé à annuler cette demande de congé.');
+        }
+
+        if ($conge->statut !== 'en_attente') {
+            return redirect()->route('employe.conges.index')
+                ->with('error', 'Vous ne pouvez annuler que les demandes en attente.');
+        }
+
+        $conge->delete();
+
+        return redirect()->route('employe.conges.index')
+            ->with('success', 'Votre demande de congé a été annulée.');
+    }
+
+    public function congesCalendar()
+    {
+        return view('conges.calendar');
+    }
+
+    public function getCongesEvents(Request $request)
+    {
+        $start = Carbon::parse($request->start);
+        $end = Carbon::parse($request->end);
+
+        $societe = Auth::user()->employe->societe;
+        
+        $conges = Conge::query()
+            ->select('conges.*', 'employes.nom', 'employes.prenom', 'employes.id as employe_id')
+            ->join('employes', 'conges.employe_id', '=', 'employes.id')
+            ->where('employes.societe_id', $societe->id)
+            ->where('statut', 'accepte')
+            ->where(function($query) use ($start, $end) {
+                $query->whereBetween('date_debut', [$start, $end])
+                      ->orWhereBetween('date_fin', [$start, $end]);
+            })
+            ->get();
+
+        // Couleurs pour les employés
+        $colors = [
+            '#FF6B6B', // Rouge
+            '#4ECDC4', // Turquoise
+            '#45B7D1', // Bleu
+            '#96CEB4', // Vert
+            '#D4A5A5', // Rose
+            '#9370DB', // Violet
+            '#FFB347', // Orange
+            '#87CEEB', // Bleu ciel
+            '#98FB98', // Vert clair
+            '#DDA0DD', // Violet clair
+            '#F0E68C', // Jaune
+            '#E6E6FA', // Lavande
+            '#FFA07A', // Saumon
+            '#20B2AA', // Vert mer
+            '#FFB6C1', // Rose clair
+        ];
+
+        $events = [];
+        foreach ($conges as $conge) {
+            // Utiliser l'ID de l'employé pour choisir une couleur
+            $colorIndex = $conge->employe_id % count($colors);
+            $color = $colors[$colorIndex];
+
+            $events[] = [
+                'id' => $conge->id,
+                'title' => $conge->nom . ' ' . $conge->prenom,
+                'start' => $conge->date_debut->format('Y-m-d'),
+                'end' => Carbon::parse($conge->date_fin)->addDay()->format('Y-m-d'),
+                'backgroundColor' => $color,
+                'borderColor' => 'transparent',
+                'textColor' => '#000000',
+                'allDay' => true,
+                'classNames' => ['calendar-event-block'],
+                'display' => 'block',
+                'extendedProps' => [
+                    'duree' => $conge->duree
+                ]
+            ];
+        }
+
+        return response()->json($events);
+    }
+
+    public function calendar()
+    {
+        $user = auth()->user();
+        $employe = $user->employe;
+
+        if (!$employe) {
+            return redirect()->route('dashboard')->with('error', 'Profil employé non trouvé.');
+        }
+
+        $conges = Conge::where('employe_id', $employe->id)
+            ->with(['type'])
+            ->orderBy('date_debut', 'desc')
+            ->get()
+            ->map(function ($conge) {
+                $conge->periode = 'Du ' . $conge->date_debut->format('d/m/Y') . ' au ' . $conge->date_fin->format('d/m/Y');
+                return $conge;
+            });
+
+        return view('conges.calendar', [
+            'conges' => $conges
+        ]);
+    }
+
+    /**
+     * Affiche le calendrier des congés (vue admin)
+     */
+    public function adminCalendar()
+    {
+        return view('conges.admin-calendar');
+    }
+
+    /**
+     * Récupère les événements pour le calendrier admin
+     */
+    public function getAdminEvents(Request $request)
+    {
+        $start = Carbon::parse($request->start);
+        $end = Carbon::parse($request->end);
+
+        $societe = Auth::user()->societe;
+        
+        $conges = Conge::query()
+            ->select('conges.*', 'employes.nom', 'employes.prenom')
+            ->join('employes', 'conges.employe_id', '=', 'employes.id')
+            ->where('employes.societe_id', $societe->id)
+            ->where('conges.statut', 'accepte')
+            ->whereBetween('date_debut', [$start, $end])
+            ->get();
+
+        return response()->json($conges->map(function ($conge) {
+            return [
+                'id' => $conge->id,
+                'title' => $conge->employe->nom . ' ' . $conge->employe->prenom,
+                'start' => $conge->date_debut,
+                'end' => Carbon::parse($conge->date_fin)->addDay()->format('Y-m-d'),
+                'backgroundColor' => '#4F46E5',
+                'borderColor' => '#4F46E5',
+                'textColor' => '#ffffff',
+            ];
+        }));
+    }
+} 

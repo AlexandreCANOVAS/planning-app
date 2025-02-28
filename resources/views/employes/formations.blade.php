@@ -1,0 +1,156 @@
+<x-app-layout>
+    <x-slot name="header">
+        <div class="flex justify-between items-center">
+            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+                @if(isset($employe))
+                    {{ __('Formations de') }} {{ $employe->prenom }} {{ $employe->nom }}
+                @else
+                    {{ __('Formations des employés') }}
+                @endif
+            </h2>
+            <a href="{{ route('employes.index') }}" class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-lg font-semibold text-sm text-white hover:bg-gray-700">
+                <i class="fas fa-arrow-left mr-2"></i>
+                {{ __('Retour') }}
+            </a>
+        </div>
+    </x-slot>
+
+    <div class="py-12">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            @if(isset($employe))
+                <!-- Single employee view -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
+                    <div class="p-6">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+                            <i class="fas fa-graduation-cap text-blue-500 mr-2"></i>
+                            État des formations
+                        </h3>
+                        @if(!$employe->formations || $employe->formations->isEmpty())
+                            <div class="flex items-center justify-center h-48 bg-gray-50 rounded-lg">
+                                <p class="text-gray-500 flex items-center">
+                                    <i class="fas fa-info-circle text-gray-400 mr-2 text-xl"></i>
+                                    Aucune formation enregistrée
+                                </p>
+                            </div>
+                        @else
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                @foreach($employe->formations as $formation)
+                                    <div class="bg-gray-50 rounded-lg p-4">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <h4 class="font-medium text-gray-800">{{ $formation->nom }}</h4>
+                                            @php
+                                                $dateObtention = \Carbon\Carbon::parse($formation->pivot->date_obtention);
+                                                $dateRecyclage = $formation->pivot->date_recyclage ? \Carbon\Carbon::parse($formation->pivot->date_recyclage) : null;
+                                                $isValid = $dateRecyclage ? $dateRecyclage->isFuture() : false;
+                                            @endphp
+                                            
+                                            @if($isValid)
+                                                <span class="px-2 py-1 text-sm rounded-full bg-green-100 text-green-800">
+                                                    <i class="fas fa-check-circle mr-1"></i>
+                                                    Valide
+                                                </span>
+                                            @else
+                                                <span class="px-2 py-1 text-sm rounded-full bg-red-100 text-red-800">
+                                                    <i class="fas fa-exclamation-circle mr-1"></i>
+                                                    Expirée
+                                                </span>
+                                            @endif
+                                        </div>
+                                        <div class="mt-2 space-y-1 text-sm text-gray-600">
+                                            <p>
+                                                <i class="fas fa-calendar-check mr-1"></i>
+                                                Date d'obtention: {{ $dateObtention->format('d/m/Y') }}
+                                            </p>
+                                            @if($dateRecyclage)
+                                                <p>
+                                                    <i class="fas fa-sync mr-1"></i>
+                                                    Date de recyclage: {{ $dateRecyclage->format('d/m/Y') }}
+                                                </p>
+                                            @endif
+                                        </div>
+                                        <div class="mt-4">
+                                            <a href="{{ route('employes.edit', $employe) }}#formations" 
+                                               class="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-indigo-600 bg-indigo-50 hover:bg-indigo-100">
+                                                <i class="fas fa-edit mr-1"></i>
+                                                Modifier
+                                            </a>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            @else
+                <!-- Multiple employees view -->
+                <div class="space-y-6">
+                    @foreach($employes as $employe)
+                        <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
+                            <div class="p-6">
+                                <h3 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+                                    <i class="fas fa-user text-blue-500 mr-2"></i>
+                                    {{ $employe->prenom }} {{ $employe->nom }}
+                                </h3>
+                                
+                                @if(!$employe->formations || $employe->formations->isEmpty())
+                                    <div class="flex items-center justify-center h-48 bg-gray-50 rounded-lg">
+                                        <p class="text-gray-500 flex items-center">
+                                            <i class="fas fa-info-circle text-gray-400 mr-2 text-xl"></i>
+                                            Aucune formation enregistrée
+                                        </p>
+                                    </div>
+                                @else
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        @foreach($employe->formations as $formation)
+                                            <div class="bg-gray-50 rounded-lg p-4">
+                                                <div class="flex items-center justify-between mb-2">
+                                                    <h4 class="font-medium text-gray-800">{{ $formation->nom }}</h4>
+                                                    @php
+                                                        $dateObtention = \Carbon\Carbon::parse($formation->pivot->date_obtention);
+                                                        $dateRecyclage = $formation->pivot->date_recyclage ? \Carbon\Carbon::parse($formation->pivot->date_recyclage) : null;
+                                                        $isValid = $dateRecyclage ? $dateRecyclage->isFuture() : false;
+                                                    @endphp
+                                                    
+                                                    @if($isValid)
+                                                        <span class="px-2 py-1 text-sm rounded-full bg-green-100 text-green-800">
+                                                            <i class="fas fa-check-circle mr-1"></i>
+                                                            Valide
+                                                        </span>
+                                                    @else
+                                                        <span class="px-2 py-1 text-sm rounded-full bg-red-100 text-red-800">
+                                                            <i class="fas fa-exclamation-circle mr-1"></i>
+                                                            Expirée
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                                <div class="mt-2 space-y-1 text-sm text-gray-600">
+                                                    <p>
+                                                        <i class="fas fa-calendar-check mr-1"></i>
+                                                        Date d'obtention: {{ $dateObtention->format('d/m/Y') }}
+                                                    </p>
+                                                    @if($dateRecyclage)
+                                                        <p>
+                                                            <i class="fas fa-sync mr-1"></i>
+                                                            Date de recyclage: {{ $dateRecyclage->format('d/m/Y') }}
+                                                        </p>
+                                                    @endif
+                                                </div>
+                                                <div class="mt-4">
+                                                    <a href="{{ route('employes.edit', $employe) }}#formations" 
+                                                       class="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-indigo-600 bg-indigo-50 hover:bg-indigo-100">
+                                                        <i class="fas fa-edit mr-1"></i>
+                                                        Modifier
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+        </div>
+    </div>
+</x-app-layout>
