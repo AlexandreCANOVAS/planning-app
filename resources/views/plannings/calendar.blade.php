@@ -147,27 +147,23 @@
 
         function supprimerPlanning(employeId, mois, annee) {
             if (confirm('Êtes-vous sûr de vouloir supprimer tous les plannings de cet employé pour ce mois ?')) {
-                // Créer un formulaire temporaire pour envoyer la requête DELETE
                 const form = document.createElement('form');
                 form.method = 'POST';
                 form.action = `/plannings/destroy-monthly/${employeId}/${annee}-${mois.padStart(2, '0')}`;
                 form.style.display = 'none';
 
-                // Ajouter le token CSRF
                 const csrfToken = document.createElement('input');
                 csrfToken.type = 'hidden';
                 csrfToken.name = '_token';
                 csrfToken.value = '{{ csrf_token() }}';
                 form.appendChild(csrfToken);
 
-                // Ajouter la méthode DELETE
                 const methodField = document.createElement('input');
                 methodField.type = 'hidden';
                 methodField.name = '_method';
                 methodField.value = 'DELETE';
                 form.appendChild(methodField);
 
-                // Ajouter le formulaire au document et le soumettre
                 document.body.appendChild(form);
                 form.submit();
             }

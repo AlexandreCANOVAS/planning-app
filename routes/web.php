@@ -100,6 +100,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/{employe}/edit', [EmployeController::class, 'edit'])->name('employes.edit');
             Route::put('/{employe}', [EmployeController::class, 'update'])->name('employes.update');
             Route::delete('/{employe}', [EmployeController::class, 'destroy'])->name('employes.destroy');
+            Route::get('/{employe}/stats', [EmployeController::class, 'stats'])->name('employes.stats');
             Route::get('/formations', [EmployeController::class, 'formations'])->name('employes.formations');
         });
         
@@ -125,6 +126,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 ->name('plannings.download-pdf');
             Route::delete('/destroy-monthly/{employe_id}/{year_month}', [PlanningController::class, 'destroyMonthly'])
                 ->name('plannings.destroy_monthly');
+            Route::post('/remplir-jours-non-travailles/{employe_id}/{annee}/{mois}', [PlanningController::class, 'remplirJoursNonTravailles'])
+                ->name('plannings.remplir-jours-non-travailles');
+            Route::post('/ajouter-conge/{employe_id}/{annee}/{mois}', [PlanningController::class, 'ajouterConge'])
+                ->name('plannings.ajouter-conge');
         });
         
         // Routes de la comptabilité

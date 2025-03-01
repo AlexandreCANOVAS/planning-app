@@ -645,6 +645,7 @@ class PlanningController extends Controller
         
         // Récupérer tous les plannings du mois
         $plannings = Planning::where('employe_id', $employe->id)
+            ->where('societe_id', $user->societe_id)
             ->whereBetween('date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
             ->with('lieu')
             ->orderBy('date')
@@ -934,5 +935,101 @@ class PlanningController extends Controller
         }
         
         return sprintf("%02d:%02d", $heures_entieres, $minutes);
+    }
+
+    public function remplirJoursNonTravailles($employe_id, $annee, $mois)
+    {
+        $user = auth()->user();
+        
+        // Vérifier que l'employé appartient à la société
+        $employe = Employe::where('id', $employe_id)
+            ->where('societe_id', $user->societe_id)
+            ->firstOrFail();
+
+        // Créer les dates pour le mois
+        $dateDebut = Carbon::create($annee, $mois, 1);
+        $finMois = $dateDebut->copy()->endOfMonth();
+
+        // Parcourir tous les jours du mois
+        $date = $dateDebut->copy();
+        while ($date <= $finMois) {
+            // Si c'est un samedi ou un dimanche
+            if ($date->isWeekend()) {
+                // Vérifier si un planning existe déjà pour cette date
+                $planningExistant = Planning::where('employe_id', $employe_id)
+                    ->where('date', $date->format('Y-m-d'))
+                    ->first();
+
+                // Si aucun planning n'existe, créer un planning "Repos"
+                if (!$planningExistant) {
+                    Planning::create([
+                        'employe_id' => $employe_id,
+                        'societe_id' => $user->societe_id,
+                        'date' => $date->format('Y-m-d'),
+                        'type_horaire' => 'repos',
+                        'lieu_id' => null,
+                        'heure_debut' => null,
+                        'heure_fin' => null,
+                        'pause_debut' => null,
+                        'pause_fin' => null
+                    ]);
+                }
+            }
+            $date->addDay();
+        }
+
+        return response()->json(['success' => true]);
+    }
+
+    public function ajouterConge($employe_id, $annee, $mois)
+    {
+        $user = auth()->user();
+        
+        // Vérifier que l'employé appartient à la société
+        $employe = Employe::where('id', $employe_id)
+            ->where('societe_id', $user->societe_id)
+            ->firstOrFail();
+
+        // Trouver le lieu "CP" (Congé Payé)
+        $lieuCP = LieuTravail::where('nom', 'CP')
+            ->where(function($query) use ($user) {
+                $query->where('societe_id', $user->societe_id)
+                    ->orWhereNull('societe_id');
+            })
+            ->firstOrFail();
+
+        // Créer les dates pour le mois
+        $dateDebut = Carbon::create($annee, $mois, 1);
+        $finMois = $dateDebut->copy()->endOfMonth();
+
+        // Parcourir tous les jours du mois
+        $date = $dateDebut->copy();
+        while ($date <= $finMois) {
+            // Si ce n'est pas un weekend
+            if (!$date->isWeekend()) {
+                // Vérifier si un planning existe déjà pour cette date
+                $planningExistant = Planning::where('employe_id', $employe_id)
+                    ->where('date', $date->format('Y-m-d'))
+                    ->first();
+
+                // Si aucun planning n'existe, créer un planning "CP"
+                if (!$planningExistant) {
+                    Planning::create([
+                        'employe_id' => $employe_id,
+                        'societe_id' => $user->societe_id,
+                        'date' => $date->format('Y-m-d'),
+                        'type_horaire' => 'conge',
+                        'lieu_id' => $lieuCP->id,
+                        'heure_debut' => '09:00',
+                        'heure_fin' => '17:00',
+                        'pause_debut' => '12:00',
+                        'pause_fin' => '13:00'
+                    ]);
+                }
+            }
+            $date->addDay();
+        }
+
+        return response()->json(['success' => true]);
     }
 }

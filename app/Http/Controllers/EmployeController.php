@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Employe;
 use App\Models\User;
 use App\Models\Formation;
+use App\Models\Planning;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -12,6 +13,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Carbon\Carbon;
 
 class EmployeController extends Controller
 {
@@ -179,5 +181,57 @@ class EmployeController extends Controller
         }
 
         return view('employes.formations', compact('employes'));
+    }
+
+    public function stats(Employe $employe)
+    {
+        $user = auth()->user();
+        
+        // Vérifier que l'employé appartient à la société de l'utilisateur
+        if ($employe->societe_id !== $user->societe_id) {
+            abort(403);
+        }
+
+        // Récupérer tous les plannings de l'employé
+        $plannings = Planning::where('employe_id', $employe->id)
+            ->with('lieu')
+            ->get();
+
+        // Calculer les heures par lieu de travail
+        $workByLocation = $plannings
+            ->whereNotNull('lieu_id')
+            ->groupBy('lieu.nom')
+            ->map(function ($plannings) {
+                return $plannings->sum('heures_travaillees');
+            })
+            ->toArray();
+
+        // Calculer les heures par mois
+        $workByMonth = $plannings
+            ->groupBy(function ($planning) {
+                return Carbon::parse($planning->date)->format('Y-m');
+            })
+            ->map(function ($plannings) {
+                return $plannings->sum('heures_travaillees');
+            })
+            ->toArray();
+
+        // Récupérer les formations
+        $formations = $employe->formations ?? collect();
+
+        // Informations de débogage
+        $debug = [
+            'plannings_count' => $plannings->count(),
+            'has_locations' => !empty($workByLocation),
+            'has_months' => !empty($workByMonth),
+        ];
+
+        return view('employes.stats', compact(
+            'employe',
+            'workByLocation',
+            'workByMonth',
+            'formations',
+            'debug'
+        ));
     }
 }
