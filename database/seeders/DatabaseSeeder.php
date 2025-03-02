@@ -14,6 +14,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             TestDataSeeder::class,
             LieuxSpeciauxSeeder::class,
+            SpecialLieuxSeeder::class,
         ]);
     }
 }

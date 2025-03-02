@@ -1,6 +1,10 @@
 @extends('layouts.app')
 
 @section('content')
+@php
+use App\Models\Lieu;
+@endphp
+
 <div class="py-12">
     <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
         <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
@@ -404,12 +408,22 @@
         };
 
         window.remplirJoursRepos = function() {
-            const rhId = "rh";
+            const rhId = {{ Lieu::where('nom', 'RH')->where('is_special', true)->first()->id ?? 'null' }};
 
             document.querySelectorAll('.calendar-cell').forEach(cell => {
                 const date = cell.dataset.date;
                 if (date && date.startsWith('{{ $annee }}-{{ str_pad($mois, 2, '0', STR_PAD_LEFT) }}')) {
                     if (!cell.querySelector('.planning-details')) {
+                        temporaryPlannings[date] = {
+                            lieu_id: rhId,
+                            lieu_nom: 'RH',
+                            type_horaire: 'simple',
+                            horaires: {
+                                debut: '00:00',
+                                fin: '00:00'
+                            }
+                        };
+
                         cell.innerHTML = `
                             <div class="text-right mb-2">${date.split('-')[2]}</div>
                             <div class="planning-details text-xs">
@@ -429,9 +443,21 @@
                 return;
             }
 
+            const cpId = {{ Lieu::where('nom', 'CP')->where('is_special', true)->first()->id ?? 'null' }};
+
             selectedDates.forEach(date => {
                 const cell = document.querySelector(`[data-date="${date}"]`);
                 if (cell) {
+                    temporaryPlannings[date] = {
+                        lieu_id: cpId,
+                        lieu_nom: 'CP',
+                        type_horaire: 'simple',
+                        horaires: {
+                            debut: '00:00',
+                            fin: '00:00'
+                        }
+                    };
+
                     cell.innerHTML = `
                         <div class="text-right mb-2">${date.split('-')[2]}</div>
                         <div class="planning-details text-xs">

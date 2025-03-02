@@ -965,6 +965,11 @@ class PlanningController extends Controller
             ->where('societe_id', $user->societe_id)
             ->firstOrFail();
 
+        // Trouver le lieu RH
+        $lieuRH = Lieu::where('nom', 'RH')
+            ->where('is_special', true)
+            ->firstOrFail();
+
         // Créer les dates pour le mois
         $dateDebut = Carbon::create($annee, $mois, 1);
         $finMois = $dateDebut->copy()->endOfMonth();
@@ -986,9 +991,9 @@ class PlanningController extends Controller
                         'societe_id' => $user->societe_id,
                         'date' => $date->format('Y-m-d'),
                         'type_horaire' => 'repos',
-                        'lieu_id' => null,
-                        'heure_debut' => null,
-                        'heure_fin' => null,
+                        'lieu_id' => $lieuRH->id,
+                        'heure_debut' => '00:00',
+                        'heure_fin' => '00:00',
                         'pause_debut' => null,
                         'pause_fin' => null
                     ]);
@@ -1011,10 +1016,7 @@ class PlanningController extends Controller
 
         // Trouver le lieu "CP" (Congé Payé)
         $lieuCP = Lieu::where('nom', 'CP')
-            ->where(function($query) use ($user) {
-                $query->where('societe_id', $user->societe_id)
-                    ->orWhereNull('societe_id');
-            })
+            ->where('is_special', true)
             ->firstOrFail();
 
         // Créer les dates pour le mois
@@ -1039,10 +1041,10 @@ class PlanningController extends Controller
                         'date' => $date->format('Y-m-d'),
                         'type_horaire' => 'conge',
                         'lieu_id' => $lieuCP->id,
-                        'heure_debut' => '09:00',
-                        'heure_fin' => '17:00',
-                        'pause_debut' => '12:00',
-                        'pause_fin' => '13:00'
+                        'heure_debut' => '00:00',
+                        'heure_fin' => '00:00',
+                        'pause_debut' => null,
+                        'pause_fin' => null
                     ]);
                 }
             }

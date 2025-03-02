@@ -78,13 +78,11 @@
                                         <div class="font-semibold text-gray-700">
                                             {{ $dayPlannings['journee']->lieu->nom ?? 'Non défini' }}
                                         </div>
-                                        @if($dayPlannings['journee']->lieu && !in_array($dayPlannings['journee']->lieu->nom, ['RH', 'CP']))
-                                            <div class="text-gray-600">
-                                                {{ Carbon\Carbon::parse($dayPlannings['journee']->heure_debut)->format('H:i') }} 
-                                                - 
-                                                {{ Carbon\Carbon::parse($dayPlannings['journee']->heure_fin)->format('H:i') }}
-                                            </div>
-                                        @endif
+                                        <div class="text-gray-600">
+                                            {{ Carbon\Carbon::parse($dayPlannings['journee']->heure_debut)->format('H:i') }} 
+                                            - 
+                                            {{ Carbon\Carbon::parse($dayPlannings['journee']->heure_fin)->format('H:i') }}
+                                        </div>
                                     </div>
                                 @else
                                     @if($dayPlannings['matin'])
@@ -92,13 +90,11 @@
                                             <div class="font-semibold text-gray-700">
                                                 {{ $dayPlannings['matin']->lieu->nom ?? 'Non défini' }}
                                             </div>
-                                            @if($dayPlannings['matin']->lieu && !in_array($dayPlannings['matin']->lieu->nom, ['RH', 'CP']))
-                                                <div class="text-gray-600">
-                                                    {{ Carbon\Carbon::parse($dayPlannings['matin']->heure_debut)->format('H:i') }} 
-                                                    - 
-                                                    {{ Carbon\Carbon::parse($dayPlannings['matin']->heure_fin)->format('H:i') }}
-                                                </div>
-                                            @endif
+                                            <div class="text-gray-600">
+                                                {{ Carbon\Carbon::parse($dayPlannings['matin']->heure_debut)->format('H:i') }} 
+                                                - 
+                                                {{ Carbon\Carbon::parse($dayPlannings['matin']->heure_fin)->format('H:i') }}
+                                            </div>
                                         </div>
                                     @endif
 
@@ -107,13 +103,11 @@
                                             <div class="font-semibold text-gray-700">
                                                 {{ $dayPlannings['apres-midi']->lieu->nom ?? 'Non défini' }}
                                             </div>
-                                            @if($dayPlannings['apres-midi']->lieu && !in_array($dayPlannings['apres-midi']->lieu->nom, ['RH', 'CP']))
-                                                <div class="text-gray-600">
-                                                    {{ Carbon\Carbon::parse($dayPlannings['apres-midi']->heure_debut)->format('H:i') }} 
-                                                    - 
-                                                    {{ Carbon\Carbon::parse($dayPlannings['apres-midi']->heure_fin)->format('H:i') }}
-                                                </div>
-                                            @endif
+                                            <div class="text-gray-600">
+                                                {{ Carbon\Carbon::parse($dayPlannings['apres-midi']->heure_debut)->format('H:i') }} 
+                                                - 
+                                                {{ Carbon\Carbon::parse($dayPlannings['apres-midi']->heure_fin)->format('H:i') }}
+                                            </div>
                                         </div>
                                     @endif
                                 @endif
