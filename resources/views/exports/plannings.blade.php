@@ -141,8 +141,8 @@
                 <table>
                     <thead>
                         <tr>
-                            <th class="date-column">DATE</th>
                             <th class="jour-column">JOUR</th>
+                            <th class="date-column">DATE</th>
                             <th class="lieu-column">LIEU</th>
                             <th class="debut-column">DÉBUT</th>
                             <th class="fin-column">FIN</th>
@@ -173,15 +173,15 @@
                             @endphp
                             
                             <tr class="{{ $planningMatin || $planningAprem ? '' : 'repos' }}">
-                                <td>{{ $currentDate->format('d/m/Y') }}</td>
                                 <td>{{ ucfirst($currentDate->locale('fr')->isoFormat('dddd')) }}</td>
+                                <td>{{ $currentDate->format('d/m/Y') }}</td>
                                 
                                 @if($planningMatin)
                                     <td>{{ $planningMatin->lieu->nom }}</td>
-                                    <td>{{ $planningMatin->heure_debut }}</td>
-                                    <td>{{ $planningMatin->heure_fin }}</td>
-                                    <td>{{ $planningAprem ? $planningAprem->heure_debut : '-' }}</td>
-                                    <td>{{ $planningAprem ? $planningAprem->heure_fin : '-' }}</td>
+                                    <td>{{ Carbon::parse($planningMatin->heure_debut)->format('H:i') }}</td>
+                                    <td>{{ Carbon::parse($planningMatin->heure_fin)->format('H:i') }}</td>
+                                    <td>{{ $planningAprem ? Carbon::parse($planningAprem->heure_debut)->format('H:i') : '-' }}</td>
+                                    <td>{{ $planningAprem ? Carbon::parse($planningAprem->heure_fin)->format('H:i') : '-' }}</td>
                                     <td class="heures-column">
                                         @php
                                             $heuresJour = $planningMatin->heures_travaillees;
@@ -191,20 +191,20 @@
                                             $totalHeuresSemaine += $heuresJour;
                                         @endphp
                                         @if($planningAprem)
-                                            <span>{{ number_format($planningMatin->heures_travaillees, 2) }}h</span>
-                                            <span class="heures-composees">+{{ number_format($planningAprem->heures_travaillees, 2) }}h</span>
-                                            <span class="heures-total">({{ number_format($heuresJour, 2) }}h)</span>
+                                            <span>{{ App\Http\Controllers\PlanningController::convertToHHMM($planningMatin->heures_travaillees) }}</span>
+                                            <span class="heures-composees">+{{ App\Http\Controllers\PlanningController::convertToHHMM($planningAprem->heures_travaillees) }}</span>
+                                            <span class="heures-total">({{ App\Http\Controllers\PlanningController::convertToHHMM($heuresJour) }})</span>
                                         @else
-                                            {{ number_format($heuresJour, 2) }}h
+                                            {{ App\Http\Controllers\PlanningController::convertToHHMM($heuresJour) }}
                                         @endif
                                     </td>
                                 @else
-                                    <td>Repos</td>
                                     <td>-</td>
                                     <td>-</td>
                                     <td>-</td>
                                     <td>-</td>
-                                    <td class="heures-column">0.00h</td>
+                                    <td>-</td>
+                                    <td class="heures-column">-</td>
                                 @endif
                             </tr>
                             @php
@@ -213,10 +213,11 @@
                         @endfor
                         <tr>
                             <td colspan="7" class="total">Total de la semaine</td>
-                            <td class="heures-column total">{{ number_format($totalHeuresSemaine, 2) }}h</td>
+                            <td class="heures-column total">{{ App\Http\Controllers\PlanningController::convertToHHMM($totalHeuresSemaine) }}</td>
                         </tr>
                     </tbody>
                 </table>
+                
             </div>
         @endforeach
 

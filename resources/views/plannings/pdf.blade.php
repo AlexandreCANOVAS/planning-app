@@ -222,8 +222,8 @@
             <table class="planning-table" style="margin-bottom: 10px;">
                 <thead>
                     <tr>
-                        <th style="width: 15%;">Date</th>
                         <th style="width: 15%;">Jour</th>
+                        <th style="width: 15%;">Date</th>
                         <th style="width: 30%;">Lieu</th>
                         <th style="width: 13%;">Début</th>
                         <th style="width: 13%;">Fin</th>
@@ -233,8 +233,8 @@
                 <tbody>
                     @foreach($week['days'] as $day)
                         <tr class="{{ $day['isWeekend'] ? 'weekend' : '' }} {{ $day['isRepos'] ? 'repos' : '' }}">
-                            <td class="date-cell">{{ $day['date']->format('d/m/Y') }}</td>
                             <td>{{ ucfirst($day['date']->locale('fr')->isoFormat('dddd')) }}</td>
+                            <td class="date-cell">{{ $day['date']->format('d/m/Y') }}</td>
                             <td class="info-cell">
                                 @if($day['planning'] && $day['planning']->lieu)
                                     {{ $day['planning']->lieu->nom }}
@@ -258,7 +258,7 @@
                             </td>
                             <td class="hours-cell">
                                 @if($day['planning'] && !$day['isRepos'] && $day['planning']->heures_travaillees)
-                                    {{ abs($day['planning']->heures_travaillees) }}h
+                                    {{ App\Http\Controllers\PlanningController::convertToHHMM($day['planning']->heures_travaillees) }}
                                 @else
                                     <span class="no-planning">-</span>
                                 @endif
@@ -269,7 +269,7 @@
             </table>
             <div style="text-align: right; padding: 5px 10px; background-color: #f8fafc; border-radius: 4px; margin-top: 5px;">
                 <p style="margin: 0; color: #2d3748; font-weight: bold;">
-                    Total de la semaine : {{ abs($week['total_hours']) }}h
+                    Total de la semaine : {{ App\Http\Controllers\PlanningController::convertToHHMM($week['total_hours']) }}
                 </p>
             </div>
         </div>
@@ -277,7 +277,7 @@
 
     <div class="total-section">
         <div class="total-hours">
-            <p style="margin: 0;">Total des heures travaillées : <strong>{{ abs($totalHeures) }}h</strong></p>
+            <p style="margin: 0;">Total des heures travaillées : <strong>{{ App\Http\Controllers\PlanningController::convertToHHMM($totalHeures) }}</strong></p>
             <p style="margin: 5px 0 0 0; font-size: 12px; color: #718096;">
                 Jours travaillés : {{ $joursTravailles }} | Jours de repos : {{ $joursRepos }}
             </p>
