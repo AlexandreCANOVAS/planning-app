@@ -955,7 +955,7 @@ class PlanningController extends Controller
         return abs($heureFin->floatDiffInHours($heureDebut));
     }
 
-    private function convertToHHMM($heures)
+    public static function convertToHHMM($heures)
     {
         $heures_entieres = floor($heures);
         $minutes = round(($heures - $heures_entieres) * 60);
