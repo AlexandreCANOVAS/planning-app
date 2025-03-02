@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\LieuTravail;
+use App\Models\Lieu;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -13,7 +13,7 @@ class LieuController extends Controller
     public function index()
     {
         // Récupérer uniquement les lieux de travail de la société de l'employeur connecté
-        $lieux = LieuTravail::where('societe_id', Auth::user()->societe->id)
+        $lieux = Lieu::where('societe_id', Auth::user()->societe->id)
             ->orderBy('nom')
             ->paginate(10);
         return view('lieux.index', compact('lieux'));
@@ -31,16 +31,17 @@ class LieuController extends Controller
             'adresse' => 'required|string',
             'ville' => 'required|string|max:255',
             'code_postal' => 'required|string|max:10',
+            'description' => 'nullable|string',
             'couleur' => 'nullable|string|max:7'
         ]);
 
-        $lieu = Auth::user()->societe->lieuxTravail()->create($validated);
+        $lieu = Auth::user()->societe->lieux()->create($validated);
 
         return redirect()->route('lieux.index')
             ->with('success', 'Lieu de travail créé avec succès');
     }
 
-    public function edit(LieuTravail $lieu)
+    public function edit(Lieu $lieu)
     {
         $this->authorize('view', $lieu);
         $this->authorize('update', $lieu);
@@ -53,7 +54,7 @@ class LieuController extends Controller
         return view('lieux.edit', compact('lieu'));
     }
 
-    public function update(Request $request, LieuTravail $lieu)
+    public function update(Request $request, Lieu $lieu)
     {
         $this->authorize('update', $lieu);
         // Ne pas permettre la modification des lieux spéciaux
@@ -67,6 +68,7 @@ class LieuController extends Controller
             'adresse' => 'required|string',
             'ville' => 'required|string|max:255',
             'code_postal' => 'required|string|max:10',
+            'description' => 'nullable|string',
             'couleur' => 'nullable|string|max:7'
         ]);
 
@@ -76,7 +78,7 @@ class LieuController extends Controller
             ->with('success', 'Lieu de travail mis à jour avec succès');
     }
 
-    public function destroy(LieuTravail $lieu)
+    public function destroy(Lieu $lieu)
     {
         $this->authorize('delete', $lieu);
         // Ne pas permettre la suppression des lieux spéciaux

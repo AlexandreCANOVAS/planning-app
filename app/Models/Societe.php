@@ -35,7 +35,7 @@ class Societe extends Model
     }
 
     /**
-     * Relation avec les lieux
+     * Relation avec les lieux de travail
      */
     public function lieux()
     {

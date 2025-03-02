@@ -19,10 +19,12 @@ class Lieu extends Model
         'adresse',
         'ville',
         'code_postal',
-        'societe_id',
         'description',
-        'couleur'
+        'couleur',
+        'societe_id'
     ];
+
+    protected $appends = ['adresse_complete', 'employes_count'];
 
     /**
      * Relation avec la société
@@ -37,7 +39,7 @@ class Lieu extends Model
      */
     public function plannings()
     {
-        return $this->hasMany(Planning::class);
+        return $this->hasMany(Planning::class, 'lieu_id');
     }
 
     /**
