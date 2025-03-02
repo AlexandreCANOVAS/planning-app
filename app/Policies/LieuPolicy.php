@@ -16,4 +16,9 @@ class LieuPolicy
     {
         return $user->societe->id === $lieu->societe_id;
     }
+
+    public function view(User $user, Lieu $lieu): bool
+    {
+        return $user->societe->id === $lieu->societe_id;
+    }
 } 

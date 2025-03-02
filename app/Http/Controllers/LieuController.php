@@ -12,8 +12,10 @@ class LieuController extends Controller
 
     public function index()
     {
-        // Récupérer tous les lieux de travail, y compris les lieux spéciaux
-        $lieux = LieuTravail::orderBy('nom')->paginate(10);
+        // Récupérer uniquement les lieux de travail de la société de l'employeur connecté
+        $lieux = LieuTravail::where('societe_id', Auth::user()->societe->id)
+            ->orderBy('nom')
+            ->paginate(10);
         return view('lieux.index', compact('lieux'));
     }
 
@@ -40,6 +42,7 @@ class LieuController extends Controller
 
     public function edit(LieuTravail $lieu)
     {
+        $this->authorize('view', $lieu);
         $this->authorize('update', $lieu);
         // Ne pas permettre la modification des lieux spéciaux
         if (in_array($lieu->nom, $this->lieuxSpeciaux)) {
