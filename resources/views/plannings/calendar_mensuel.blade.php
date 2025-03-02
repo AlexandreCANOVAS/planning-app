@@ -76,9 +76,9 @@
                                 @if($dayPlannings['journee'])
                                     <div class="text-xs">
                                         <div class="font-semibold text-gray-700">
-                                            {{ $dayPlannings['journee']->lieuTravail->nom ?? 'Non défini' }}
+                                            {{ $dayPlannings['journee']->lieu->nom ?? 'Non défini' }}
                                         </div>
-                                        @if($dayPlannings['journee']->lieuTravail && !in_array($dayPlannings['journee']->lieuTravail->nom, ['RH', 'CP']))
+                                        @if($dayPlannings['journee']->lieu && !in_array($dayPlannings['journee']->lieu->nom, ['RH', 'CP']))
                                             <div class="text-gray-600">
                                                 {{ Carbon\Carbon::parse($dayPlannings['journee']->heure_debut)->format('H:i') }} 
                                                 - 
@@ -90,9 +90,9 @@
                                     @if($dayPlannings['matin'])
                                         <div class="text-xs mb-1">
                                             <div class="font-semibold text-gray-700">
-                                                {{ $dayPlannings['matin']->lieuTravail->nom ?? 'Non défini' }}
+                                                {{ $dayPlannings['matin']->lieu->nom ?? 'Non défini' }}
                                             </div>
-                                            @if($dayPlannings['matin']->lieuTravail && !in_array($dayPlannings['matin']->lieuTravail->nom, ['RH', 'CP']))
+                                            @if($dayPlannings['matin']->lieu && !in_array($dayPlannings['matin']->lieu->nom, ['RH', 'CP']))
                                                 <div class="text-gray-600">
                                                     {{ Carbon\Carbon::parse($dayPlannings['matin']->heure_debut)->format('H:i') }} 
                                                     - 
@@ -105,9 +105,9 @@
                                     @if($dayPlannings['apres-midi'])
                                         <div class="text-xs">
                                             <div class="font-semibold text-gray-700">
-                                                {{ $dayPlannings['apres-midi']->lieuTravail->nom ?? 'Non défini' }}
+                                                {{ $dayPlannings['apres-midi']->lieu->nom ?? 'Non défini' }}
                                             </div>
-                                            @if($dayPlannings['apres-midi']->lieuTravail && !in_array($dayPlannings['apres-midi']->lieuTravail->nom, ['RH', 'CP']))
+                                            @if($dayPlannings['apres-midi']->lieu && !in_array($dayPlannings['apres-midi']->lieu->nom, ['RH', 'CP']))
                                                 <div class="text-gray-600">
                                                     {{ Carbon\Carbon::parse($dayPlannings['apres-midi']->heure_debut)->format('H:i') }} 
                                                     - 

@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Carbon\Carbon;
 use App\Models\Lieu;
-use App\Models\LieuTravail;
 use App\Models\Employe;
 use App\Models\Societe;
 
@@ -62,14 +61,6 @@ class Planning extends Model
     }
 
     /**
-     * Relation avec le lieu de travail
-     */
-    public function lieuTravail()
-    {
-        return $this->belongsTo(LieuTravail::class, 'lieu_id');
-    }
-
-    /**
      * Accesseur pour formater les heures travaillées
      */
     public function getHeuresTravailleesFormateesAttribute()
@@ -98,7 +89,7 @@ class Planning extends Model
      */
     public function getHeureDebutFormatteeAttribute()
     {
-        return Carbon::parse($this->heure_debut)->format('H:i');
+        return $this->heure_debut->format('H:i');
     }
 
     /**
@@ -106,7 +97,7 @@ class Planning extends Model
      */
     public function getHeureFinFormatteeAttribute()
     {
-        return Carbon::parse($this->heure_fin)->format('H:i');
+        return $this->heure_fin->format('H:i');
     }
 
     /**
@@ -114,7 +105,7 @@ class Planning extends Model
      */
     public function getDateFormatteeAttribute()
     {
-        return Carbon::parse($this->date)->format('d/m/Y');
+        return $this->date->format('d/m/Y');
     }
 
     /**
@@ -122,7 +113,7 @@ class Planning extends Model
      */
     public function getJourSemaineAttribute()
     {
-        return Carbon::parse($this->date)->locale('fr_FR')->isoFormat('dddd');
+        return $this->date->locale('fr_FR')->isoFormat('dddd');
     }
 
     /**
@@ -140,8 +131,8 @@ class Planning extends Model
     {
         static::saving(function ($planning) {
             if ($planning->heure_debut && $planning->heure_fin) {
-                $debut = Carbon::parse($planning->heure_debut);
-                $fin = Carbon::parse($planning->heure_fin);
+                $debut = $planning->heure_debut;
+                $fin = $planning->heure_fin;
                 
                 // Si l'heure de fin est avant l'heure de début, on ajoute 24h
                 if ($fin < $debut) {
@@ -152,35 +143,5 @@ class Planning extends Model
                 $planning->heures_travaillees = $fin->floatDiffInHours($debut);
             }
         });
-    }
-
-    public function getDateAttribute($value)
-    {
-        return Carbon::parse($value)->format('Y-m-d');
-    }
-
-    public function getHeureDebutAttribute($value)
-    {
-        return $value ? Carbon::parse($value)->format('H:i') : null;
-    }
-
-    public function getHeureFinAttribute($value)
-    {
-        return $value ? Carbon::parse($value)->format('H:i') : null;
-    }
-
-    public function getDateFormateeAttribute()
-    {
-        return $this->date ? Carbon::parse($this->date)->format('Y-m-d') : null;
-    }
-
-    public function getHeureDebutFormateeAttribute()
-    {
-        return $this->heure_debut ? Carbon::parse($this->heure_debut)->format('H:i') : null;
-    }
-
-    public function getHeureFinFormateeAttribute()
-    {
-        return $this->heure_fin ? Carbon::parse($this->heure_fin)->format('H:i') : null;
     }
 }

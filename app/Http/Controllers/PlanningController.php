@@ -94,7 +94,9 @@ class PlanningController extends Controller
 
         // Grouper par mois
         $planningsParMois = $plannings->groupBy(function($planning) {
-            return intval(Carbon::parse($planning->date)->format('m'));
+            return $planning->date instanceof Carbon 
+                ? $planning->date->month 
+                : Carbon::parse($planning->date)->month;
         });
 
         \Log::info('Plannings groupés par mois', [
@@ -118,13 +120,14 @@ class PlanningController extends Controller
                     $recapitulatifMensuel[$mois]['stats_par_employe'][] = [
                         'employe' => $employe,
                         'total_heures' => $planningsEmploye->sum('heures_travaillees'),
-                        'lieux' => $planningsEmploye->groupBy('lieu.nom')
-                            ->map(function($plannings) {
-                                return [
-                                    'count' => $plannings->count(),
-                                    'heures' => $plannings->sum('heures_travaillees')
-                                ];
-                            })
+                        'lieux' => $planningsEmploye->groupBy(function($planning) {
+                            return optional($planning->lieu)->nom ?? 'Lieu inconnu';
+                        })->map(function($plannings) {
+                            return [
+                                'count' => $plannings->count(),
+                                'heures' => $plannings->sum('heures_travaillees')
+                            ];
+                        })
                     ];
                 }
             }
@@ -435,7 +438,10 @@ class PlanningController extends Controller
         // Organiser les plannings par date et période
         $planningsByDate = [];
         foreach ($plannings as $planning) {
-            $date = $planning->date->format('Y-m-d');
+            $date = $planning->date instanceof Carbon 
+                ? $planning->date->format('Y-m-d')
+                : Carbon::parse($planning->date)->format('Y-m-d');
+                
             if (!isset($planningsByDate[$date])) {
                 $planningsByDate[$date] = [
                     'matin' => null,
