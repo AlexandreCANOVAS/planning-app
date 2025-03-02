@@ -156,11 +156,8 @@ class PlanningController extends Controller
         $employes = Employe::where('societe_id', $user->societe_id)
             ->orderBy('nom')
             ->get();
-        $lieux = Lieu::where(function($query) use ($user) {
-                $query->where('societe_id', $user->societe_id)
-                      ->orWhereNull('societe_id')
-                      ->orWhere('is_special', true);
-            })
+        $lieux = Lieu::where('societe_id', $user->societe_id)
+            ->where('is_special', false)
             ->orderBy('nom')
             ->get();
         
@@ -841,12 +838,10 @@ class PlanningController extends Controller
             ->where('societe_id', $user->societe_id)
             ->firstOrFail();
 
-        // Récupérer les lieux de travail
-        $lieux = Lieu::where(function($query) use ($user) {
-                $query->where('societe_id', $user->societe_id)
-                      ->orWhereNull('societe_id')
-                      ->orWhere('is_special', true);
-            })
+        // Récupérer les lieux de travail (en excluant les lieux spéciaux)
+        $lieux = Lieu::where('societe_id', $user->societe_id)
+            ->where('is_special', false)
+            ->orderBy('nom')
             ->get();
 
         // Créer les dates pour le mois
