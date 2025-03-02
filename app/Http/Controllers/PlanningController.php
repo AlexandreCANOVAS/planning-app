@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Planning;
-use App\Models\LieuTravail;
+use App\Models\Lieu;
 use App\Models\Employe;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -67,8 +67,11 @@ class PlanningController extends Controller
         $anneeActuelle = $request->get('annee', now()->year);
         
         $employes = Employe::where('societe_id', $user->societe_id)->get();
-        $lieux = LieuTravail::where('societe_id', $user->societe_id)
-            ->orWhereIn('nom', ['RH', 'CP'])
+        $lieux = Lieu::where(function($query) use ($user) {
+                $query->where('societe_id', $user->societe_id)
+                      ->orWhereNull('societe_id')
+                      ->orWhere('is_special', true);
+            })
             ->orderBy('nom')
             ->get();
         
@@ -153,7 +156,11 @@ class PlanningController extends Controller
         $employes = Employe::where('societe_id', $user->societe_id)
             ->orderBy('nom')
             ->get();
-        $lieux = LieuTravail::where('societe_id', $user->societe_id)
+        $lieux = Lieu::where(function($query) use ($user) {
+                $query->where('societe_id', $user->societe_id)
+                      ->orWhereNull('societe_id')
+                      ->orWhere('is_special', true);
+            })
             ->orderBy('nom')
             ->get();
         
@@ -425,7 +432,7 @@ class PlanningController extends Controller
             ->where('societe_id', $user->societe_id)
             ->whereYear('date', $annee)
             ->whereMonth('date', $mois)
-            ->with('lieuTravail')
+            ->with('lieu')
             ->get();
 
         // Organiser les plannings par date et période
@@ -468,7 +475,12 @@ class PlanningController extends Controller
         $nextMonth = $date->copy()->addMonth()->format('Y-m');
         
         // Récupérer les lieux de travail pour le filtre
-        $lieux = LieuTravail::where('societe_id', $employe->societe_id)->get();
+        $lieux = Lieu::where(function($query) use ($employe) {
+                $query->where('societe_id', $employe->societe_id)
+                      ->orWhereNull('societe_id')
+                      ->orWhere('is_special', true);
+            })
+            ->get();
         $lieuId = $request->input('lieu_id');
 
         // Récupérer les plannings du mois
@@ -543,7 +555,11 @@ class PlanningController extends Controller
         $employes = Employe::where('societe_id', $user->societe_id)
             ->orderBy('nom')
             ->get();
-        $lieux = LieuTravail::where('societe_id', $user->societe_id)
+        $lieux = Lieu::where(function($query) use ($user) {
+                $query->where('societe_id', $user->societe_id)
+                      ->orWhereNull('societe_id')
+                      ->orWhere('is_special', true);
+            })
             ->orderBy('nom')
             ->get();
 
@@ -561,7 +577,7 @@ class PlanningController extends Controller
 
         $validated = $request->validate([
             'employe_id' => 'required|exists:employes,id',
-            'lieu_id' => 'required|exists:lieux_travail,id',
+            'lieu_id' => 'required|exists:lieux,id',
             'date' => 'required|date',
             'heure_debut' => 'required',
             'heure_fin' => 'required|after:heure_debut',
@@ -826,10 +842,12 @@ class PlanningController extends Controller
             ->firstOrFail();
 
         // Récupérer les lieux de travail
-        $lieux = LieuTravail::where(function($query) use ($user) {
-            $query->where('societe_id', $user->societe_id)
-                  ->orWhereIn('nom', ['RH', 'CP']);
-        })->get();
+        $lieux = Lieu::where(function($query) use ($user) {
+                $query->where('societe_id', $user->societe_id)
+                      ->orWhereNull('societe_id')
+                      ->orWhere('is_special', true);
+            })
+            ->get();
 
         // Créer les dates pour le mois
         $dateDebut = Carbon::create($annee, $mois, 1);
@@ -841,7 +859,7 @@ class PlanningController extends Controller
             ->where('societe_id', $user->societe_id)
             ->whereYear('date', $annee)
             ->whereMonth('date', $mois)
-            ->with('lieuTravail')
+            ->with('lieu')
             ->get();
 
         // Organiser les plannings par date et période
@@ -880,7 +898,7 @@ class PlanningController extends Controller
                 ->firstOrFail();
 
             // Récupérer tous les plannings du mois
-            $plannings = Planning::with('lieuTravail')
+            $plannings = Planning::with('lieu')
                 ->where('employe_id', $employe_id)
                 ->whereYear('date', $annee)
                 ->whereMonth('date', $mois)
@@ -896,7 +914,7 @@ class PlanningController extends Controller
                     return [
                         'date' => $date,
                         'lieu_id' => $planning->lieu_id,
-                        'lieu' => optional($planning->lieuTravail)->nom ?? 'Lieu inconnu',
+                        'lieu' => optional($planning->lieu)->nom ?? 'Lieu inconnu',
                         'periode' => $planning->periode,
                         'heure_debut' => $heure_debut,
                         'heure_fin' => $heure_fin,
@@ -991,7 +1009,7 @@ class PlanningController extends Controller
             ->firstOrFail();
 
         // Trouver le lieu "CP" (Congé Payé)
-        $lieuCP = LieuTravail::where('nom', 'CP')
+        $lieuCP = Lieu::where('nom', 'CP')
             ->where(function($query) use ($user) {
                 $query->where('societe_id', $user->societe_id)
                     ->orWhereNull('societe_id');

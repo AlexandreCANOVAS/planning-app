@@ -15,7 +15,7 @@ return new class extends Migration
             $table->string('ville');
             $table->string('code_postal');
             $table->text('description')->nullable();
-            $table->foreignId('societe_id')->constrained()->onDelete('cascade');
+            $table->foreignId('societe_id')->nullable()->constrained()->onDelete('cascade');
             $table->timestamps();
         });
     }
@@ -24,4 +24,4 @@ return new class extends Migration
     {
         Schema::dropIfExists('lieux');
     }
-}; 
+};

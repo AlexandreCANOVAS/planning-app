@@ -21,7 +21,12 @@ class Lieu extends Model
         'code_postal',
         'description',
         'couleur',
-        'societe_id'
+        'societe_id',
+        'is_special'
+    ];
+
+    protected $casts = [
+        'is_special' => 'boolean'
     ];
 
     protected $appends = ['adresse_complete', 'employes_count'];
@@ -47,6 +52,9 @@ class Lieu extends Model
      */
     public function getAdresseCompleteAttribute(): string
     {
+        if ($this->is_special) {
+            return $this->nom;
+        }
         return "{$this->adresse}, {$this->code_postal} {$this->ville}";
     }
 
@@ -66,7 +74,11 @@ class Lieu extends Model
      */
     public function scopeDeSociete($query, $societeId)
     {
-        return $query->where('societe_id', $societeId);
+        return $query->where(function($q) use ($societeId) {
+            $q->where('societe_id', $societeId)
+              ->orWhereNull('societe_id')
+              ->orWhere('is_special', true);
+        });
     }
 
     /**

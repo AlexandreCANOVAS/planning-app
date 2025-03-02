@@ -4,9 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Carbon\Carbon;
 use App\Models\Lieu;
 use App\Models\LieuTravail;
+use App\Models\Employe;
+use App\Models\Societe;
 
 class Planning extends Model
 {
@@ -14,17 +17,15 @@ class Planning extends Model
 
     protected $fillable = [
         'employe_id',
-        'societe_id',
         'lieu_id',
+        'societe_id',
         'date',
         'heure_debut',
         'heure_fin',
         'heures_travaillees',
-        'heures_composees',
-        'description',
         'periode',
-        'heures_matin',
-        'heures_aprem'
+        'heures_majorees',
+        'heures_complementaires'
     ];
 
     protected $casts = [
@@ -32,15 +33,14 @@ class Planning extends Model
         'heure_debut' => 'datetime',
         'heure_fin' => 'datetime',
         'heures_travaillees' => 'float',
-        'heures_composees' => 'float',
-        'heures_matin' => 'json',
-        'heures_aprem' => 'json'
+        'heures_majorees' => 'float',
+        'heures_complementaires' => 'float'
     ];
 
     /**
      * Relation avec l'employé
      */
-    public function employe()
+    public function employe(): BelongsTo
     {
         return $this->belongsTo(Employe::class);
     }
@@ -48,7 +48,7 @@ class Planning extends Model
     /**
      * Relation avec le lieu
      */
-    public function lieu()
+    public function lieu(): BelongsTo
     {
         return $this->belongsTo(Lieu::class);
     }
@@ -56,7 +56,7 @@ class Planning extends Model
     /**
      * Relation avec la société
      */
-    public function societe()
+    public function societe(): BelongsTo
     {
         return $this->belongsTo(Societe::class);
     }
@@ -140,16 +140,47 @@ class Planning extends Model
     {
         static::saving(function ($planning) {
             if ($planning->heure_debut && $planning->heure_fin) {
-                $debut = $planning->heure_debut->copy();
-                $fin = $planning->heure_fin->copy();
+                $debut = Carbon::parse($planning->heure_debut);
+                $fin = Carbon::parse($planning->heure_fin);
                 
                 // Si l'heure de fin est avant l'heure de début, on ajoute 24h
                 if ($fin < $debut) {
                     $fin->addDay();
                 }
                 
-                $planning->heures_travaillees = $fin->diffInMinutes($debut) / 60;
+                // Calculer les heures travaillées
+                $planning->heures_travaillees = $fin->floatDiffInHours($debut);
             }
         });
+    }
+
+    public function getDateAttribute($value)
+    {
+        return Carbon::parse($value)->format('Y-m-d');
+    }
+
+    public function getHeureDebutAttribute($value)
+    {
+        return $value ? Carbon::parse($value)->format('H:i') : null;
+    }
+
+    public function getHeureFinAttribute($value)
+    {
+        return $value ? Carbon::parse($value)->format('H:i') : null;
+    }
+
+    public function getDateFormateeAttribute()
+    {
+        return $this->date ? Carbon::parse($this->date)->format('Y-m-d') : null;
+    }
+
+    public function getHeureDebutFormateeAttribute()
+    {
+        return $this->heure_debut ? Carbon::parse($this->heure_debut)->format('H:i') : null;
+    }
+
+    public function getHeureFinFormateeAttribute()
+    {
+        return $this->heure_fin ? Carbon::parse($this->heure_fin)->format('H:i') : null;
     }
 }

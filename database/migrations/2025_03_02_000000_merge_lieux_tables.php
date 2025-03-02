@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('code_postal')->default('00000');
             $table->text('description')->nullable();
             $table->string('couleur')->default('#3498db');
-            $table->foreignId('societe_id')->constrained()->onDelete('cascade');
+            $table->foreignId('societe_id')->nullable()->constrained()->onDelete('cascade');
             $table->timestamps();
         });
 
@@ -51,6 +51,8 @@ return new class extends Migration
                 DB::table('lieux_temp')->insert([
                     'nom' => $lieu->nom,
                     'adresse' => $lieu->adresse,
+                    'ville' => $lieu->ville ?? 'À définir',
+                    'code_postal' => $lieu->code_postal ?? '00000',
                     'societe_id' => $lieu->societe_id,
                     'couleur' => $lieu->couleur ?? '#3498db',
                     'created_at' => $lieu->created_at,
