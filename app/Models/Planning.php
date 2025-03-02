@@ -130,6 +130,13 @@ class Planning extends Model
     protected static function booted()
     {
         static::saving(function ($planning) {
+            // Si c'est un RH ou CP, mettre les heures travaillées à 0
+            if ($planning->lieu && in_array($planning->lieu->nom, ['RH', 'CP'])) {
+                $planning->heures_travaillees = 0;
+                return;
+            }
+
+            // Pour les autres lieux, calculer les heures travaillées
             if ($planning->heure_debut && $planning->heure_fin) {
                 $debut = $planning->heure_debut;
                 $fin = $planning->heure_fin;
@@ -140,7 +147,7 @@ class Planning extends Model
                 }
                 
                 // Calculer les heures travaillées
-                $planning->heures_travaillees = $fin->floatDiffInHours($debut);
+                $planning->heures_travaillees = abs($fin->floatDiffInHours($debut));
             }
         });
     }

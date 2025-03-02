@@ -117,15 +117,22 @@ class PlanningController extends Controller
                 $planningsEmploye = $planningsDuMois->where('employe_id', $employe->id);
                 
                 if($planningsEmploye->isNotEmpty()) {
+                    // Filtrer les plannings pour exclure RH et CP du calcul des heures
+                    $planningsNonSpeciaux = $planningsEmploye->filter(function($planning) {
+                        return !($planning->lieu && in_array($planning->lieu->nom, ['RH', 'CP']));
+                    });
+
                     $recapitulatifMensuel[$mois]['stats_par_employe'][] = [
                         'employe' => $employe,
-                        'total_heures' => $planningsEmploye->sum('heures_travaillees'),
+                        'total_heures' => $planningsNonSpeciaux->sum('heures_travaillees'),
                         'lieux' => $planningsEmploye->groupBy(function($planning) {
                             return optional($planning->lieu)->nom ?? 'Lieu inconnu';
                         })->map(function($plannings) {
+                            // Pour chaque lieu, vérifier s'il est spécial
+                            $isSpecial = $plannings->first()->lieu && in_array($plannings->first()->lieu->nom, ['RH', 'CP']);
                             return [
                                 'count' => $plannings->count(),
-                                'heures' => $plannings->sum('heures_travaillees')
+                                'heures' => $isSpecial ? 0 : $plannings->sum('heures_travaillees')
                             ];
                         })
                     ];
@@ -936,10 +943,16 @@ class PlanningController extends Controller
      */
     private function calculerHeuresTravaillees($debut, $fin)
     {
+        // Si les heures sont 00:00, retourner 0
+        if ($debut === '00:00' && $fin === '00:00') {
+            return 0;
+        }
+
         $heureDebut = Carbon::parse($debut);
         $heureFin = Carbon::parse($fin);
         
-        return $heureFin->floatDiffInHours($heureDebut);
+        // Utiliser abs() pour avoir une valeur absolue positive
+        return abs($heureFin->floatDiffInHours($heureDebut));
     }
 
     private function convertToHHMM($heures)
