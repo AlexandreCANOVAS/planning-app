@@ -71,25 +71,22 @@
                         @for($day = 1; $day <= $lastDay->day; $day++)
                             @php
                                 $currentDate = \Carbon\Carbon::create($selectedYear, $selectedMonth, $day);
-                                $planning = $plannings->first(function($planning) use ($currentDate) {
-                                    return $planning->date->format('Y-m-d') === $currentDate->format('Y-m-d');
-                                });
+                                $currentDateStr = $currentDate->format('Y-m-d');
+                                $planning = $plannings->get($currentDateStr, collect([]));
                                 $isWeekend = in_array($currentDate->dayOfWeek, [0, 6]);
                             @endphp
                             
-                            <div class="h-32 rounded-lg {{ $isWeekend ? 'bg-gray-50' : 'bg-white' }} border {{ $planning ? 'border-blue-200' : 'border-gray-200' }} p-2 overflow-hidden">
+                            <div class="h-32 rounded-lg {{ $isWeekend ? 'bg-gray-50' : 'bg-white' }} border {{ !$planning->isEmpty() ? 'border-blue-200' : 'border-gray-200' }} p-2 overflow-hidden">
                                 <div class="font-medium text-sm {{ $isWeekend ? 'text-gray-400' : 'text-gray-700' }}">
                                     {{ $day }}
                                 </div>
-                                @if($planning)
+                                @if(!$planning->isEmpty())
                                     <div class="mt-1">
                                         <div class="bg-blue-50 rounded p-1 text-xs">
-                                            <div class="font-medium text-blue-700">{{ $planning->lieu->nom ?? 'Non défini' }}</div>
-                                            <div class="text-blue-600">{{ $planning->horaire_debut }} - {{ $planning->horaire_fin }}</div>
-                                            <div class="text-blue-500">{{ $planning->heures_travaillees }}h</div>
-                                            @if($planning->commentaire)
-                                                <div class="text-blue-400 truncate">{{ $planning->commentaire }}</div>
-                                            @endif
+                                            <div class="font-semibold text-gray-800">{{ $planning->first()['lieu'] }}</div>
+                                            @foreach($planning as $p)
+                                                <div class="text-gray-700">{{ $p['heure_debut'] }} - {{ $p['heure_fin'] }}</div>
+                                            @endforeach
                                         </div>
                                     </div>
                                 @endif

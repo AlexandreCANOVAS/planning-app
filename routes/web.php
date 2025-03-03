@@ -181,6 +181,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/plannings', [PlanningController::class, 'employeIndex'])->name('plannings.index');
         Route::get('/plannings/calendar', [PlanningController::class, 'employeCalendar'])->name('plannings.calendar');
         Route::get('/plannings/download-pdf', [PlanningController::class, 'downloadPdf'])->name('plannings.download-pdf');
+        Route::get('/plannings/collegue/{employe}/calendar', [PlanningController::class, 'voirPlanningCollegueCalendar'])->name('plannings.collegue');
         
         // Routes des congés
         Route::prefix('conges')->name('conges.')->group(function () {

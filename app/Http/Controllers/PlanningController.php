@@ -766,23 +766,44 @@ class PlanningController extends Controller
         $employe = $user->employe;
 
         if (!$employe) {
-            return redirect()->route('dashboard')->with('error', 'Profil employé non trouvé.');
+            return redirect()->route('dashboard')->with('error', 'Profil employé non trouvé');
         }
 
         $selectedYear = $request->get('annee', now()->year);
         $selectedMonth = $request->get('mois', now()->month);
 
+        // Créer les dates pour le mois
+        $dateDebut = Carbon::create($selectedYear, $selectedMonth, 1);
+        $debutPeriode = $dateDebut->copy()->startOfWeek(Carbon::MONDAY);
+        $finPeriode = $dateDebut->copy()->endOfMonth()->endOfWeek(Carbon::SUNDAY);
+
+        // Récupérer les plannings du mois
         $plannings = Planning::where('employe_id', $employe->id)
-            ->where('societe_id', $user->societe_id) // Ajout du filtre par société
+            ->where('societe_id', $user->societe_id)
             ->whereYear('date', $selectedYear)
             ->whereMonth('date', $selectedMonth)
-            ->with(['lieu', 'societe'])
-            ->get();
+            ->with(['lieu:id,nom'])
+            ->select('id', 'date', 'heure_debut', 'heure_fin', 'lieu_id')
+            ->get()
+            ->groupBy(function($planning) {
+                return $planning->date->format('Y-m-d');
+            })
+            ->map(function($dayPlannings) {
+                return $dayPlannings->map(function($planning) {
+                    return [
+                        'lieu' => $planning->lieu->nom,
+                        'heure_debut' => $planning->getHeureDebutFormatteeAttribute(),
+                        'heure_fin' => $planning->getHeureFinFormatteeAttribute()
+                    ];
+                });
+            });
 
         return view('plannings.employe-calendar', [
             'selectedYear' => $selectedYear,
             'selectedMonth' => $selectedMonth,
-            'plannings' => $plannings
+            'plannings' => $plannings,
+            'debutPeriode' => $debutPeriode,
+            'finPeriode' => $finPeriode
         ]);
     }
 
@@ -916,8 +937,8 @@ class PlanningController extends Controller
                     $date = Carbon::parse($planning->date)->format('Y-m-d');
                     
                     // Formater les heures en H:i
-                    $heure_debut = Carbon::parse($planning->heure_debut)->format('H:i');
-                    $heure_fin = Carbon::parse($planning->heure_fin)->format('H:i');
+                    $heure_debut = $planning->getHeureDebutFormatteeAttribute();
+                    $heure_fin = $planning->getHeureFinFormatteeAttribute();
                     
                     return [
                         'date' => $date,
@@ -936,6 +957,89 @@ class PlanningController extends Controller
             \Log::error('Erreur lors de la récupération des plannings: ' . $e->getMessage());
             return response()->json(['error' => 'Une erreur est survenue lors de la récupération des plannings'], 500);
         }
+    }
+
+    /**
+     * Affiche le planning d'un collègue
+     */
+    public function voirPlanningCollegue(Request $request, Employe $employe)
+    {
+        $user = auth()->user();
+        
+        // Vérifier que l'employé appartient à la même société
+        if ($employe->societe_id !== $user->societe_id) {
+            return redirect()->route('employe.plannings.index')
+                ->with('error', 'Vous ne pouvez pas voir le planning de cet employé.');
+        }
+
+        // Convertir les paramètres en entiers
+        $selectedYear = (int) $request->get('annee', now()->year);
+        $selectedMonth = (int) $request->get('mois', now()->month);
+
+        $plannings = Planning::where('employe_id', $employe->id)
+            ->where('societe_id', $user->societe_id)
+            ->whereYear('date', $selectedYear)
+            ->whereMonth('date', $selectedMonth)
+            ->with(['lieu', 'societe'])
+            ->get();
+
+        return view('plannings.employe-collegue', [
+            'selectedYear' => $selectedYear,
+            'selectedMonth' => $selectedMonth,
+            'plannings' => $plannings,
+            'totalHeures' => $plannings->sum('heures_travaillees'),
+            'employe' => $employe
+        ]);
+    }
+
+    /**
+     * Affiche le planning d'un collègue en format calendrier
+     */
+    public function voirPlanningCollegueCalendar(Request $request, Employe $employe)
+    {
+        $user = auth()->user();
+        
+        // Vérifier que l'employé appartient à la même société
+        if ($employe->societe_id !== $user->societe_id) {
+            return redirect()->route('employe.plannings.index')
+                ->with('error', 'Vous ne pouvez pas voir le planning de cet employé.');
+        }
+
+        // Convertir les paramètres en entiers
+        $selectedYear = (int) $request->get('annee', now()->year);
+        $selectedMonth = (int) $request->get('mois', now()->month);
+
+        // Récupérer tous les plannings du mois
+        $plannings = Planning::where('employe_id', $employe->id)
+            ->where('societe_id', $user->societe_id)
+            ->whereYear('date', $selectedYear)
+            ->whereMonth('date', $selectedMonth)
+            ->with(['lieu', 'societe'])
+            ->get();
+
+        // Créer un tableau des plannings indexé par date
+        $planningsByDate = [];
+        foreach ($plannings as $planning) {
+            $date = Carbon::parse($planning->date)->format('Y-m-d');
+            if (!isset($planningsByDate[$date])) {
+                $planningsByDate[$date] = [];
+            }
+            $planningsByDate[$date][] = $planning;
+        }
+
+        // Obtenir le premier et dernier jour du mois
+        $firstDay = Carbon::create($selectedYear, $selectedMonth, 1);
+        $lastDay = $firstDay->copy()->endOfMonth();
+
+        return view('plannings.employe-collegue-calendar', [
+            'selectedYear' => $selectedYear,
+            'selectedMonth' => $selectedMonth,
+            'plannings' => $planningsByDate,
+            'firstDay' => $firstDay,
+            'lastDay' => $lastDay,
+            'employe' => $employe,
+            'totalHeures' => $plannings->sum('heures_travaillees')
+        ]);
     }
 
     /**
