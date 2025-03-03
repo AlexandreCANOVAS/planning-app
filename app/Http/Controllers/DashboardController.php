@@ -145,6 +145,39 @@ class DashboardController extends Controller
         $employe = $user->employe;
         $societe = $user->societe;
 
-        return view('dashboard.employe', compact('employe', 'societe'));
+        // Calculer les statistiques pour l'employé
+        $stats = [
+            'heures_semaine' => Planning::where('employe_id', $employe->id)
+                ->whereBetween('date', [
+                    Carbon::now()->startOfWeek(),
+                    Carbon::now()->endOfWeek()
+                ])
+                ->sum('heures_travaillees'),
+            'conges_restants' => $employe->conges_restants ?? 0,
+            'prochain_planning' => Planning::where('employe_id', $employe->id)
+                ->where('date', '>=', Carbon::today())
+                ->orderBy('date')
+                ->orderBy('heure_debut')
+                ->first()
+        ];
+
+        // Récupérer les plannings de la semaine
+        $plannings = Planning::where('employe_id', $employe->id)
+            ->whereBetween('date', [
+                Carbon::now()->startOfWeek(),
+                Carbon::now()->endOfWeek()
+            ])
+            ->with('lieu')
+            ->orderBy('date')
+            ->orderBy('heure_debut')
+            ->get();
+
+        // Récupérer les dernières demandes de congés
+        $conges = Conge::where('employe_id', $employe->id)
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get();
+
+        return view('dashboard.employe', compact('employe', 'societe', 'stats', 'plannings', 'conges'));
     }
 }

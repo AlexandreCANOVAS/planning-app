@@ -11,47 +11,67 @@
 
                 <!-- Navigation Links -->
                 <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
-                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" 
-                        class="inline-flex items-center px-1 pt-1 text-sm font-medium leading-5 transition duration-150 ease-in-out">
-                        <i class="fas fa-chart-line mr-2"></i>
-                        {{ __('Tableau de bord') }}
-                    </x-nav-link>
+                    @if(Auth::user()->role === 'employe')
+                        <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" 
+                            class="inline-flex items-center px-1 pt-1 text-sm font-medium leading-5 transition duration-150 ease-in-out">
+                            <i class="fas fa-chart-line mr-2"></i>
+                            {{ __('Tableau de bord') }}
+                        </x-nav-link>
 
-                    <x-nav-link :href="route('employes.index')" :active="request()->routeIs('employes.*')"
-                        class="inline-flex items-center px-1 pt-1 text-sm font-medium leading-5 transition duration-150 ease-in-out">
-                        <i class="fas fa-users mr-2"></i>
-                        {{ __('Employés') }}
-                    </x-nav-link>
+                        <x-nav-link :href="route('employe.plannings.index')" :active="request()->routeIs('employe.plannings.*')"
+                            class="inline-flex items-center px-1 pt-1 text-sm font-medium leading-5 transition duration-150 ease-in-out">
+                            <i class="fas fa-calendar-alt mr-2"></i>
+                            {{ __('Plannings') }}
+                        </x-nav-link>
 
-                    <x-nav-link :href="route('formations.index')" :active="request()->routeIs('formations.*')"
-                        class="inline-flex items-center px-1 pt-1 text-sm font-medium leading-5 transition duration-150 ease-in-out">
-                        <i class="fas fa-graduation-cap mr-2"></i>
-                        {{ __('Formations') }}
-                    </x-nav-link>
+                        <x-nav-link :href="route('employe.conges.index')" :active="request()->routeIs('employe.conges.*')"
+                            class="inline-flex items-center px-1 pt-1 text-sm font-medium leading-5 transition duration-150 ease-in-out">
+                            <i class="fas fa-umbrella-beach mr-2"></i>
+                            {{ __('Congés') }}
+                        </x-nav-link>
+                    @else
+                        <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" 
+                            class="inline-flex items-center px-1 pt-1 text-sm font-medium leading-5 transition duration-150 ease-in-out">
+                            <i class="fas fa-chart-line mr-2"></i>
+                            {{ __('Tableau de bord') }}
+                        </x-nav-link>
 
-                    <x-nav-link :href="route('plannings.calendar')" :active="request()->routeIs('plannings.*')"
-                        class="inline-flex items-center px-1 pt-1 text-sm font-medium leading-5 transition duration-150 ease-in-out">
-                        <i class="fas fa-calendar-alt mr-2"></i>
-                        {{ __('Plannings') }}
-                    </x-nav-link>
+                        <x-nav-link :href="route('employes.index')" :active="request()->routeIs('employes.*')"
+                            class="inline-flex items-center px-1 pt-1 text-sm font-medium leading-5 transition duration-150 ease-in-out">
+                            <i class="fas fa-users mr-2"></i>
+                            {{ __('Employés') }}
+                        </x-nav-link>
 
-                    <x-nav-link :href="route('comptabilite.index')" :active="request()->routeIs('comptabilite.*')"
-                        class="inline-flex items-center px-1 pt-1 text-sm font-medium leading-5 transition duration-150 ease-in-out">
-                        <i class="fas fa-calculator mr-2"></i>
-                        {{ __('Comptabilité') }}
-                    </x-nav-link>
+                        <x-nav-link :href="route('formations.index')" :active="request()->routeIs('formations.*')"
+                            class="inline-flex items-center px-1 pt-1 text-sm font-medium leading-5 transition duration-150 ease-in-out">
+                            <i class="fas fa-graduation-cap mr-2"></i>
+                            {{ __('Formations') }}
+                        </x-nav-link>
 
-                    <x-nav-link :href="route('conges.index')" :active="request()->routeIs('conges.*')"
-                        class="inline-flex items-center px-1 pt-1 text-sm font-medium leading-5 transition duration-150 ease-in-out">
-                        <i class="fas fa-umbrella-beach mr-2"></i>
-                        {{ __('Congés') }}
-                    </x-nav-link>
+                        <x-nav-link :href="route('plannings.calendar')" :active="request()->routeIs('plannings.*')"
+                            class="inline-flex items-center px-1 pt-1 text-sm font-medium leading-5 transition duration-150 ease-in-out">
+                            <i class="fas fa-calendar-alt mr-2"></i>
+                            {{ __('Plannings') }}
+                        </x-nav-link>
 
-                    <x-nav-link :href="route('lieux.index')" :active="request()->routeIs('lieux.*')"
-                        class="inline-flex items-center px-1 pt-1 text-sm font-medium leading-5 transition duration-150 ease-in-out">
-                        <i class="fas fa-map-marker-alt mr-2"></i>
-                        {{ __('Lieux de travail') }}
-                    </x-nav-link>
+                        <x-nav-link :href="route('comptabilite.index')" :active="request()->routeIs('comptabilite.*')"
+                            class="inline-flex items-center px-1 pt-1 text-sm font-medium leading-5 transition duration-150 ease-in-out">
+                            <i class="fas fa-calculator mr-2"></i>
+                            {{ __('Comptabilité') }}
+                        </x-nav-link>
+
+                        <x-nav-link :href="route('conges.index')" :active="request()->routeIs('conges.*')"
+                            class="inline-flex items-center px-1 pt-1 text-sm font-medium leading-5 transition duration-150 ease-in-out">
+                            <i class="fas fa-umbrella-beach mr-2"></i>
+                            {{ __('Congés') }}
+                        </x-nav-link>
+
+                        <x-nav-link :href="route('lieux.index')" :active="request()->routeIs('lieux.*')"
+                            class="inline-flex items-center px-1 pt-1 text-sm font-medium leading-5 transition duration-150 ease-in-out">
+                            <i class="fas fa-map-marker-alt mr-2"></i>
+                            {{ __('Lieux de travail') }}
+                        </x-nav-link>
+                    @endif
                 </div>
             </div>
 
@@ -114,40 +134,57 @@
     <!-- Responsive Navigation Menu -->
     <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
         <div class="pt-2 pb-3 space-y-1">
-            <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" class="flex items-center">
-                <i class="fas fa-chart-line mr-2"></i>
-                {{ __('Tableau de bord') }}
-            </x-responsive-nav-link>
+            @if(Auth::user()->role === 'employe')
+                <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" class="flex items-center">
+                    <i class="fas fa-chart-line mr-2"></i>
+                    {{ __('Tableau de bord') }}
+                </x-responsive-nav-link>
 
-            <x-responsive-nav-link :href="route('employes.index')" :active="request()->routeIs('employes.*')" class="flex items-center">
-                <i class="fas fa-users mr-2"></i>
-                {{ __('Employés') }}
-            </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('employe.plannings.index')" :active="request()->routeIs('employe.plannings.*')" class="flex items-center">
+                    <i class="fas fa-calendar-alt mr-2"></i>
+                    {{ __('Plannings') }}
+                </x-responsive-nav-link>
 
-            <x-responsive-nav-link :href="route('formations.index')" :active="request()->routeIs('formations.*')" class="flex items-center">
-                <i class="fas fa-graduation-cap mr-2"></i>
-                {{ __('Formations') }}
-            </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('employe.conges.index')" :active="request()->routeIs('employe.conges.*')" class="flex items-center">
+                    <i class="fas fa-umbrella-beach mr-2"></i>
+                    {{ __('Congés') }}
+                </x-responsive-nav-link>
+            @else
+                <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" class="flex items-center">
+                    <i class="fas fa-chart-line mr-2"></i>
+                    {{ __('Tableau de bord') }}
+                </x-responsive-nav-link>
 
-            <x-responsive-nav-link :href="route('plannings.calendar')" :active="request()->routeIs('plannings.*')" class="flex items-center">
-                <i class="fas fa-calendar-alt mr-2"></i>
-                {{ __('Plannings') }}
-            </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('employes.index')" :active="request()->routeIs('employes.*')" class="flex items-center">
+                    <i class="fas fa-users mr-2"></i>
+                    {{ __('Employés') }}
+                </x-responsive-nav-link>
 
-            <x-responsive-nav-link :href="route('comptabilite.index')" :active="request()->routeIs('comptabilite.*')" class="flex items-center">
-                <i class="fas fa-calculator mr-2"></i>
-                {{ __('Comptabilité') }}
-            </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('formations.index')" :active="request()->routeIs('formations.*')" class="flex items-center">
+                    <i class="fas fa-graduation-cap mr-2"></i>
+                    {{ __('Formations') }}
+                </x-responsive-nav-link>
 
-            <x-responsive-nav-link :href="route('conges.index')" :active="request()->routeIs('conges.*')" class="flex items-center">
-                <i class="fas fa-umbrella-beach mr-2"></i>
-                {{ __('Congés') }}
-            </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('plannings.calendar')" :active="request()->routeIs('plannings.*')" class="flex items-center">
+                    <i class="fas fa-calendar-alt mr-2"></i>
+                    {{ __('Plannings') }}
+                </x-responsive-nav-link>
 
-            <x-responsive-nav-link :href="route('lieux.index')" :active="request()->routeIs('lieux.*')" class="flex items-center">
-                <i class="fas fa-map-marker-alt mr-2"></i>
-                {{ __('Lieux de travail') }}
-            </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('comptabilite.index')" :active="request()->routeIs('comptabilite.*')" class="flex items-center">
+                    <i class="fas fa-calculator mr-2"></i>
+                    {{ __('Comptabilité') }}
+                </x-responsive-nav-link>
+
+                <x-responsive-nav-link :href="route('conges.index')" :active="request()->routeIs('conges.*')" class="flex items-center">
+                    <i class="fas fa-umbrella-beach mr-2"></i>
+                    {{ __('Congés') }}
+                </x-responsive-nav-link>
+
+                <x-responsive-nav-link :href="route('lieux.index')" :active="request()->routeIs('lieux.*')" class="flex items-center">
+                    <i class="fas fa-map-marker-alt mr-2"></i>
+                    {{ __('Lieux de travail') }}
+                </x-responsive-nav-link>
+            @endif
         </div>
 
         <!-- Responsive Settings Options -->
