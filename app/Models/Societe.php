@@ -31,7 +31,7 @@ class Societe extends Model
      */
     public function employes()
     {
-        return $this->hasMany(User::class)->where('role', 'employe');
+        return $this->hasMany(Employe::class);
     }
 
     /**
