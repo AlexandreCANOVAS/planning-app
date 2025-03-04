@@ -18,7 +18,7 @@
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6">
                         <h3 class="text-lg font-medium text-gray-900 mb-4">Répartition des heures par lieu de travail</h3>
-                        @if(empty($workByLocation))
+                        @if(empty($chartData['locations']))
                             <p class="text-gray-500">Aucune donnée disponible.</p>
                         @else
                             <div class="aspect-w-16 aspect-h-9">
@@ -32,7 +32,7 @@
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6">
                         <h3 class="text-lg font-medium text-gray-900 mb-4">Heures travaillées par mois</h3>
-                        @if(empty($workByMonth))
+                        @if(empty($chartData['months']))
                             <p class="text-gray-500">Aucune donnée disponible.</p>
                         @else
                             <div class="aspect-w-16 aspect-h-9">
@@ -84,7 +84,6 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Configuration des couleurs
             const colors = [
                 'rgba(54, 162, 235, 0.8)',
                 'rgba(255, 99, 132, 0.8)',
@@ -94,81 +93,71 @@
                 'rgba(255, 159, 64, 0.8)'
             ];
 
-            <!-- Debug Info -->
-                @if(app()->environment('local'))
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mt-6">
-                    <div class="p-6">
-                        <h3 class="text-lg font-medium text-gray-900 mb-4">Debug Information</h3>
-                        <pre class="bg-gray-100 p-4 rounded">
-                            Plannings Count: {{ $debug['plannings_count'] }}
-                            Has Location Data: {{ $debug['has_locations'] ? 'Yes' : 'No' }}
-                            Has Monthly Data: {{ $debug['has_months'] ? 'Yes' : 'No' }}
-                            
-                            Work by Location:
-                            @json($workByLocation, JSON_PRETTY_PRINT)
-                            
-                            Work by Month:
-                            @json($workByMonth, JSON_PRETTY_PRINT)
-                        </pre>
-                    </div>
-                </div>
-                @endif
-
             // Graphique par lieu
-            @if(!empty($workByLocation))
-            const workByLocationData = @json($workByLocation);
-            new Chart(document.getElementById('workByLocationChart'), {
-                type: 'pie',
-                data: {
-                    labels: Object.keys(workByLocationData),
-                    datasets: [{
-                        data: Object.values(workByLocationData),
-                        backgroundColor: colors
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'right'
-                        }
-                    }
-                }
-            });
-            @endif
-
-            // Graphique par mois
-            @if(!empty($workByMonth))
-            const workByMonthData = @json($workByMonth);
-            new Chart(document.getElementById('workByMonthChart'), {
-                type: 'bar',
-                data: {
-                    labels: Object.keys(workByMonthData).map(date => {
-                        const [year, month] = date.split('-');
-                        return new Date(year, month - 1).toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' });
-                    }),
-                    datasets: [{
-                        label: 'Heures travaillées',
-                        data: Object.values(workByMonthData),
-                        backgroundColor: colors[0]
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Heures'
+            const locationData = @json($chartData['locations']);
+            if (locationData && locationData.labels.length > 0) {
+                new Chart(document.getElementById('workByLocationChart'), {
+                    type: 'pie',
+                    data: {
+                        labels: locationData.labels,
+                        datasets: [{
+                            data: locationData.data,
+                            backgroundColor: colors.slice(0, locationData.labels.length)
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: {
+                                    font: {
+                                        size: 12
+                                    }
+                                }
                             }
                         }
                     }
-                }
-            });
-            @endif
+                });
+            }
+
+            // Graphique par mois
+            const monthData = @json($chartData['months']);
+            if (monthData && monthData.labels.length > 0) {
+                new Chart(document.getElementById('workByMonthChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: monthData.labels,
+                        datasets: [{
+                            label: 'Heures travaillées',
+                            data: monthData.data,
+                            backgroundColor: colors[0],
+                            borderColor: colors[0],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Heures'
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top'
+                            }
+                        }
+                    }
+                });
+            }
         });
     </script>
     @endpush

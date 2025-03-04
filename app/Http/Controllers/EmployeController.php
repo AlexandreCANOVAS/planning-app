@@ -192,38 +192,79 @@ class EmployeController extends Controller
             abort(403);
         }
 
+        // Charger les formations avec les données du pivot
+        $employe->load('formations');
+
         // Récupérer tous les plannings de l'employé
         $plannings = Planning::where('employe_id', $employe->id)
             ->with('lieu')
+            ->orderBy('date')
             ->get();
 
         // Calculer les heures par lieu de travail
-        $workByLocation = $plannings
-            ->whereNotNull('lieu_id')
-            ->groupBy('lieu.nom')
-            ->map(function ($plannings) {
-                return $plannings->sum('heures_travaillees');
-            })
-            ->toArray();
+        $workByLocation = [];
+        foreach ($plannings as $planning) {
+            if ($planning->lieu) {
+                $lieu = $planning->lieu->nom;
+                // Exclure RH et CP
+                if (!in_array($lieu, ['RH', 'CP'])) {
+                    if (!isset($workByLocation[$lieu])) {
+                        $workByLocation[$lieu] = 0;
+                    }
+                    $workByLocation[$lieu] += $planning->heures_travaillees;
+                }
+            }
+        }
 
         // Calculer les heures par mois
-        $workByMonth = $plannings
-            ->groupBy(function ($planning) {
-                return Carbon::parse($planning->date)->format('Y-m');
-            })
-            ->map(function ($plannings) {
-                return $plannings->sum('heures_travaillees');
-            })
-            ->toArray();
+        $workByMonth = [];
+        foreach ($plannings as $planning) {
+            $monthKey = Carbon::parse($planning->date)->format('Y-m');
+            if (!isset($workByMonth[$monthKey])) {
+                $workByMonth[$monthKey] = 0;
+            }
+            $workByMonth[$monthKey] += $planning->heures_travaillees;
+        }
 
-        // Récupérer les formations
-        $formations = $employe->formations ?? collect();
+        // Trier les mois par ordre chronologique
+        ksort($workByMonth);
+
+        // Récupérer les formations avec leur statut
+        $formations = collect();
+        if ($employe->formations) {
+            $formations = $employe->formations->map(function ($formation) {
+                $dateObtention = Carbon::parse($formation->pivot->date_obtention);
+                $dateRecyclage = $formation->pivot->date_recyclage ? Carbon::parse($formation->pivot->date_recyclage) : null;
+                
+                return [
+                    'nom' => $formation->nom,
+                    'date_obtention' => $dateObtention,
+                    'date_recyclage' => $dateRecyclage,
+                    'status' => $dateRecyclage && $dateRecyclage->isPast() ? 'expired' : 'valid'
+                ];
+            });
+        }
 
         // Informations de débogage
         $debug = [
             'plannings_count' => $plannings->count(),
             'has_locations' => !empty($workByLocation),
             'has_months' => !empty($workByMonth),
+            'formations_count' => $formations->count()
+        ];
+
+        // Convertir les données en format adapté pour Chart.js
+        $chartData = [
+            'locations' => [
+                'labels' => array_keys($workByLocation),
+                'data' => array_values($workByLocation)
+            ],
+            'months' => [
+                'labels' => array_map(function($month) {
+                    return Carbon::createFromFormat('Y-m', $month)->format('M Y');
+                }, array_keys($workByMonth)),
+                'data' => array_values($workByMonth)
+            ]
         ];
 
         return view('employes.stats', compact(
@@ -231,7 +272,8 @@ class EmployeController extends Controller
             'workByLocation',
             'workByMonth',
             'formations',
-            'debug'
+            'debug',
+            'chartData'
         ));
     }
 }
