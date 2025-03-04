@@ -144,7 +144,22 @@ class CongeController extends Controller
             ->orderBy('date_debut', 'desc')
             ->get();
 
-        return view('conges.mes-conges', compact('conges'));
+        // Récupérer les congés des autres employés de la même société
+        $autresConges = Conge::query()
+            ->with('employe')
+            ->whereHas('employe', function($query) use ($employe) {
+                $query->where('societe_id', $employe->societe_id)
+                      ->where('id', '!=', $employe->id);
+            })
+            ->where('statut', 'accepte')
+            ->where(function($query) {
+                $query->where('date_debut', '>=', now()->startOfMonth())
+                      ->orWhere('date_fin', '>=', now());
+            })
+            ->orderBy('date_debut')
+            ->get();
+
+        return view('conges.mes-conges', compact('conges', 'autresConges'));
     }
 
     public function demandeConge(Request $request)
