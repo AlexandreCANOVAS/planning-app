@@ -48,6 +48,17 @@
                                                         </div>
                                                     </div>
                                                     <div class="flex items-center space-x-2">
+                                                        <a href="{{ route('plannings.export-pdf', [
+                                                            'employe_id' => $employeeId,
+                                                            'mois' => Carbon\Carbon::createFromFormat('Y-m', $yearMonth)->format('m'),
+                                                            'annee' => Carbon\Carbon::createFromFormat('Y-m', $yearMonth)->format('Y')
+                                                        ]) }}" 
+                                                        class="text-indigo-600 hover:text-indigo-800"
+                                                        title="Télécharger le planning en PDF">
+                                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                                            </svg>
+                                                        </a>
                                                         <a href="{{ route('plannings.calendar', [
                                                             'employe_id' => $employeeId,
                                                             'mois' => Carbon\Carbon::createFromFormat('Y-m', $yearMonth)->format('m'),
@@ -88,34 +99,53 @@
     </div>
 
     <div class="mt-6 px-4 py-3 bg-gray-50 text-right sm:px-6">
-        <form action="{{ route('plannings.export') }}" method="POST" class="inline-block">
-            @csrf
+        <form action="{{ route('plannings.export-pdf', ['employe_id' => ':employe_id', 'mois' => ':mois', 'annee' => ':annee']) }}" method="GET" class="inline-block" id="exportForm">
             <div class="flex items-center justify-end gap-4">
-                <select name="employe_id" class="mt-1 block w-64 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
+                <select name="employe_id" class="mt-1 block w-64 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required onchange="updateExportUrl()">
                     <option value="">Sélectionner un employé</option>
                     @foreach($employes as $employe)
                         <option value="{{ $employe->id }}">{{ $employe->nom }} {{ $employe->prenom }}</option>
                     @endforeach
                 </select>
 
-                <select name="mois" class="mt-1 block w-40 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
+                <select name="mois" class="mt-1 block w-40 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required onchange="updateExportUrl()">
                     @for($m = 1; $m <= 12; $m++)
-                        <option value="{{ $m }}" {{ $m == date('n') ? 'selected' : '' }}>
-                            {{ \Carbon\Carbon::create(null, $m, 1)->locale('fr')->isoFormat('MMMM') }}
+                        <option value="{{ $m }}" {{ $m == now()->month ? 'selected' : '' }}>
+                            {{ \Carbon\Carbon::create(null, $m, 1)->locale('fr')->monthName }}
                         </option>
                     @endfor
                 </select>
 
-                <select name="annee" class="mt-1 block w-32 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
-                    @for($y = date('Y') - 1; $y <= date('Y') + 1; $y++)
-                        <option value="{{ $y }}" {{ $y == date('Y') ? 'selected' : '' }}>{{ $y }}</option>
+                <select name="annee" class="mt-1 block w-32 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required onchange="updateExportUrl()">
+                    @for($y = now()->year - 1; $y <= now()->year + 1; $y++)
+                        <option value="{{ $y }}" {{ $y == now()->year ? 'selected' : '' }}>{{ $y }}</option>
                     @endfor
                 </select>
 
                 <button type="submit" class="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                    </svg>
                     Télécharger PDF
                 </button>
             </div>
         </form>
     </div>
+
+    <script>
+    function updateExportUrl() {
+        const form = document.getElementById('exportForm');
+        const employe = form.querySelector('[name="employe_id"]').value;
+        const mois = form.querySelector('[name="mois"]').value;
+        const annee = form.querySelector('[name="annee"]').value;
+        
+        if (employe && mois && annee) {
+            const url = form.action
+                .replace(':employe_id', employe)
+                .replace(':mois', mois)
+                .replace(':annee', annee);
+            form.action = url;
+        }
+    }
+    </script>
 </x-app-layout>

@@ -87,6 +87,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/home', [PlanningController::class, 'calendarIndex'])->name('home');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
+    // Route d'export PDF accessible à tous les utilisateurs authentifiés
+    Route::get('/plannings/export-pdf/{employe_id}/{mois}/{annee}', [PlanningController::class, 'exportPdf'])
+        ->name('plannings.export-pdf');
+        
     // Routes pour les employeurs
     Route::middleware(['auth', CheckEmployeur::class])->group(function () {
         Route::resource('societes', SocieteController::class)->only(['create', 'store', 'edit', 'update']);
@@ -110,7 +114,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Routes des plannings
         Route::prefix('plannings')->group(function () {
             Route::get('/calendar', [PlanningController::class, 'calendar'])->name('plannings.calendar');
-            Route::match(['get', 'post'], '/create-monthly-calendar', [PlanningController::class, 'createMonthlyCalendar'])
+            Route::get('/download-pdf', [PlanningController::class, 'downloadPdf'])->name('plannings.download-pdf');
+            Route::get('/create-monthly-calendar', [PlanningController::class, 'createMonthlyCalendar'])
                 ->name('plannings.create_monthly')
                 ->withoutMiddleware([CheckEmployeur::class]);
             Route::post('/store-monthly', [PlanningController::class, 'storeMonthly'])
@@ -122,8 +127,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/view-monthly-calendar/{employe_id}/{mois}/{annee}', [PlanningController::class, 'viewMonthlyCalendar'])
                 ->name('plannings.view-monthly-calendar')
                 ->withoutMiddleware([CheckEmployeur::class]);
-            Route::get('/download-pdf/{employe_id}/{mois}/{annee}', [PlanningController::class, 'downloadPdf'])
-                ->name('plannings.download-pdf');
             Route::delete('/destroy-monthly/{employe_id}/{year_month}', [PlanningController::class, 'destroyMonthly'])
                 ->name('plannings.destroy_monthly');
             Route::post('/remplir-jours-non-travailles/{employe_id}/{annee}/{mois}', [PlanningController::class, 'remplirJoursNonTravailles'])
@@ -178,10 +181,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Routes pour les employés
     Route::middleware(CheckEmploye::class)->prefix('employe')->name('employe.')->group(function () {
         // Routes des plannings
-        Route::get('/plannings', [PlanningController::class, 'employeIndex'])->name('plannings.index');
+        Route::get('/plannings', [PlanningController::class, 'index'])->name('plannings.index');
         Route::get('/plannings/calendar', [PlanningController::class, 'employeCalendar'])->name('plannings.calendar');
-        Route::get('/plannings/download-pdf', [PlanningController::class, 'downloadPdf'])->name('plannings.download-pdf');
+        Route::get('/plannings/download-pdf', [PlanningController::class, 'exportPdfEmploye'])->name('plannings.download-pdf');
         Route::get('/plannings/collegue/{employe}/calendar', [PlanningController::class, 'voirPlanningCollegueCalendar'])->name('plannings.collegue');
+        Route::post('/plannings/export-pdf-employe', [PlanningController::class, 'exportPdfEmploye'])->name('plannings.export-pdf-employe');
         
         // Routes des congés
         Route::prefix('conges')->name('conges.')->group(function () {
@@ -191,6 +195,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('/demande', [CongeController::class, 'demandeConge'])->name('demande');
             Route::delete('/{conge}/annuler', [CongeController::class, 'annulerConge'])->name('annuler');
         });
+        
+        // Route pour l'export du planning mensuel employé
+        Route::post('/plannings/export-mensuel', [PlanningController::class, 'exportMensuel'])->name('plannings.export');
     });
 
     // Routes communes

@@ -34,7 +34,7 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="w-1/3 flex items-end">
+                <div class="w-1/3 flex items-end space-x-2">
                     <button type="button" onclick="createPlanning()" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
                         Créer un planning
                     </button>
@@ -42,7 +42,7 @@
             </div>
 
             <!-- Récapitulatif des plannings -->
-            <div class="mt-8">
+            <div class="mt-8 flex flex-col">
                 <h3 class="text-lg font-semibold mb-4">Récapitulatif des Plannings - {{ $anneeActuelle }}</h3>
                 
                 @php
@@ -93,18 +93,32 @@
                                                     @endforeach
                                                 </td>
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                                                    <a href="{{ url('/plannings/view-monthly-calendar/'.$stat['employe']->id.'/'.$mois.'/'.$anneeActuelle) }}" 
-                                                        class="text-blue-600 hover:text-blue-900 mr-4">
-                                                        <i class="fas fa-eye"></i> Voir
-                                                    </a>
-                                                    <a href="#" onclick="modifierPlanning('{{ $stat['employe']->id }}', '{{ $mois }}', '{{ $anneeActuelle }}')" 
-                                                        class="text-blue-600 hover:text-blue-900 mr-4">
-                                                        <i class="fas fa-edit"></i> Modifier
-                                                    </a>
-                                                    <button onclick="supprimerPlanning('{{ $stat['employe']->id }}', '{{ str_pad($mois, 2, '0', STR_PAD_LEFT) }}', '{{ $anneeActuelle }}')" 
-                                                        class="text-red-600 hover:text-red-900">
-                                                        <i class="fas fa-trash"></i> Supprimer
-                                                    </button>
+                                                    <div class="flex items-center space-x-3">
+                                                        <a href="{{ url('/plannings/view-monthly-calendar/'.$stat['employe']->id.'/'.$moisActuel.'/'.$anneeActuelle) }}" 
+                                                            class="text-blue-600 hover:text-blue-900">
+                                                            <i class="fas fa-eye"></i> Voir
+                                                        </a>
+                                                        <a href="#" onclick="modifierPlanning('{{ $stat['employe']->id }}', '{{ $moisActuel }}', '{{ $anneeActuelle }}')" 
+                                                            class="text-blue-600 hover:text-blue-900">
+                                                            <i class="fas fa-edit"></i> Modifier
+                                                        </a>
+                                                        <a href="{{ route('plannings.export-pdf', [
+                                                            'employe_id' => $stat['employe']->id,
+                                                            'mois' => $moisActuel,
+                                                            'annee' => $anneeActuelle
+                                                        ]) }}" 
+                                                        class="text-indigo-600 hover:text-indigo-800"
+                                                        title="Télécharger le planning en PDF"
+                                                        download>
+                                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                                            </svg>
+                                                        </a>
+                                                        <button onclick="supprimerPlanning('{{ $stat['employe']->id }}', '{{ str_pad($moisActuel, 2, '0', STR_PAD_LEFT) }}', '{{ $anneeActuelle }}')" 
+                                                            class="text-red-600 hover:text-red-900">
+                                                            <i class="fas fa-trash"></i> Supprimer
+                                                        </button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         @endforeach

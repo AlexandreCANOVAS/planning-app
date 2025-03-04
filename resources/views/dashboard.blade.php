@@ -1,169 +1,215 @@
 <x-app-layout>
-    <x-slot name="header">
-        <div class="flex justify-between items-center">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                {{ __('Tableau de bord') }}
-            </h2>
-            <div class="flex space-x-4">
-                <span class="text-gray-500">{{ now()->format('d/m/Y') }}</span>
+    <div class="min-h-screen bg-gray-50">
+        <!-- En-tête avec informations principales -->
+        <header class="bg-white shadow-sm">
+            <div class="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
+                <div class="md:flex md:items-center md:justify-between">
+                    <div class="min-w-0 flex-1">
+                        <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">
+                            Bonjour, {{ auth()->user()->name }}
+                        </h2>
+                        <div class="mt-1 flex flex-col sm:mt-0 sm:flex-row sm:flex-wrap sm:space-x-6">
+                            <div class="mt-2 flex items-center text-sm text-gray-500">
+                                <svg class="mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M10 8a3 3 0 100-6 3 3 0 000 6zM3.465 14.493a1.23 1.23 0 00.41 1.412A9.957 9.957 0 0010 18c2.31 0 4.438-.784 6.131-2.1.43-.333.604-.903.408-1.41-1.15-3.004-3.47-5.49-6.539-5.49-3.07 0-5.39 2.486-6.535 5.493z"/>
+                                </svg>
+                                {{ auth()->user()->email }}
+                            </div>
+                            <div class="mt-2 flex items-center text-sm text-gray-500">
+                                <svg class="mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+                                </svg>
+                                Dernière connexion : {{ now()->format('d/m/Y H:i') }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
-    </x-slot>
+        </header>
 
-    <div class="py-6">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            @if(auth()->user()->role === 'employeur')
-                @if(auth()->user()->societe)
-                    <!-- En-tête société -->
-                    <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
-                        <div class="flex justify-between items-center">
-                            <div>
-                                <h3 class="text-2xl font-bold text-gray-800">{{ auth()->user()->societe->nom }}</h3>
-                                <p class="text-gray-500">{{ auth()->user()->email }}</p>
-                            </div>
-                            <a href="{{ route('societes.edit', auth()->user()->societe) }}" class="text-blue-600 hover:text-blue-800">
-                                <i class="fas fa-cog"></i> Paramètres
-                            </a>
-                        </div>
-                    </div>
-
-                    <!-- Statistiques principales -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-                        <div class="bg-white rounded-lg shadow-sm p-6 border-l-4 border-blue-500">
+        <main class="py-6">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <!-- Statistiques principales -->
+                <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                    <!-- Heures travaillées -->
+                    <div class="bg-white overflow-hidden shadow rounded-lg">
+                        <div class="p-5">
                             <div class="flex items-center">
-                                <div class="p-3 rounded-full bg-blue-100 mr-4">
-                                    <i class="fas fa-users text-blue-500"></i>
+                                <div class="flex-shrink-0">
+                                    <svg class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
                                 </div>
-                                <div>
-                                    <p class="text-sm text-gray-500">Employés</p>
-                                    <p class="text-2xl font-bold">{{ auth()->user()->societe->employes->count() }}</p>
+                                <div class="ml-5 w-0 flex-1">
+                                    <dl>
+                                        <dt class="text-sm font-medium text-gray-500 truncate">
+                                            Heures travaillées ce mois
+                                        </dt>
+                                        <dd class="flex items-baseline">
+                                            <div class="text-2xl font-semibold text-gray-900">
+                                                43.50h
+                                            </div>
+                                        </dd>
+                                    </dl>
                                 </div>
                             </div>
                         </div>
-
-                        <div class="bg-white rounded-lg shadow-sm p-6 border-l-4 border-green-500">
-                            <div class="flex items-center">
-                                <div class="p-3 rounded-full bg-green-100 mr-4">
-                                    <i class="fas fa-calendar text-green-500"></i>
-                                </div>
-                                <div>
-                                    <p class="text-sm text-gray-500">Plannings actifs</p>
-                                    <p class="text-2xl font-bold">{{ auth()->user()->societe->plannings()->whereMonth('date', now()->month)->count() }}</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="bg-white rounded-lg shadow-sm p-6 border-l-4 border-yellow-500">
-                            <div class="flex items-center">
-                                <div class="p-3 rounded-full bg-yellow-100 mr-4">
-                                    <i class="fas fa-clock text-yellow-500"></i>
-                                </div>
-                                <div>
-                                    <p class="text-sm text-gray-500">Heures ce mois</p>
-                                    <p class="text-2xl font-bold">{{ auth()->user()->societe->plannings()->whereMonth('date', now()->month)->sum('heures_travaillees') }}</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="bg-white rounded-lg shadow-sm p-6 border-l-4 border-red-500">
-                            <div class="flex items-center">
-                                <div class="p-3 rounded-full bg-red-100 mr-4">
-                                    <i class="fas fa-umbrella-beach text-red-500"></i>
-                                </div>
-                                <div>
-                                    <p class="text-sm text-gray-500">Congés en attente</p>
-                                    <p class="text-2xl font-bold">{{ auth()->user()->societe->conges()->where('statut', 'en_attente')->count() }}</p>
-                                </div>
+                        <div class="bg-gray-50 px-5 py-3">
+                            <div class="text-sm">
+                                <a href="{{ route('employe.plannings.index') }}" class="font-medium text-blue-700 hover:text-blue-900">
+                                    Voir les détails →
+                                </a>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Actions rapides -->
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                        <div class="bg-white rounded-lg shadow-sm p-6">
-                            <h4 class="text-lg font-semibold mb-4">Actions rapides</h4>
-                            <div class="grid grid-cols-2 gap-4">
-                                <a href="{{ route('employes.create') }}" class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
-                                    <i class="fas fa-user-plus text-blue-500 mr-3"></i>
-                                    <span>Ajouter un employé</span>
-                                </a>
-                                <a href="{{ route('plannings.create_monthly') }}" class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
-                                    <i class="fas fa-calendar-plus text-green-500 mr-3"></i>
-                                    <span>Créer un planning mensuel</span>
-                                </a>
-                                <a href="{{ route('plannings.create') }}" class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
-                                    <i class="fas fa-calendar-plus text-green-500 mr-2"></i>
-                                    <span>Créer un planning</span>
-                                </a>
-                                <a href="{{ route('conges.create') }}" class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
-                                    <i class="fas fa-plus-circle text-yellow-500 mr-2"></i>
-                                    <span>Gérer les congés</span>
-                                </a>
-                                <a href="{{ route('comptabilite.index') }}" class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
-                                    <i class="fas fa-calculator text-red-500 mr-2"></i>
-                                    <span>Voir la comptabilité</span>
+                    <!-- Congés restants -->
+                    <div class="bg-white overflow-hidden shadow rounded-lg">
+                        <div class="p-5">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                    </svg>
+                                </div>
+                                <div class="ml-5 w-0 flex-1">
+                                    <dl>
+                                        <dt class="text-sm font-medium text-gray-500 truncate">
+                                            Congés restants
+                                        </dt>
+                                        <dd class="flex items-baseline">
+                                            <div class="text-2xl font-semibold text-gray-900">
+                                                0 jours
+                                            </div>
+                                        </dd>
+                                    </dl>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-gray-50 px-5 py-3">
+                            <div class="text-sm">
+                                <a href="{{ route('conges.index') }}" class="font-medium text-green-700 hover:text-green-900">
+                                    Gérer mes congés →
                                 </a>
                             </div>
                         </div>
                     </div>
-                @else
-                    <div class="bg-white rounded-lg shadow-sm p-8 text-center">
-                        <div class="max-w-md mx-auto">
-                            <i class="fas fa-building text-4xl text-gray-400 mb-4"></i>
-                            <h3 class="text-xl font-semibold mb-2">Bienvenue sur votre espace employeur</h3>
-                            <p class="text-gray-600 mb-6">Pour commencer, créez votre société pour pouvoir gérer vos employés et leurs plannings.</p>
-                            <a href="{{ route('societes.create') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700">
-                                Créer ma société
-                            </a>
+
+                    <!-- Prochain service -->
+                    <div class="bg-white overflow-hidden shadow rounded-lg">
+                        <div class="p-5">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    <svg class="h-6 w-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                </div>
+                                <div class="ml-5 w-0 flex-1">
+                                    <dl>
+                                        <dt class="text-sm font-medium text-gray-500 truncate">
+                                            Prochain service
+                                        </dt>
+                                        <dd class="flex items-baseline">
+                                            <div class="text-2xl font-semibold text-gray-900">
+                                                05/03/2025
+                                            </div>
+                                        </dd>
+                                    </dl>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-gray-50 px-5 py-3">
+                            <div class="text-sm">
+                                <a href="{{ route('employe.plannings.index') }}" class="font-medium text-purple-700 hover:text-purple-900">
+                                    Voir mon planning →
+                                </a>
+                            </div>
                         </div>
                     </div>
-                @endif
-            @else
-                <!-- Tableau de bord employé -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <!-- Carte Planning -->
-                    <div class="bg-white rounded-lg shadow-sm p-6">
-                        <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-lg font-semibold">Mon Planning</h3>
-                            <a href="{{ route('employe.plannings.index') }}" class="text-blue-600 hover:text-blue-800">
-                                <i class="fas fa-arrow-right"></i>
-                            </a>
+                </div>
+
+                <!-- Planning de la semaine -->
+                <div class="mt-8">
+                    <div class="bg-white shadow rounded-lg">
+                        <div class="px-4 py-5 sm:p-6">
+                            <h3 class="text-lg font-medium leading-6 text-gray-900">Mon planning de la semaine</h3>
+                            <div class="mt-5">
+                                <div class="flow-root">
+                                    <ul role="list" class="-mb-8">
+                                        <li>
+                                            <div class="relative pb-8">
+                                                <span class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200" aria-hidden="true"></span>
+                                                <div class="relative flex space-x-3">
+                                                    <div>
+                                                        <span class="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center ring-8 ring-white">
+                                                            <svg class="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
+                                                                <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
+                                                            </svg>
+                                                        </span>
+                                                    </div>
+                                                    <div class="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
+                                                        <div>
+                                                            <p class="text-sm text-gray-500">Service <span class="font-medium text-gray-900">9h30 - 17h30</span></p>
+                                                        </div>
+                                                        <div class="text-right text-sm whitespace-nowrap text-gray-500">
+                                                            <time datetime="2025-03-05">5 mars</time>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
                         </div>
-                        <p class="text-gray-600 mb-4">Consultez votre planning et vos horaires de travail.</p>
-                        <a href="{{ route('employe.plannings.index') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700">
-                            Voir mon planning
+                    </div>
+                </div>
+
+                <!-- Actions rapides -->
+                <div class="mt-8">
+                    <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">Actions rapides</h3>
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                        <a href="{{ route('employe.plannings.index') }}" class="relative rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm flex items-center space-x-3 hover:border-gray-400 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
+                            <div class="flex-shrink-0">
+                                <svg class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <span class="absolute inset-0" aria-hidden="true"></span>
+                                <p class="text-sm font-medium text-gray-900">Voir mon planning</p>
+                                <p class="text-sm text-gray-500">Consultez vos horaires</p>
+                            </div>
                         </a>
-                    </div>
 
-                    <!-- Carte Congés -->
-                    <div class="bg-white rounded-lg shadow-sm p-6">
-                        <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-lg font-semibold">Mes Congés</h3>
-                            <a href="{{ route('employe.mes-conges') }}" class="text-blue-600 hover:text-blue-800">
-                                <i class="fas fa-arrow-right"></i>
-                            </a>
-                        </div>
-                        <p class="text-gray-600 mb-4">Gérez vos demandes de congés et consultez leur statut.</p>
-                        <a href="{{ route('employe.mes-conges') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700">
-                            Gérer mes congés
+                        <a href="{{ route('conges.create') }}" class="relative rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm flex items-center space-x-3 hover:border-gray-400 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-green-500">
+                            <div class="flex-shrink-0">
+                                <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                </svg>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <span class="absolute inset-0" aria-hidden="true"></span>
+                                <p class="text-sm font-medium text-gray-900">Demander un congé</p>
+                                <p class="text-sm text-gray-500">Faites votre demande</p>
+                            </div>
                         </a>
-                    </div>
 
-                    <!-- Carte Profil -->
-                    <div class="bg-white rounded-lg shadow-sm p-6">
-                        <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-lg font-semibold">Mon Profil</h3>
-                            <a href="{{ route('profile.edit') }}" class="text-blue-600 hover:text-blue-800">
-                                <i class="fas fa-arrow-right"></i>
-                            </a>
-                        </div>
-                        <p class="text-gray-600 mb-4">Mettez à jour vos informations personnelles.</p>
-                        <a href="{{ route('profile.edit') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700">
-                            Modifier mon profil
+                        <a href="{{ route('employe.profile.show') }}" class="relative rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm flex items-center space-x-3 hover:border-gray-400 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-purple-500">
+                            <div class="flex-shrink-0">
+                                <svg class="h-6 w-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                </svg>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <span class="absolute inset-0" aria-hidden="true"></span>
+                                <p class="text-sm font-medium text-gray-900">Mon profil</p>
+                                <p class="text-sm text-gray-500">Gérez vos informations</p>
+                            </div>
                         </a>
                     </div>
                 </div>
-            @endif
-        </div>
+            </div>
+        </main>
     </div>
 </x-app-layout>

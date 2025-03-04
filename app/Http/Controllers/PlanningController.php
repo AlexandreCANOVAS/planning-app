@@ -656,61 +656,174 @@ class PlanningController extends Controller
 
     public function downloadPdf(Request $request)
     {
-        $user = auth()->user();
-        $employe_id = $request->get('employe_id');
-        $mois = $request->get('mois', now()->month);
-        $annee = $request->get('annee', now()->year);
-        
-        // Récupérer l'employé
-        $employe = Employe::where('id', $employe_id)
-            ->where('societe_id', $user->societe_id)
-            ->firstOrFail();
-
-        $startDate = Carbon::create($annee, $mois, 1);
-        $endDate = $startDate->copy()->endOfMonth();
-        
-        // Récupérer tous les plannings du mois
-        $plannings = Planning::where('employe_id', $employe->id)
-            ->where('societe_id', $user->societe_id)
-            ->whereBetween('date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
-            ->with('lieu')
-            ->orderBy('date')
-            ->orderBy('periode')  // Pour s'assurer que matin vient avant après-midi
-            ->get();
-
-        // Grouper les plannings par semaine
-        $planningsParSemaine = collect();
-        $currentDate = $startDate->copy()->startOfWeek(Carbon::MONDAY);
-        $endDate = $startDate->copy()->endOfMonth()->endOfWeek(Carbon::SUNDAY);
-
-        while ($currentDate <= $endDate) {
-            $weekStart = $currentDate->copy()->format('Y-m-d');
-            $weekPlannings = $plannings->filter(function($planning) use ($currentDate) {
-                $planningDate = Carbon::parse($planning->date);
-                return $planningDate->weekOfYear === $currentDate->weekOfYear;
-            });
-
-            if ($weekPlannings->isNotEmpty()) {
-                $planningsParSemaine[$weekStart] = $weekPlannings;
-            }
-
-            $currentDate->addWeek();
-        }
-
-        $pdf = PDF::loadView('exports.plannings', [
-            'employe' => $employe,
-            'planningsParSemaine' => $planningsParSemaine,
-            'date_debut' => $startDate->format('Y-m-d'),
-            'date_fin' => $endDate->format('Y-m-d')
+        $request->validate([
+            'employe_id' => 'required|exists:employes,id',
+            'mois' => 'required|integer|between:1,12',
+            'annee' => 'required|integer|min:2000'
         ]);
 
-        $filename = sprintf(
-            'planning_%s_%s_%s.pdf',
-            Str::slug($employe->nom_complet),
-            $startDate->locale('fr')->isoFormat('MMMM'),
-            $annee
-        );
+        $employe = Employe::findOrFail($request->employe_id);
+        
+        // Vérifier que l'employeur a accès à cet employé
+        if ($employe->societe_id !== auth()->user()->societe_id) {
+            abort(403, 'Vous n\'avez pas accès à cet employé');
+        }
 
+        // Créer la date à partir des paramètres
+        $date = Carbon::create($request->annee, $request->mois, 1);
+        
+        // Récupérer les plannings du mois
+        $plannings = Planning::where('employe_id', $request->employe_id)
+            ->whereYear('date', $request->annee)
+            ->whereMonth('date', $request->mois)
+            ->with(['lieu'])
+            ->orderBy('date')
+            ->orderBy('heure_debut')
+            ->get();
+
+        // Calculer le total des heures
+        $totalHeures = $plannings->sum('heures_travaillees');
+
+        // Générer le PDF
+        $pdf = PDF::loadView('pdf.planning-mensuel', [
+            'plannings' => $plannings,
+            'employe' => $employe,
+            'mois' => $date->locale('fr')->monthName,
+            'annee' => $request->annee,
+            'totalHeures' => $totalHeures
+        ]);
+
+        // Nom du fichier
+        $filename = "planning_{$employe->nom}_{$employe->prenom}_{$date->format('Y_m')}.pdf";
+
+        // Retourner le PDF pour téléchargement
+        return $pdf->download($filename);
+    }
+
+    public function exportPdfEmploye(Request $request)
+    {
+        // Validation des paramètres
+        $request->validate([
+            'mois' => 'required|integer|between:1,12',
+            'annee' => 'required|integer|min:2000'
+        ]);
+
+        $user = auth()->user();
+        $employe = $user->employe;
+        
+        // Créer la date à partir des paramètres
+        $date = Carbon::create($request->annee, $request->mois, 1);
+        
+        // Récupérer les plannings du mois
+        $plannings = Planning::where('employe_id', $employe->id)
+            ->where('societe_id', $user->societe_id)
+            ->whereYear('date', $request->annee)
+            ->whereMonth('date', $request->mois)
+            ->with(['lieu'])
+            ->orderBy('date')
+            ->orderBy('heure_debut')
+            ->get();
+
+        // Calculer le total des heures
+        $totalHeures = $plannings->sum('heures_travaillees');
+
+        // Générer le PDF
+        $pdf = PDF::loadView('pdf.planning-mensuel', [
+            'plannings' => $plannings,
+            'employe' => $employe,
+            'mois' => $date->locale('fr')->monthName,
+            'annee' => $request->annee,
+            'totalHeures' => $totalHeures
+        ]);
+
+        // Nom du fichier
+        $filename = "planning_{$employe->nom}_{$employe->prenom}_{$date->format('Y_m')}.pdf";
+
+        // Retourner le PDF pour téléchargement
+        return $pdf->download($filename);
+    }
+
+    public function exportPDF(Request $request, $employe_id, $mois, $annee)
+    {
+        try {
+            $employe = Employe::findOrFail($employe_id);
+            
+            // Créer la date
+            $date = Carbon::create($annee, $mois, 1);
+            
+            // Récupérer les plannings du mois
+            $plannings = Planning::where('employe_id', $employe_id)
+                ->whereYear('date', $annee)
+                ->whereMonth('date', $mois)
+                ->with(['lieu'])
+                ->orderBy('date')
+                ->orderBy('heure_debut')
+                ->get();
+
+            // Calculer le total des heures
+            $totalHeures = $plannings->sum('heures_travaillees');
+
+            // Générer le PDF
+            $pdf = PDF::loadView('pdf.planning-mensuel', [
+                'plannings' => $plannings,
+                'employe' => $employe,
+                'mois' => $date->locale('fr')->monthName,
+                'annee' => $annee,
+                'totalHeures' => $totalHeures
+            ]);
+
+            // Forcer le téléchargement
+            return response($pdf->output(), 200, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'attachment; filename="planning_' . $employe->nom . '_' . $employe->prenom . '_' . $date->format('m_Y') . '.pdf"',
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Erreur lors de la génération du PDF: ' . $e->getMessage());
+            return response()->json(['error' => 'Erreur lors de la génération du PDF'], 500);
+        }
+    }
+
+    public function exportMensuel(Request $request)
+    {
+        $request->validate([
+            'month' => 'required|date_format:Y-m'
+        ]);
+
+        $user = auth()->user();
+        $employe = $user->employe;
+        
+        // Extraire l'année et le mois
+        $date = Carbon::createFromFormat('Y-m', $request->month);
+        $year = $date->year;
+        $month = $date->month;
+
+        // Récupérer les plannings du mois
+        $plannings = Planning::where('employe_id', $employe->id)
+            ->where('societe_id', $user->societe_id)
+            ->whereYear('date', $year)
+            ->whereMonth('date', $month)
+            ->with(['lieu'])
+            ->orderBy('date')
+            ->orderBy('heure_debut')
+            ->get();
+
+        // Calculer le total des heures
+        $totalHeures = $plannings->sum('heures_travaillees');
+
+        // Générer le PDF
+        $pdf = PDF::loadView('pdf.planning-mensuel', [
+            'plannings' => $plannings,
+            'employe' => $employe,
+            'mois' => $date->locale('fr')->monthName,
+            'annee' => $year,
+            'totalHeures' => $totalHeures
+        ]);
+
+        // Nom du fichier
+        $filename = "planning_{$employe->nom}_{$employe->prenom}_{$date->format('Y_m')}.pdf";
+
+        // Retourner le PDF pour téléchargement
         return $pdf->download($filename);
     }
 
@@ -782,8 +895,7 @@ class PlanningController extends Controller
             ->where('societe_id', $user->societe_id)
             ->whereYear('date', $selectedYear)
             ->whereMonth('date', $selectedMonth)
-            ->with(['lieu:id,nom'])
-            ->select('id', 'date', 'heure_debut', 'heure_fin', 'lieu_id')
+            ->with(['lieu'])
             ->get()
             ->groupBy(function($planning) {
                 return $planning->date->format('Y-m-d');
