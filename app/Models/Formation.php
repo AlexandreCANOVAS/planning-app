@@ -12,12 +12,21 @@ class Formation extends Model
     protected $fillable = [
         'nom',
         'description',
+        'objectifs_pedagogiques',
+        'prerequis',
+        'duree_recommandee_heures',
+        'organisme_formateur',
+        'formateur_interne',
+        'cout',
         'duree_validite_mois',
         'societe_id',
     ];
 
     protected $casts = [
-        'duree_validite_mois' => 'integer'
+        'duree_validite_mois' => 'integer',
+        'duree_recommandee_heures' => 'integer',
+        'formateur_interne' => 'boolean',
+        'cout' => 'decimal:2'
     ];
 
     public function societe(): BelongsTo

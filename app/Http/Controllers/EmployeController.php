@@ -19,7 +19,7 @@ class EmployeController extends Controller
 {
     use AuthorizesRequests;
 
-    public function index()
+    public function index(Request $request)
     {
         $user = auth()->user();
         
@@ -27,14 +27,90 @@ class EmployeController extends Controller
             return redirect()->route('societes.create')
                 ->with('error', 'Vous devez d\'abord créer votre société.');
         }
-
-        $employes = Employe::with(['formations' => function($query) {
+        
+        // Récupérer le paramètre de recherche et le mode d'affichage
+        $search = $request->input('search');
+        $viewMode = $request->input('view_mode', 'grid'); // Par défaut: grille
+        
+        // Construire la requête de base
+        $query = Employe::with(['formations' => function($query) {
                 $query->select('formations.*', 'employe_formation.date_obtention', 'employe_formation.date_recyclage', 'employe_formation.commentaire');
             }])
-            ->where('societe_id', auth()->user()->societe_id)
-            ->paginate(9);
-
-        return view('employes.index', compact('employes'));
+            ->where('societe_id', auth()->user()->societe_id);
+        
+        // Appliquer le filtre de recherche par nom/prénom/email
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('nom', 'like', "%{$search}%")
+                  ->orWhere('prenom', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+        
+        // Ajuster le nombre d'employés par page selon le mode d'affichage
+        $perPage = $viewMode === 'list' ? 15 : 9;
+        
+        // Exécuter la requête avec pagination
+        try {
+            $employes = $query->paginate($perPage)->appends([
+                'search' => $search,
+                'view_mode' => $viewMode
+            ]);
+        } catch (\Exception $e) {
+            // En cas d'erreur, initialiser avec une collection vide paginée
+            $employes = new \Illuminate\Pagination\LengthAwarePaginator(
+                [], // items
+                0,  // total
+                $perPage, // perPage
+                1,  // currentPage
+                ['path' => request()->url(), 'query' => request()->query()]
+            );
+        }
+        
+        // Statistiques pour le tableau de bord
+        $societeId = auth()->user()->societe_id;
+        $now = Carbon::now();
+        
+        // Nombre total d'employés
+        $totalEmployes = Employe::where('societe_id', $societeId)->count();
+        
+        // Taux d'occupation moyen (employés avec plannings actifs / total)
+        $today = $now->format('Y-m-d');
+        $employesActifs = DB::table('employes')
+            ->join('plannings', 'employes.id', '=', 'plannings.employe_id')
+            ->where('employes.societe_id', $societeId)
+            ->where('plannings.date', '=', $today)
+            ->distinct('employes.id')
+            ->count('employes.id');
+            
+        $tauxOccupation = $totalEmployes > 0 ? round(($employesActifs / $totalEmployes) * 100) : 0;
+        
+        // Nombre de congés en cours et à venir
+        $today = $now->format('Y-m-d');
+        $congesEnCours = DB::table('conges')
+            ->join('employes', 'conges.employe_id', '=', 'employes.id')
+            ->where('employes.societe_id', $societeId)
+            ->where('conges.date_debut', '<=', $today)
+            ->where('conges.date_fin', '>=', $today)
+            ->where('conges.statut', 'accepte')
+            ->count();
+            
+        $congesAVenir = DB::table('conges')
+            ->join('employes', 'conges.employe_id', '=', 'employes.id')
+            ->where('employes.societe_id', $societeId)
+            ->where('conges.date_debut', '>', $today)
+            ->where('conges.statut', 'accepte')
+            ->count();
+        
+        return view('employes.index', compact(
+            'employes', 
+            'search', 
+            'viewMode',
+            'totalEmployes', 
+            'tauxOccupation', 
+            'congesEnCours', 
+            'congesAVenir'
+        ));
     }
 
     public function create()
@@ -105,6 +181,8 @@ class EmployeController extends Controller
     public function edit(Employe $employe)
     {
         $this->authorize('update', $employe);
+        // Charger explicitement la relation formations avec l'employé
+        $employe->load('formations');
         $formations = Formation::where('societe_id', auth()->user()->societe_id)->get();
         return view('employes.edit', compact('employe', 'formations'));
     }

@@ -128,7 +128,7 @@
                                                            id="formation_{{ $formation->id }}"
                                                            name="formations[{{ $formation->id }}][selected]" 
                                                            value="1"
-                                                           {{ $employe->formations->contains($formation->id) ? 'checked' : '' }}
+                                                           {{ ($employe->formations && $employe->formations->contains($formation->id)) ? 'checked' : '' }}
                                                            class="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 transition duration-150">
                                                 </div>
                                                 <div class="ml-4 flex-1">
@@ -151,7 +151,7 @@
                                                                 <input type="date" 
                                                                        id="date_obtention_{{ $formation->id }}"
                                                                        name="formations[{{ $formation->id }}][date_obtention]"
-                                                                       value="{{ $employe->formations->find($formation->id)?->pivot?->date_obtention }}"
+                                                                       value="{{ ($employe->formations && $employe->formations->find($formation->id)) ? $employe->formations->find($formation->id)->pivot->date_obtention : '' }}"
                                                                        class="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent">
                                                             </div>
                                                         </div>
@@ -167,7 +167,7 @@
                                                                 <input type="date"
                                                                        id="date_recyclage_{{ $formation->id }}"
                                                                        name="formations[{{ $formation->id }}][date_recyclage]"
-                                                                       value="{{ $employe->formations->find($formation->id)?->pivot?->date_recyclage }}"
+                                                                       value="{{ $employe->formations && $employe->formations->find($formation->id) ? $employe->formations->find($formation->id)->pivot->date_recyclage : '' }}"
                                                                        class="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent">
                                                             </div>
                                                         </div>
@@ -185,7 +185,7 @@
                                                                       name="formations[{{ $formation->id }}][commentaire]"
                                                                       class="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
                                                                       rows="2"
-                                                                      placeholder="Ajoutez un commentaire sur cette formation...">{{ $employe->formations->find($formation->id)?->pivot?->commentaire }}</textarea>
+                                                                      placeholder="Ajoutez un commentaire sur cette formation...">{{ ($employe->formations !== null && $employe->formations->find($formation->id)) ? $employe->formations->find($formation->id)->pivot->commentaire : '' }}</textarea>
                                                         </div>
                                                     </div>
                                                 </div>

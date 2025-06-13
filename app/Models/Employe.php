@@ -113,4 +113,95 @@ class Employe extends Model
         
         return $stats;
     }
-} 
+    
+    /**
+     * Détermine le statut actuel de l'employé (disponible, en congé, etc.)
+     */
+    public function getStatutActuelAttribute()
+    {
+        // Vérifier si l'employé est en congé aujourd'hui
+        $congeAujourdhui = $this->conges()
+            ->where('statut', 'accepte')
+            ->where('date_debut', '<=', now()->format('Y-m-d'))
+            ->where('date_fin', '>=', now()->format('Y-m-d'))
+            ->first();
+            
+        if ($congeAujourdhui) {
+            return 'en_conge';
+        }
+        
+        // Vérifier si l'employé a un planning aujourd'hui
+        $planningAujourdhui = $this->plannings()
+            ->whereDate('date', now()->format('Y-m-d'))
+            ->first();
+            
+        if ($planningAujourdhui) {
+            return 'en_service';
+        }
+        
+        return 'disponible';
+    }
+    
+    /**
+     * Calcule la charge de travail de l'employé (pourcentage des heures travaillées par rapport à une semaine standard)
+     */
+    public function getChargeDeTravailAttribute()
+    {
+        // Calculer le nombre d'heures travaillées cette semaine
+        $debutSemaine = now()->startOfWeek()->format('Y-m-d');
+        $finSemaine = now()->endOfWeek()->format('Y-m-d');
+        
+        $planningsSemaine = $this->plannings()
+            ->whereBetween('date', [$debutSemaine, $finSemaine])
+            ->get();
+            
+        $heuresTravaillees = 0;
+        
+        foreach ($planningsSemaine as $planning) {
+            // Calculer les heures entre heure_debut et heure_fin
+            if ($planning->heure_debut && $planning->heure_fin) {
+                // Utiliser parse qui est plus flexible avec les formats d'heure
+                try {
+                    $debut = \Carbon\Carbon::parse($planning->heure_debut);
+                    $fin = \Carbon\Carbon::parse($planning->heure_fin);
+                    
+                    // Utiliser diffInHours avec le paramètre absolu à true pour avoir une valeur positive
+                    $heuresTravaillees += $debut->diffInHours($fin, false);
+                } catch (\Exception $e) {
+                    // En cas d'erreur de parsing, on ignore cette entrée
+                    continue;
+                }
+            }
+        }
+        
+        // Une semaine standard est de 35 heures
+        $heuresStandard = 35;
+        
+        return min(100, round(($heuresTravaillees / $heuresStandard) * 100));
+    }
+    
+    /**
+     * Calcule la progression des formations de l'employé
+     */
+    public function getProgressionFormationsAttribute()
+    {
+        // Si l'employé n'a pas de formations, retourner 0
+        if ($this->formations->isEmpty()) {
+            return 0;
+        }
+        
+        $formationsAJour = 0;
+        $totalFormations = $this->formations->count();
+        
+        foreach ($this->formations as $formation) {
+            // Vérifier si la formation est à jour (pas de date de recyclage ou date de recyclage future)
+            $dateRecyclage = $formation->pivot->date_recyclage;
+            
+            if (!$dateRecyclage || \Carbon\Carbon::parse($dateRecyclage)->isFuture()) {
+                $formationsAJour++;
+            }
+        }
+        
+        return round(($formationsAJour / $totalFormations) * 100);
+    }
+}
