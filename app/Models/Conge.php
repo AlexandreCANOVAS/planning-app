@@ -8,6 +8,15 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Conge extends Model
 {
     use HasFactory;
+    
+    /**
+     * Les statuts possibles pour une demande de congé
+     */
+    const STATUTS = [
+        'en_attente' => 'En attente',
+        'accepte' => 'Accepté',
+        'refuse' => 'Refusé'
+    ];
 
     protected $fillable = [
         'employe_id',
@@ -26,14 +35,7 @@ class Conge extends Model
         'duree' => 'decimal:1'
     ];
 
-    /**
-     * Les statuts possibles pour une demande de congé
-     */
-    const STATUTS = [
-        'en_attente' => 'En attente',
-        'accepte' => 'Accepté',
-        'refuse' => 'Refusé'
-    ];
+    // Les statuts sont définis comme constante plus haut dans le fichier
 
     /**
      * Relation avec l'employé
@@ -73,5 +75,36 @@ class Conge extends Model
     public function isRefuse(): bool
     {
         return $this->statut === 'refuse';
+    }
+    
+    /**
+     * Relation avec l'historique des modifications de statut
+     */
+    public function historique()
+    {
+        return $this->hasMany(CongeHistory::class)->orderBy('created_at', 'desc');
+    }
+    
+    /**
+     * Vérifie s'il y a des chevauchements avec d'autres congés
+     */
+    public function chevauchements()
+    {
+        if (!$this->employe) {
+            return collect();
+        }
+        
+        return Conge::where('employe_id', '!=', $this->employe_id)
+            ->where(function($query) {
+                $query->whereBetween('date_debut', [$this->date_debut, $this->date_fin])
+                    ->orWhereBetween('date_fin', [$this->date_debut, $this->date_fin])
+                    ->orWhere(function($q) {
+                        $q->where('date_debut', '<=', $this->date_debut)
+                          ->where('date_fin', '>=', $this->date_fin);
+                    });
+            })
+            ->where('statut', 'accepte')
+            ->with('employe')
+            ->get();
     }
 } 

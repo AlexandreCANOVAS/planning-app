@@ -1,5 +1,32 @@
 @extends('layouts.app')
 
+@push('styles')
+<style>
+    .calendar-cell {
+        min-height: 100px;
+        transition: background-color 0.2s ease;
+    }
+    .calendar-cell:hover {
+        cursor: pointer;
+    }
+    .calendar-cell.selected {
+        background-color: #fef08a !important; /* yellow-200 */
+        border: 2px solid #eab308 !important; /* yellow-500 */
+    }
+    .calendar-cell.has-planning {
+        background-color: #dbeafe !important; /* blue-100 */
+    }
+    .calendar-cell.modified {
+        background-color: #fee2e2 !important; /* red-100 */
+        border: 2px solid #ef4444 !important; /* red-500 */
+    }
+    .modified-text {
+        color: #dc2626 !important; /* red-600 */
+        font-weight: bold;
+    }
+</style>
+@endpush
+
 @section('content')
 @php
 use App\Models\Lieu;
@@ -40,6 +67,14 @@ use App\Models\Lieu;
                         class="px-4 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600 transition-colors duration-200"
                     >
                         Modifier le planning
+                    </button>
+                    <button 
+                        type="button" 
+                        id="exportPdfBtn"
+                        onclick="exportPdfWithModifications()"
+                        class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors duration-200"
+                    >
+                        Exporter PDF avec modifications
                     </button>
                     <a href="{{ route('plannings.calendar') }}" 
                        class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors duration-200">
@@ -131,8 +166,9 @@ use App\Models\Lieu;
                 @endwhile
             </div>
 
-            <!-- Bouton de création -->
-            <div class="mt-4 flex justify-end">
+            <!-- Boutons d'action -->
+            <div class="mt-4 flex justify-end items-center">
+                <!-- Bouton de création -->
                 <button type="button" onclick="creerPlanning()" 
                     class="inline-flex items-center px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
                     id="btnCreerPlanning"
@@ -247,11 +283,82 @@ use App\Models\Lieu;
 
 @push('scripts')
 <script>
+    // Variables globales
+    let selectedDates = [];
+    let employeId = {{ $employe->id }};
+    let selectedLieuId = null;
+    let temporaryPlannings = {};
+    let modifiedPlanningIds = []; // Pour suivre les IDs des plannings modifiés
+    
+    // Fonctions globales pour être accessibles depuis les attributs onclick
+    window.toggleDateSelection = function(cell) {
+        console.log('toggleDateSelection called', cell);
+        
+        // Vérifier si la cellule a déjà un planning
+        if (cell.classList.contains('has-planning')) {
+            console.log('Cell has planning, allowing selection');
+            // Permettre la sélection sans confirmation
+        }
+        
+        const date = cell.dataset.date;
+        console.log('Cell date:', date);
+        console.log('Current classes:', [...cell.classList]);
+        
+        // Si la cellule est déjà sélectionnée, la désélectionner
+        if (cell.classList.contains('selected')) {
+            console.log('Deselecting cell');
+            cell.classList.remove('selected');
+            cell.style.backgroundColor = '#ffffff'; // blanc
+            cell.style.border = '1px solid #e5e7eb'; // gris clair
+            
+            // Retirer la date de la liste des dates sélectionnées
+            const index = selectedDates.indexOf(date);
+            if (index > -1) {
+                selectedDates.splice(index, 1);
+            }
+        } else {
+            // Sélectionner la cellule
+            console.log('Selecting cell');
+            cell.classList.add('selected');
+            cell.style.backgroundColor = '#fef08a'; // jaune
+            cell.style.border = '2px solid #eab308'; // jaune foncé
+            
+            // Ajouter la date à la liste des dates sélectionnées
+            if (!selectedDates.includes(date)) {
+                selectedDates.push(date);
+            }
+        }
+        
+        console.log('Selected dates:', selectedDates);
+        
+        // Si au moins une date est sélectionnée, afficher le bouton pour remplir les plannings
+        const btnFillPlanning = document.getElementById('btnFillPlanning');
+        if (btnFillPlanning) {
+            btnFillPlanning.classList.toggle('hidden', selectedDates.length === 0);
+            console.log('Button visibility updated, hidden:', selectedDates.length === 0);
+        } else {
+            console.error('Button with ID btnFillPlanning not found');
+        }
+    };
+    
+    window.showForm = function() {
+        document.getElementById('planningForm').classList.remove('hidden');
+    };
+    
+    window.closeForm = function() {
+        document.getElementById('planningForm').classList.add('hidden');
+        document.getElementById('lieu_id').value = '';
+        document.querySelector('input[name="type_horaire"][value="simple"]').checked = true;
+        toggleHoraires();
+    };
+    
+    window.toggleHoraires = function() {
+        const isCompose = document.querySelector('input[name="type_horaire"]:checked').value === 'compose';
+        document.getElementById('horaires_simples').classList.toggle('hidden', isCompose);
+        document.getElementById('horaires_composes').classList.toggle('hidden', !isCompose);
+    };
+    
     document.addEventListener('DOMContentLoaded', function() {
-        let selectedDates = [];
-        let employeId = {{ $employe->id }};
-        let selectedLieuId = null;
-        let temporaryPlannings = {};
 
         // Initialiser les plannings existants
         @foreach($planningsByDate as $date => $dayPlannings)
@@ -289,49 +396,110 @@ use App\Models\Lieu;
             @endif
         @endforeach
 
-        window.toggleHoraires = function() {
-            const isCompose = document.querySelector('input[name="type_horaire"]:checked').value === 'compose';
-            document.getElementById('horaires_simples').classList.toggle('hidden', isCompose);
-            document.getElementById('horaires_composes').classList.toggle('hidden', !isCompose);
-        };
-
-        window.showForm = function() {
-            document.getElementById('planningForm').classList.remove('hidden');
-        };
-
-        window.closeForm = function() {
-            document.getElementById('planningForm').classList.add('hidden');
-            document.getElementById('lieu_id').value = '';
-            document.querySelector('input[name="type_horaire"][value="simple"]').checked = true;
-            toggleHoraires();
-        };
-
-        window.toggleDateSelection = function(cell) {
-            const date = cell.dataset.date;
-            if (selectedDates.includes(date)) {
-                selectedDates = selectedDates.filter(d => d !== date);
-                cell.classList.remove('selected', 'bg-blue-200');
-            } else {
-                selectedDates.push(date);
-                cell.classList.add('selected', 'bg-blue-200');
-            }
-
-            document.querySelector('button[onclick="showForm()"]').disabled = selectedDates.length === 0;
-        };
-
+        // Initialisation des événements au chargement de la page
         document.getElementById('lieu_id').addEventListener('change', function() {
             selectedLieuId = this.value;
         });
+        
+        // Initialiser les horaires
+        toggleHoraires();
+        
+        // Désactiver le bouton d'export PDF au chargement
+        document.getElementById('exportPdfBtn').classList.add('opacity-50');
+        document.getElementById('exportPdfBtn').disabled = true;
 
+        // Fonction pour exporter le PDF avec les modifications en rouge
+        window.exportPdfWithModifications = function() {
+            console.log('exportPdfWithModifications called');
+            console.log('modifiedPlanningIds:', modifiedPlanningIds);
+            
+            if (modifiedPlanningIds.length === 0) {
+                alert('Aucune modification n\'a été effectuée');
+                return;
+            }
+            
+            // Créer un formulaire temporaire pour soumettre les données
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '{{ route("plannings.export-pdf-with-modifications") }}';
+            form.target = '_blank'; // Ouvrir dans un nouvel onglet
+            
+            // Ajouter le token CSRF
+            const csrfToken = document.createElement('input');
+            csrfToken.type = 'hidden';
+            csrfToken.name = '_token';
+            csrfToken.value = '{{ csrf_token() }}';
+            form.appendChild(csrfToken);
+            
+            // Ajouter l'ID de l'employé
+            const employeIdInput = document.createElement('input');
+            employeIdInput.type = 'hidden';
+            employeIdInput.name = 'employe_id';
+            employeIdInput.value = employeId;
+            form.appendChild(employeIdInput);
+            
+            // Ajouter le mois et l'année
+            const moisInput = document.createElement('input');
+            moisInput.type = 'hidden';
+            moisInput.name = 'mois';
+            moisInput.value = {{ $mois }};
+            form.appendChild(moisInput);
+            
+            const anneeInput = document.createElement('input');
+            anneeInput.type = 'hidden';
+            anneeInput.name = 'annee';
+            anneeInput.value = {{ $annee }};
+            form.appendChild(anneeInput);
+            
+            // Ajouter les IDs des plannings modifiés
+            const modifiedPlanningsInput = document.createElement('input');
+            modifiedPlanningsInput.type = 'hidden';
+            modifiedPlanningsInput.name = 'modified_plannings';
+            modifiedPlanningsInput.value = JSON.stringify(modifiedPlanningIds);
+            form.appendChild(modifiedPlanningsInput);
+            
+            // Ajouter le formulaire au document et le soumettre
+            document.body.appendChild(form);
+            form.submit();
+            document.body.removeChild(form);
+        };
+        
         window.savePlanning = function() {
+            console.log('savePlanning called');
+            console.log('selectedDates:', selectedDates);
+            console.log('selectedLieuId:', selectedLieuId);
+            
             if (!selectedLieuId) {
                 alert('Veuillez sélectionner un lieu de travail');
                 return;
             }
 
+            // Vérifier si des dates sont sélectionnées
             if (selectedDates.length === 0) {
-                alert('Veuillez sélectionner au moins un jour');
-                return;
+                // Essayer de récupérer les dates sélectionnées directement depuis le DOM
+                const selectedCells = document.querySelectorAll('.calendar-cell.selected');
+                console.log('Selected cells found in DOM:', selectedCells.length);
+                
+                if (selectedCells.length > 0) {
+                    // Réinitialiser selectedDates
+                    selectedDates = [];
+                    
+                    // Ajouter les dates des cellules sélectionnées
+                    selectedCells.forEach(cell => {
+                        const date = cell.dataset.date;
+                        if (date && !selectedDates.includes(date)) {
+                            selectedDates.push(date);
+                        }
+                    });
+                    
+                    console.log('Reconstructed selectedDates:', selectedDates);
+                }
+                
+                // Vérifier à nouveau si des dates sont sélectionnées
+                if (selectedDates.length === 0) {
+                    alert('Veuillez sélectionner au moins un jour');
+                    return;
+                }
             }
 
             const typeHoraire = document.querySelector('input[name="type_horaire"]:checked').value;
@@ -359,6 +527,27 @@ use App\Models\Lieu;
                     type_horaire: typeHoraire,
                     horaires: horaires
                 };
+                
+                // Récupérer l'ID du planning existant s'il y en a un
+                @foreach($planningsByDate as $dateStr => $dayPlannings)
+                    if ('{{ $dateStr }}' === date) {
+                        @if($dayPlannings['journee'])
+                            if (!modifiedPlanningIds.includes({{ $dayPlannings['journee']->id }})) {
+                                modifiedPlanningIds.push({{ $dayPlannings['journee']->id }});
+                            }
+                        @endif
+                        @if($dayPlannings['matin'])
+                            if (!modifiedPlanningIds.includes({{ $dayPlannings['matin']->id }})) {
+                                modifiedPlanningIds.push({{ $dayPlannings['matin']->id }});
+                            }
+                        @endif
+                        @if($dayPlannings['apres-midi'])
+                            if (!modifiedPlanningIds.includes({{ $dayPlannings['apres-midi']->id }})) {
+                                modifiedPlanningIds.push({{ $dayPlannings['apres-midi']->id }});
+                            }
+                        @endif
+                    }
+                @endforeach
 
                 const cell = document.querySelector(`[data-date="${date}"]`);
                 if (cell) {
@@ -372,12 +561,17 @@ use App\Models\Lieu;
                     cell.innerHTML = `
                         <div class="text-right mb-2">${new Date(date).getDate()}</div>
                         <div class="planning-details text-xs">
-                            <div class="font-semibold">${lieuNom}</div>
-                            <div>${horaireText}</div>
+                            <div class="font-semibold modified-text">${lieuNom}</div>
+                            <div class="modified-text">${horaireText}</div>
                         </div>
                     `;
-                    cell.classList.add('bg-blue-50');
                     cell.classList.remove('selected');
+                    cell.classList.remove('bg-blue-50');
+                    cell.classList.add('modified');
+                    
+                    // Activer le bouton d'export PDF si des modifications ont été faites
+                    document.getElementById('exportPdfBtn').classList.remove('opacity-50');
+                    document.getElementById('exportPdfBtn').disabled = false;
                 }
             });
 

@@ -87,9 +87,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/home', [PlanningController::class, 'calendarIndex'])->name('home');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
-    // Route d'export PDF accessible à tous les utilisateurs authentifiés
+    // Routes d'export PDF accessibles à tous les utilisateurs authentifiés
     Route::get('/plannings/export-pdf/{employe_id}/{mois}/{annee}', [PlanningController::class, 'exportPdf'])
         ->name('plannings.export-pdf');
+        
+    // Routes d'export pour la comptabilité
+    Route::get('/export/comptabilite', [ExportController::class, 'exportComptabilitePDF'])->name('export.comptabilite');
+    Route::get('/export/comptabilite/excel', [ExportController::class, 'exportComptabiliteExcel'])->name('export.comptabilite.excel');
         
     // Routes pour les employeurs
     Route::middleware(['auth', CheckEmployeur::class])->group(function () {
@@ -115,6 +119,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::prefix('plannings')->group(function () {
             Route::get('/calendar', [PlanningController::class, 'calendar'])->name('plannings.calendar');
             Route::get('/download-pdf', [PlanningController::class, 'downloadPdf'])->name('plannings.download-pdf');
+            Route::post('/export-pdf-with-modifications', [PlanningController::class, 'exportPdfWithModifications'])->name('plannings.export-pdf-with-modifications');
             Route::get('/create-monthly-calendar', [PlanningController::class, 'createMonthlyCalendar'])
                 ->name('plannings.create-monthly-calendar');
             Route::get('/edit-monthly-calendar', [PlanningController::class, 'editMonthlyCalendar'])

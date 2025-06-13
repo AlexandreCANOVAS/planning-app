@@ -54,6 +54,13 @@
             border-bottom: 1px solid #e2e8f0;
             vertical-align: middle;
         }
+        .modified {
+            color: #dc2626 !important; /* rouge */
+            font-weight: bold;
+        }
+        tr.modified-row td {
+            background-color: #fee2e2 !important; /* rouge clair */
+        }
         .month-title {
             font-size: 16px;
             margin-bottom: 10px;
@@ -232,31 +239,34 @@
                 </thead>
                 <tbody>
                     @foreach($week['days'] as $day)
-                        <tr class="{{ $day['isWeekend'] ? 'weekend' : '' }} {{ $day['isRepos'] ? 'repos' : '' }}">
+                        @php
+                            $isModified = isset($modifiedPlannings) && $day['planning'] && in_array($day['planning']->id, $modifiedPlannings);
+                        @endphp
+                        <tr class="{{ $day['isWeekend'] ? 'weekend' : '' }} {{ $day['isRepos'] ? 'repos' : '' }} {{ $isModified ? 'modified-row' : '' }}">
                             <td>{{ ucfirst($day['date']->locale('fr')->isoFormat('dddd')) }}</td>
                             <td class="date-cell">{{ $day['date']->format('d/m/Y') }}</td>
-                            <td class="info-cell">
+                            <td class="info-cell {{ $isModified ? 'modified' : '' }}">
                                 @if($day['planning'] && $day['planning']->lieu)
                                     {{ $day['planning']->lieu->nom }}
                                 @else
                                     <span class="no-planning">-</span>
                                 @endif
                             </td>
-                            <td class="time-cell">
+                            <td class="time-cell {{ $isModified ? 'modified' : '' }}">
                                 @if($day['planning'] && !$day['isRepos'])
                                     {{ $day['planning']->heure_debut ? \Carbon\Carbon::parse($day['planning']->heure_debut)->format('H:i') : '-' }}
                                 @else
                                     <span class="no-planning">-</span>
                                 @endif
                             </td>
-                            <td class="time-cell">
+                            <td class="time-cell {{ $isModified ? 'modified' : '' }}">
                                 @if($day['planning'] && !$day['isRepos'])
                                     {{ $day['planning']->heure_fin ? \Carbon\Carbon::parse($day['planning']->heure_fin)->format('H:i') : '-' }}
                                 @else
                                     <span class="no-planning">-</span>
                                 @endif
                             </td>
-                            <td class="hours-cell">
+                            <td class="hours-cell {{ $isModified ? 'modified' : '' }}">
                                 @if($day['planning'] && !$day['isRepos'] && $day['planning']->heures_travaillees)
                                     {{ App\Http\Controllers\PlanningController::convertToHHMM($day['planning']->heures_travaillees) }}
                                 @else

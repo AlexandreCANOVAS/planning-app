@@ -183,7 +183,6 @@ class ExportController extends Controller
         $detailHeuresSupp = [];
         $date = $dateDebut->copy()->startOfWeek(\Carbon\Carbon::MONDAY);
         $finMoisEtSemaine = $dateFin->copy()->endOfWeek(\Carbon\Carbon::SUNDAY);
-        $semaine = 1; // Initialisation du compteur de semaines
         
         while ($date <= $finMoisEtSemaine) {
             $debutSemaine = $date->copy()->startOfWeek(\Carbon\Carbon::MONDAY);
@@ -316,183 +315,121 @@ class ExportController extends Controller
             }
             
             $date->addWeek();
-            $semaine++; // Incrémenter le compteur de semaines
+        }
+            $heuresTravaillees = $planning->heures_travaillees;
+            $heuresSemaine += $heuresTravaillees;
+            
+            $datePlanning = \Carbon\Carbon::parse($planning->date);
+            
+            // Calculer les heures de nuit (21h-06h)
+            if (!empty($planning->heure_debut) && !empty($planning->heure_fin)) {
+                // Vérifier si le lieu existe et n'est pas RH ou CP
+                $lieuExclu = false;
+                if ($planning->lieu && in_array($planning->lieu->nom, ['RH', 'CP'])) {
+                    $lieuExclu = true;
+                }
+                
+                if (!$lieuExclu) {
+                    // Approche simplifiée pour le calcul des heures de nuit
+                    $heureDebut = (int)\Carbon\Carbon::parse($planning->heure_debut)->format('H');
+                    $heureFin = (int)\Carbon\Carbon::parse($planning->heure_fin)->format('H');
+                    
+                    // Si l'heure de fin est inférieure à l'heure de début, cela signifie que le service se termine le lendemain
+                    if ($heureFin < $heureDebut) {
+                        $heureFin += 24;
+                    }
+                    
+                    // Calculer les heures de nuit
+                    $heuresNuit = 0;
+                    
+                    // Cas 1: Service commence avant 21h et finit après 21h
+                    if ($heureDebut < 21 && $heureFin > 21) {
+                        // Heures de nuit = de 21h jusqu'à la fin du service (ou 6h max)
+                        $heuresNuit += min($heureFin, 30) - 21; // 30 = 6h + 24h
+                    }
+                    
+                    // Cas 2: Service commence après 21h et avant 6h
+                    if ($heureDebut >= 21 || $heureDebut < 6) {
+                        $debutCalcul = $heureDebut;
+                        $finCalcul = min($heureFin, 30); // 30 = 6h + 24h
+                        
+                        if ($debutCalcul >= 21) {
+                            // Service de nuit qui commence après 21h
+                            $heuresNuit += $finCalcul - $debutCalcul;
+                        } else {
+                            // Service de nuit qui commence avant 6h
+                            $heuresNuit += min($finCalcul, 6) - $debutCalcul;
+                        }
+                    }
+                    
+                    // Log pour débogage
+                    \Log::info('Planning du ' . $planning->date . ' - Heures de nuit: ' . $heuresNuit . ' (début: ' . $heureDebut . 'h, fin: ' . $heureFin . 'h)');
+                    
+                    $heuresNuitSemaine += $heuresNuit;
+                }
+            }
+            
+            // Vérifier si c'est un dimanche
+            if ($datePlanning->isDayOfWeek(0)) {
+                $heuresDimancheSemaine += $heuresTravaillees;
+            }
+            
+            // Vérifier si c'est un jour férié
+            if ($this->estJourFerie($datePlanning)) {
+                $heuresJoursFeriesSemaine += $heuresTravaillees;
+            }
         }
         
-        // Calculer les montants si le taux horaire est disponible
-        $tauxHoraire = $employe->taux_horaire ?? 0;
-        $montant25 = $totalHeuresSup25 * $tauxHoraire * 1.25;
-        $montant50 = $totalHeuresSup50 * $tauxHoraire * 1.5;
-        $montantNuit = $totalHeuresNuit * $tauxHoraire * 1.1; // Majoration de 10% pour les heures de nuit
-        $montantDimanche = $totalHeuresDimanche * $tauxHoraire * 1.5; // Majoration de 50% pour les dimanches
-        $montantJoursFeries = $totalHeuresJoursFeries * $tauxHoraire * 2; // Majoration de 100% pour les jours fériés
-        $montantTotal = $montant25 + $montant50 + $montantNuit + $montantDimanche + $montantJoursFeries;
+        // Calculer les heures supplémentaires de la semaine
+        $heuresSup25 = 0;
+        $heuresSup50 = 0;
         
-        // Générer le PDF avec les données calculées
-        $nomEmploye = $employe->prenom . ' ' . $employe->nom;
-        $annee = \Carbon\Carbon::createFromFormat('Y-m', $mois)->format('Y');
-        
-        // Créer le récapitulatif mensuel pour le template
-        $recapMensuel = [
-            'total_heures' => $totalHeuresMois,
-            'heures_25' => $totalHeuresSup25,
-            'heures_50' => $totalHeuresSup50,
-            'heures_nuit' => $totalHeuresNuit,
-            'heures_dimanche' => $totalHeuresDimanche,
-            'heures_jours_feries' => $totalHeuresJoursFeries,
-            'absences' => $totalAbsences,
-            'taux_horaire' => $tauxHoraire,
-            'montant_25' => $montant25,
-            'montant_50' => $montant50,
-            'montant_nuit' => $montantNuit,
-            'montant_dimanche' => $montantDimanche,
-            'montant_jours_feries' => $montantJoursFeries,
-            'montant_total' => $montantTotal,
-        ];
-        
-        // Préparer les données pour les graphiques
-        $dataGraphique = [
-            'labels' => ['Heures normales', 'Heures sup. 25%', 'Heures sup. 50%', 'Heures de nuit', 'Heures dimanche', 'Heures jours fériés'],
-            'data' => [
-                $totalHeuresMois - $totalHeuresSup25 - $totalHeuresSup50 - $totalHeuresNuit - $totalHeuresDimanche - $totalHeuresJoursFeries,
-                $totalHeuresSup25,
-                $totalHeuresSup50,
-                $totalHeuresNuit,
-                $totalHeuresDimanche,
-                $totalHeuresJoursFeries
-            ],
-            'backgroundColor' => [
-                'rgba(75, 192, 192, 0.6)',  // Heures normales - turquoise
-                'rgba(255, 159, 64, 0.6)', // Heures sup 25% - orange
-                'rgba(255, 99, 132, 0.6)', // Heures sup 50% - rouge
-                'rgba(54, 162, 235, 0.6)', // Heures de nuit - bleu
-                'rgba(153, 102, 255, 0.6)', // Heures dimanche - violet
-                'rgba(255, 0, 0, 0.6)'     // Heures jours fériés - rouge vif
-            ]
-        ];
-        
-        // Convertir les heures en format HH:MM pour l'affichage
-        $totalHeuresMoisFormatted = $this->convertToHHMM($totalHeuresMois);
-        $totalHeuresSup25Formatted = $this->convertToHHMM($totalHeuresSup25);
-        $totalHeuresSup50Formatted = $this->convertToHHMM($totalHeuresSup50);
-        $totalHeuresNuitFormatted = $this->convertToHHMM($totalHeuresNuit);
-        $totalHeuresDimancheFormatted = $this->convertToHHMM($totalHeuresDimanche);
-        $totalHeuresJoursFeriesFormatted = $this->convertToHHMM($totalHeuresJoursFeries);
-        
-        // Formater les résultats par semaine pour l'affichage
-        $resultatsSemaines = [];
-        foreach ($detailHeuresSupp as $semaine) {
-            $resultatsSemaines[] = [
-                'periode' => $semaine['semaine'],
-                'total_heures' => $this->convertToHHMM($semaine['heures_travaillees']),
-                'heures_sup_25' => $this->convertToHHMM($semaine['heures_25']),
-                'heures_sup_50' => $this->convertToHHMM($semaine['heures_50']),
-                'heures_nuit' => $this->convertToHHMM($semaine['heures_nuit']),
-                'heures_dimanche' => $this->convertToHHMM($semaine['heures_dimanche']),
-                'heures_jours_feries' => $this->convertToHHMM($semaine['heures_jours_feries']),
-                'absences' => $semaine['absences']
-            ];
+        if ($heuresSemaine > 35) {
+            if ($heuresSemaine <= 43) {
+                $heuresSup25 = $heuresSemaine - 35;
+            } else {
+                $heuresSup25 = 8; // 43 - 35 = 8 heures à 25%
+                $heuresSup50 = $heuresSemaine - 43;
+            }
         }
         
-        $pdf = PDF::loadView('comptabilite.pdf', [
-            'employe' => $employe,
-            'societe' => $societe,
-            'mois' => $mois,
-            'annee' => $annee,
-            'nomEmploye' => $nomEmploye,
-            'detailHeuresSupp' => $detailHeuresSupp,
-            'resultatsSemaines' => $resultatsSemaines,
-            'recapMensuel' => $recapMensuel,
-            'plannings' => $plannings,
-            'total_heures' => $totalHeuresMois,
-            'heures_25' => $totalHeuresSup25,
-            'heures_50' => $totalHeuresSup50,
-            'heures_nuit' => $totalHeuresNuit,
-            'heures_dimanche' => $totalHeuresDimanche,
-            'heures_jours_feries' => $totalHeuresJoursFeries,
-            'absences' => $totalAbsences,
-            'taux_horaire' => $tauxHoraire,
-            'montant_25' => $montant25,
-            'montant_50' => $montant50,
-            'montant_nuit' => $montantNuit,
-            'montant_dimanche' => $montantDimanche,
-            'montant_jours_feries' => $montantJoursFeries,
-            'montant_total' => $montantTotal,
-            'total_mois' => [
-                'heures' => $totalHeuresMoisFormatted,
-                'heures_sup_25' => $totalHeuresSup25Formatted,
-                'heures_sup_50' => $totalHeuresSup50Formatted,
-                'heures_nuit' => $totalHeuresNuitFormatted,
-                'heures_dimanche' => $totalHeuresDimancheFormatted,
-                'heures_jours_feries' => $totalHeuresJoursFeriesFormatted,
-                'absences' => $totalAbsences
-            ],
-            'graphique' => $dataGraphique,
-        ]);
+        // Ajouter au total du mois
+        $totalHeures += $heuresSemaine;
+        $totalHeuresSup25 += $heuresSup25;
+        $totalHeuresSup50 += $heuresSup50;
+        $totalHeuresNuit += $heuresNuitSemaine;
+        $totalHeuresDimanche += $heuresDimancheSemaine;
+        $totalHeuresJoursFeries += $heuresJoursFeriesSemaine;
+        $totalAbsences += $absencesSemaine;
         
-        $filename = 'comptabilite';
-        if ($employe_id) {
-            $filename .= '-' . Str::slug($employe->nom . '-' . $employe->prenom);
-        }
-        $filename .= '-' . $mois . '.pdf';
-        
-        return $pdf->download($filename);
+        // Log pour débogage
+        \Log::info('Semaine ' . $semaine . ' - Heures de nuit: ' . $heuresNuitSemaine . ' - Total cumulé: ' . $totalHeuresNuit);
     }
     
-    private function estJourFerie($date) {
-        // Liste des jours fériés en France
-        $joursFeries = [
-            // Jours fériés fixes
-            '01-01', // Jour de l'an
-            '01-05', // Fête du travail
-            '08-05', // Victoire 1945
-            '14-07', // Fête nationale
-            '15-08', // Assomption
-            '01-11', // Toussaint
-            '11-11', // Armistice
-            '25-12', // Noël
-        ];
-        
-        // Vérifier si la date est un jour férié fixe
-        $dateFormat = $date->format('d-m');
-        if (in_array($dateFormat, $joursFeries)) {
-            return true;
-        }
-        
-        return false;
-    }
+    // Calculer les montants si le taux horaire est disponible
+    $tauxHoraire = $employe->taux_horaire ?? 0;
+    $montant25 = $totalHeuresSup25 * $tauxHoraire * 1.25;
+    $montant50 = $totalHeuresSup50 * $tauxHoraire * 1.5;
+    $montantNuit = $totalHeuresNuit * $tauxHoraire * 1.1; // Majoration de 10% pour les heures de nuit
+    $montantDimanche = $totalHeuresDimanche * $tauxHoraire * 1.5; // Majoration de 50% pour les dimanches
+    $montantJoursFeries = $totalHeuresJoursFeries * $tauxHoraire * 2; // Majoration de 100% pour les jours fériés
+    $montantTotal = $montant25 + $montant50 + $montantNuit + $montantDimanche + $montantJoursFeries;
     
-    private function convertToHHMM($decimal)
-    {
-        // Enlever le signe négatif pour l'affichage
-        $decimal = abs($decimal);
-        
-        $hours = floor($decimal);
-        $minutes = round(($decimal - $hours) * 60);
-        
-        // Si les minutes sont 60, ajuster les heures
-        if ($minutes == 60) {
-            $hours++;
-            $minutes = 0;
-        }
-        
-        return sprintf("%02d:%02d", $hours, $minutes);
-    }
-    
-    private function getNomJourFerie($date)
-    {
-        $joursFeries = [
-            '01-01' => "Jour de l'an",
-            '01-05' => "Fête du travail",
-            '08-05' => "Victoire 1945",
-            '14-07' => "Fête nationale",
-            '15-08' => "Assomption",
-            '01-11' => "Toussaint",
-            '11-11' => "Armistice",
-            '25-12' => "Noël",
-        ];
-        
-        $dateFormat = $date->format('d-m');
-        return $joursFeries[$dateFormat] ?? "Jour férié";
-    }
+    return [
+        'total_heures' => $totalHeures,
+        'heures_25' => $totalHeuresSup25,
+        'heures_50' => $totalHeuresSup50,
+        'heures_nuit' => $totalHeuresNuit,
+        'heures_dimanche' => $totalHeuresDimanche,
+        'heures_jours_feries' => $totalHeuresJoursFeries,
+        'absences' => $totalAbsences,
+        'taux_horaire' => $tauxHoraire,
+        'montant_25' => $montant25,
+        'montant_50' => $montant50,
+        'montant_nuit' => $montantNuit,
+        'montant_dimanche' => $montantDimanche,
+        'montant_jours_feries' => $montantJoursFeries,
+        'montant_total' => $montantTotal,
+    ];
+  }
 }

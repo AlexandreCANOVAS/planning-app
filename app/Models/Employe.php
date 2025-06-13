@@ -72,4 +72,45 @@ class Employe extends Model
     {
         return optional($this->formations)->count() ?? 0;
     }
+    
+    /**
+     * Calcule le solde de congés payés restants
+     */
+    public function getSoldeCongesAttribute()
+    {
+        // Par défaut, on attribue 25 jours de congés payés par an
+        $soldeInitial = 25.0;
+        
+        // Récupérer les congés acceptés de l'année en cours
+        $anneeEnCours = now()->year;
+        $congesAcceptes = $this->conges()
+            ->where('statut', 'accepte')
+            ->whereYear('date_debut', $anneeEnCours)
+            ->get();
+        
+        // Soustraire la durée des congés acceptés
+        $totalCongesPris = $congesAcceptes->sum('duree');
+        
+        return $soldeInitial - $totalCongesPris;
+    }
+    
+    /**
+     * Calcule le nombre de jours de congés pris par type de statut
+     */
+    public function getCongeStats()
+    {
+        $anneeEnCours = now()->year;
+        
+        $stats = [
+            'accepte' => 0,
+            'en_attente' => 0,
+            'refuse' => 0
+        ];
+        
+        foreach ($this->conges()->whereYear('date_debut', $anneeEnCours)->get() as $conge) {
+            $stats[$conge->statut] += $conge->duree;
+        }
+        
+        return $stats;
+    }
 } 

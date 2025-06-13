@@ -21,7 +21,7 @@ class ComptabiliteController extends Controller
         $moisActuel = Carbon::now()->format('Y-m');
         return view('comptabilite.index', compact('employes', 'moisActuel'));
     }
-    
+
     public function calculerHeures(Request $request)
     {
         try {
@@ -100,43 +100,30 @@ class ComptabiliteController extends Controller
                     $datePlanning = Carbon::parse($planning->date);
                     
                     // Calcul des heures de nuit (21h-06h)
-                    if (!empty($planning->heure_debut) && !empty($planning->heure_fin) && $planning->lieu && !in_array($planning->lieu->nom, ['RH', 'CP'])) {
-                        // Approche simplifiée pour le calcul des heures de nuit
-                        $heureDebut = (int)Carbon::parse($planning->heure_debut)->format('H');
-                        $heureFin = (int)Carbon::parse($planning->heure_fin)->format('H');
-                        
-                        // Si l'heure de fin est inférieure à l'heure de début, cela signifie que le service se termine le lendemain
-                        if ($heureFin < $heureDebut) {
-                            $heureFin += 24;
-                        }
-                        
-                        // Calculer les heures de nuit
-                        $heuresNuit = 0;
-                        
-                        // Cas 1: Service commence avant 21h et finit après 21h
-                        if ($heureDebut < 21 && $heureFin > 21) {
-                            // Heures de nuit = de 21h jusqu'à la fin du service (ou 6h max)
-                            $heuresNuit += min($heureFin, 30) - 21; // 30 = 6h + 24h
-                        }
-                        
-                        // Cas 2: Service commence après 21h et avant 6h
-                        if ($heureDebut >= 21 || $heureDebut < 6) {
-                            $debutCalcul = $heureDebut;
-                            $finCalcul = min($heureFin, 30); // 30 = 6h + 24h
+                    if (!empty($planning->heure_debut) && !empty($planning->heure_fin)) {
+                        $heureDebut = Carbon::parse($planning->heure_debut)->format('H');
+                        $heureFin = Carbon::parse($planning->heure_fin)->format('H');
+                      // Calculer les heures de nuit (21h-06h)
+                    if ($heureFin > 21 || $heureDebut < 6) {
+                        if ($heureFin > 21) {
+                            $heuresNuit = min($heureFin - 21, $heuresTravaillees);
+                            $heuresNuitSemaine += $heuresNuit;
                             
-                            if ($debutCalcul >= 21) {
-                                // Service de nuit qui commence après 21h
-                                $heuresNuit += $finCalcul - $debutCalcul;
-                            } else {
-                                // Service de nuit qui commence avant 6h
-                                $heuresNuit += min($finCalcul, 6) - $debutCalcul;
+                            // Ajouter aux détails des heures de nuit
+                            if (!isset($detailsHeuresNuit[$datePlanning->format('Y-m-d')])) {
+                                $detailsHeuresNuit[$datePlanning->format('Y-m-d')] = [
+                                    'date' => $datePlanning->format('d/m/Y'),
+                                    'jour' => $datePlanning->locale('fr')->isoFormat('dddd'),
+                                    'heures' => 0
+                                ];
                             }
+                            $detailsHeuresNuit[$datePlanning->format('Y-m-d')]['heures'] += $heuresNuit;
                         }
-                        
-                        $heuresNuitSemaine += $heuresNuit;
-                        
-                        // Ajouter aux détails des heures de nuit
-                        if ($heuresNuit > 0) {
+                        if ($heureDebut < 6) {
+                            $heuresNuit = min(6 - $heureDebut, $heuresTravaillees);
+                            $heuresNuitSemaine += $heuresNuit;
+                            
+                            // Ajouter aux détails des heures de nuit
                             if (!isset($detailsHeuresNuit[$datePlanning->format('Y-m-d')])) {
                                 $detailsHeuresNuit[$datePlanning->format('Y-m-d')] = [
                                     'date' => $datePlanning->format('d/m/Y'),
@@ -151,7 +138,7 @@ class ComptabiliteController extends Controller
                     // Calculer les heures de dimanche
                     if ($datePlanning->isDayOfWeek(Carbon::SUNDAY)) {
                         $heuresDimancheSemaine += $heuresTravaillees;
-                         
+                        
                         // Ajouter aux détails des dimanches
                         if (!isset($detailsDimanches[$datePlanning->format('Y-m-d')])) {
                             $detailsDimanches[$datePlanning->format('Y-m-d')] = [
@@ -165,7 +152,7 @@ class ComptabiliteController extends Controller
                     // Calculer les heures de jours fériés
                     if ($this->estJourFerie($datePlanning)) {
                         $heuresJoursFeriesSemaine += $heuresTravaillees;
-                         
+                        
                         // Ajouter aux détails des jours fériés
                         if (!isset($detailsJoursFeries[$datePlanning->format('Y-m-d')])) {
                             $detailsJoursFeries[$datePlanning->format('Y-m-d')] = [
@@ -291,7 +278,7 @@ class ComptabiliteController extends Controller
             ], 500);
         }
     }
-    
+
     private function convertToHHMM($decimal)
     {
         // Enlever le signe négatif pour l'affichage

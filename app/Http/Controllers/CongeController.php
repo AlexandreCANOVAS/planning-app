@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Conge;
 use App\Models\Employe;
+use App\Models\CongeHistory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
@@ -25,8 +26,33 @@ class CongeController extends Controller
             ->with('employe') // Eager loading de la relation employe
             ->orderBy('conges.date_debut', 'desc')
             ->get();
-
-        return view('conges.index', compact('conges'));
+            
+        // Préparation des données pour le graphique mensuel
+        $congesMensuels = [
+            'accepte' => array_fill(0, 12, 0),
+            'en_attente' => array_fill(0, 12, 0),
+            'refuse' => array_fill(0, 12, 0)
+        ];
+        
+        // Année en cours
+        $anneeEnCours = Carbon::now()->year;
+        
+        // Parcourir tous les congés pour les répartir par mois et par statut
+        foreach ($conges as $conge) {
+            $dateDebut = Carbon::parse($conge->date_debut);
+            
+            // Ne compter que les congés de l'année en cours
+            if ($dateDebut->year == $anneeEnCours) {
+                $mois = $dateDebut->month - 1; // Les index de tableau commencent à 0
+                $statut = $conge->statut;
+                
+                if (isset($congesMensuels[$statut])) {
+                    $congesMensuels[$statut][$mois]++;
+                }
+            }
+        }
+        
+        return view('conges.index', compact('conges', 'congesMensuels'));
     }
 
     public function create()
@@ -104,11 +130,28 @@ class CongeController extends Controller
         }
 
         $validated = $request->validate([
-            'statut' => 'required|in:accepte,refuse'
+            'statut' => 'required|in:accepte,refuse',
+            'commentaire' => 'nullable|string'
         ]);
+        
+        // Enregistrer l'ancien statut avant modification
+        $ancienStatut = $conge->statut;
+        $nouveauStatut = $validated['statut'];
+        $commentaire = $validated['commentaire'] ?? null;
 
+        // Mettre à jour le statut du congé
         $conge->update([
-            'statut' => $validated['statut']
+            'statut' => $nouveauStatut,
+            'commentaire' => $commentaire
+        ]);
+        
+        // Enregistrer l'historique de la modification
+        CongeHistory::create([
+            'conge_id' => $conge->id,
+            'user_id' => Auth::id(),
+            'ancien_statut' => $ancienStatut,
+            'nouveau_statut' => $nouveauStatut,
+            'commentaire' => $commentaire
         ]);
 
         try {

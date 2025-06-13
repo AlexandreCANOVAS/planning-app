@@ -763,6 +763,73 @@ class PlanningController extends Controller
         // Retourner le PDF pour téléchargement
         return $pdf->download($filename);
     }
+    
+    /**
+     * Exporter le planning mensuel en PDF avec les modifications en rouge
+     */
+    public function exportPdfWithModifications(Request $request)
+    {
+        // Validation des paramètres
+        $request->validate([
+            'employe_id' => 'required|exists:employes,id',
+            'mois' => 'required|integer|between:1,12',
+            'annee' => 'required|integer|min:2000',
+            'modified_plannings' => 'required|string' // IDs des plannings modifiés en JSON
+        ]);
+
+        // Récupérer l'employé
+        $employe = Employe::findOrFail($request->employe_id);
+        
+        // Vérifier que l'utilisateur a le droit de voir cet employé
+        $this->authorize('view', $employe);
+        
+        // Créer la date à partir des paramètres
+        $date = Carbon::create($request->annee, $request->mois, 1);
+        
+        // Récupérer les plannings du mois
+        $planningsCollection = Planning::where('employe_id', $employe->id)
+            ->whereYear('date', $request->annee)
+            ->whereMonth('date', $request->mois)
+            ->with(['lieu'])
+            ->orderBy('date')
+            ->orderBy('heure_debut')
+            ->get();
+            
+        // Organiser les plannings par date pour le template
+        $plannings = collect();
+        foreach ($planningsCollection as $planning) {
+            $dateStr = $planning->date->format('Y-m-d');
+            $plannings->put($dateStr, $planning);
+        }
+
+        // Calculer le total des heures
+        $totalHeures = $planningsCollection->sum('heures_travaillees');
+        
+        // Récupérer les IDs des plannings modifiés
+        $modifiedPlannings = json_decode($request->modified_plannings, true);
+        
+        // Calculer les dates de début et de fin du mois
+        $startDate = $date->copy()->startOfMonth();
+        $endDate = $date->copy()->endOfMonth();
+
+        // Générer le PDF
+        $pdf = PDF::loadView('plannings.pdf', [
+            'plannings' => $plannings,
+            'employe' => $employe,
+            'mois' => $date->locale('fr')->monthName,
+            'annee' => $request->annee,
+            'totalHeures' => $totalHeures,
+            'modifiedPlannings' => $modifiedPlannings,
+            'startDate' => $startDate,
+            'endDate' => $endDate
+        ]);
+
+        // Nom du fichier
+        $filename = "planning_modifie_{$employe->nom}_{$employe->prenom}_{$date->format('Y_m')}.pdf";
+
+        // Retourner le PDF pour téléchargement
+        return $pdf->download($filename);
+    }
 
     public function exportPDF(Request $request, $employe_id, $mois, $annee)
     {
