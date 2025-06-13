@@ -10,11 +10,7 @@ use App\Models\Lieu;
         <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-xl font-semibold">
-                    @if(request()->is('*/create-monthly-calendar') && !request()->has('from_modification'))
-                        Création du Planning - {{ $employe->nom }} {{ $employe->prenom }}
-                    @else
-                        Modification du Planning - {{ $employe->nom }} {{ $employe->prenom }}
-                    @endif
+                    Modification du Planning - {{ $employe->nom }} {{ $employe->prenom }}
                 </h2>
                 <div class="flex gap-4">
                     <button 
@@ -43,11 +39,7 @@ use App\Models\Lieu;
                         onclick="creerPlanning()"
                         class="px-4 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600 transition-colors duration-200"
                     >
-                        @if(request()->has('from_modification'))
-                            Modifier le planning
-                        @else
-                            Créer le planning
-                        @endif
+                        Modifier le planning
                     </button>
                     <a href="{{ route('plannings.calendar') }}" 
                        class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors duration-200">
@@ -149,7 +141,7 @@ use App\Models\Lieu;
                     @if(request()->has('from_modification'))
                         Modifier le planning
                     @else
-                        Créer le planning
+                        Modifier le planning
                     @endif
                 </button>
             </div>
@@ -401,10 +393,12 @@ use App\Models\Lieu;
 
             const data = {
                 employe_id: employeId,
+                mois: {{ $mois }},
+                annee: {{ $annee }},
                 plannings: temporaryPlannings
             };
 
-            fetch('{{ route('plannings.store-monthly-calendar') }}', {
+            fetch('{{ route('plannings.update-monthly-calendar') }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -417,7 +411,7 @@ use App\Models\Lieu;
                 if (data.error) {
                     alert(data.error);
                 } else {
-                    alert('Planning enregistré avec succès');
+                    alert('Planning modifié avec succès');
                     window.location.href = '{{ route('plannings.calendar') }}';
                 }
             })

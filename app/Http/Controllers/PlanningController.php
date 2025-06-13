@@ -434,13 +434,30 @@ class PlanningController extends Controller
         $debutPeriode = $dateDebut->copy()->startOfWeek(Carbon::MONDAY);
         $finPeriode = $dateDebut->copy()->endOfMonth()->endOfWeek(Carbon::SUNDAY);
 
-        // Récupérer les plannings existants pour ce mois
+        // Débogage: afficher la requête SQL
+        DB::enableQueryLog();
+        
+        // Récupérer les plannings existants pour ce mois avec la relation lieu
         $plannings = Planning::where('employe_id', $employe_id)
             ->where('societe_id', $user->societe_id)
             ->whereYear('date', $annee)
             ->whereMonth('date', $mois)
             ->with('lieu')
             ->get();
+            
+        // Débogage: afficher la requête SQL exécutée
+        $queries = DB::getQueryLog();
+        $lastQuery = end($queries);
+        
+        // Stocker les informations de débogage dans la session
+        session()->flash('debug_info', [
+            'employe_id' => $employe_id,
+            'mois' => $mois,
+            'annee' => $annee,
+            'query' => $lastQuery['query'] ?? 'Aucune requête',
+            'count' => $plannings->count(),
+            'plannings_dates' => $plannings->pluck('date')->toArray()
+        ]);
 
         // Organiser les plannings par date et période
         $planningsByDate = [];
@@ -456,10 +473,13 @@ class PlanningController extends Controller
                     'journee' => null
                 ];
             }
-            $planningsByDate[$date][$planning->periode] = $planning;
+            
+            // S'assurer que la période est définie
+            $periode = $planning->periode ?? 'journee';
+            $planningsByDate[$date][$periode] = $planning;
         }
 
-        return view('plannings.calendar_mensuel', [
+        return view('plannings.view_monthly_calendar', [
             'employe' => $employe,
             'mois' => $mois,
             'annee' => $annee,
@@ -467,7 +487,8 @@ class PlanningController extends Controller
             'anneeActuelle' => $annee,
             'planningsByDate' => $planningsByDate,
             'debutPeriode' => $debutPeriode,
-            'finPeriode' => $finPeriode
+            'finPeriode' => $finPeriode,
+            'debug' => true
         ]);
     }
 
@@ -1026,6 +1047,138 @@ class PlanningController extends Controller
             'debutPeriode',
             'finPeriode'
         ));
+    }
+    
+    public function editMonthlyCalendar(Request $request)
+    {
+        $user = auth()->user();
+        $employe_id = $request->input('employe_id');
+        $mois = $request->input('mois');
+        $annee = $request->input('annee');
+
+        // Récupérer l'employé
+        $employe = Employe::where('id', $employe_id)
+            ->where('societe_id', $user->societe_id)
+            ->firstOrFail();
+
+        // Récupérer les lieux de travail (en excluant les lieux spéciaux)
+        $lieux = Lieu::where('societe_id', $user->societe_id)
+            ->where('is_special', false)
+            ->orderBy('nom')
+            ->get();
+
+        // Créer les dates pour le mois
+        $dateDebut = Carbon::create($annee, $mois, 1);
+        $debutPeriode = $dateDebut->copy()->startOfWeek(Carbon::MONDAY);
+        $finPeriode = $dateDebut->copy()->endOfMonth()->endOfWeek(Carbon::SUNDAY);
+
+        // Récupérer les plannings existants pour ce mois
+        $plannings = Planning::where('employe_id', $employe_id)
+            ->where('societe_id', $user->societe_id)
+            ->whereYear('date', $annee)
+            ->whereMonth('date', $mois)
+            ->with('lieu')
+            ->get();
+
+        // Organiser les plannings par date et période
+        $planningsByDate = [];
+        foreach ($plannings as $planning) {
+            $date = $planning->date->format('Y-m-d');
+            if (!isset($planningsByDate[$date])) {
+                $planningsByDate[$date] = [
+                    'matin' => null,
+                    'apres-midi' => null,
+                    'journee' => null
+                ];
+            }
+            $planningsByDate[$date][$planning->periode] = $planning;
+        }
+
+        // Indiquer que nous sommes en mode modification
+        $isModification = true;
+        
+        return view('plannings.edit_monthly_calendar', compact(
+            'employe',
+            'lieux',
+            'mois',
+            'annee',
+            'planningsByDate',
+            'debutPeriode',
+            'finPeriode',
+            'isModification'
+        ));
+    }
+    
+    public function updateMonthlyCalendar(Request $request)
+    {
+        $user = auth()->user();
+        $data = $request->validate([
+            'employe_id' => 'required|exists:employes,id',
+            'mois' => 'required|integer|min:1|max:12',
+            'annee' => 'required|integer',
+            'plannings' => 'required|array'
+        ]);
+
+        $employe = Employe::where('id', $data['employe_id'])
+            ->where('societe_id', $user->societe_id)
+            ->firstOrFail();
+
+        DB::beginTransaction();
+        try {
+            // Supprimer tous les plannings existants pour ce mois et cet employé
+            Planning::where('employe_id', $employe->id)
+                ->where('societe_id', $user->societe_id)
+                ->whereYear('date', $data['annee'])
+                ->whereMonth('date', $data['mois'])
+                ->delete();
+
+            // Créer les nouveaux plannings
+            foreach ($data['plannings'] as $date => $planning) {
+                if ($planning['type_horaire'] === 'simple') {
+                    // Créer un planning simple pour la journée
+                    Planning::create([
+                        'employe_id' => $employe->id,
+                        'societe_id' => $user->societe_id,
+                        'lieu_id' => $planning['lieu_id'],
+                        'date' => $date,
+                        'periode' => 'journee',
+                        'heure_debut' => $planning['horaires']['debut'],
+                        'heure_fin' => $planning['horaires']['fin'],
+                        'heures_travaillees' => $this->calculerHeuresTravaillees($planning['horaires']['debut'], $planning['horaires']['fin'])
+                    ]);
+                } else {
+                    // Créer deux plannings pour la journée (matin et après-midi)
+                    Planning::create([
+                        'employe_id' => $employe->id,
+                        'societe_id' => $user->societe_id,
+                        'lieu_id' => $planning['lieu_id'],
+                        'date' => $date,
+                        'periode' => 'matin',
+                        'heure_debut' => $planning['horaires']['debut_matin'],
+                        'heure_fin' => $planning['horaires']['fin_matin'],
+                        'heures_travaillees' => $this->calculerHeuresTravaillees($planning['horaires']['debut_matin'], $planning['horaires']['fin_matin'])
+                    ]);
+
+                    Planning::create([
+                        'employe_id' => $employe->id,
+                        'societe_id' => $user->societe_id,
+                        'lieu_id' => $planning['lieu_id'],
+                        'date' => $date,
+                        'periode' => 'apres-midi',
+                        'heure_debut' => $planning['horaires']['debut_aprem'],
+                        'heure_fin' => $planning['horaires']['fin_aprem'],
+                        'heures_travaillees' => $this->calculerHeuresTravaillees($planning['horaires']['debut_aprem'], $planning['horaires']['fin_aprem'])
+                    ]);
+                }
+            }
+
+            DB::commit();
+            return response()->json(['message' => 'Planning modifié avec succès']);
+        } catch (\Exception $e) {
+            DB::rollback();
+            \Log::error('Erreur lors de la modification du planning: ' . $e->getMessage());
+            return response()->json(['error' => 'Une erreur est survenue lors de la modification'], 500);
+        }
     }
 
     public function getMonthlyCalendar($employe_id, $annee, $mois)

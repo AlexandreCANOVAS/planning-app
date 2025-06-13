@@ -116,12 +116,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/calendar', [PlanningController::class, 'calendar'])->name('plannings.calendar');
             Route::get('/download-pdf', [PlanningController::class, 'downloadPdf'])->name('plannings.download-pdf');
             Route::get('/create-monthly-calendar', [PlanningController::class, 'createMonthlyCalendar'])
-                ->name('plannings.create_monthly')
+                ->name('plannings.create-monthly-calendar');
+            Route::get('/edit-monthly-calendar', [PlanningController::class, 'editMonthlyCalendar'])
+                ->name('plannings.edit-monthly-calendar')
                 ->withoutMiddleware([CheckEmployeur::class]);
             Route::post('/store-monthly', [PlanningController::class, 'storeMonthly'])
                 ->name('plannings.store_monthly');
             Route::post('/store-monthly-calendar', [PlanningController::class, 'storeMonthlyCalendar'])
                 ->name('plannings.store-monthly-calendar');
+            Route::post('/update-monthly-calendar', [PlanningController::class, 'updateMonthlyCalendar'])
+                ->name('plannings.update-monthly-calendar');
             Route::get('/get-monthly-calendar/{employe_id}/{annee}/{mois}', [PlanningController::class, 'getMonthlyCalendar'])
                 ->name('plannings.get-monthly-calendar');
             Route::get('/view-monthly-calendar/{employe_id}/{mois}/{annee}', [PlanningController::class, 'viewMonthlyCalendar'])

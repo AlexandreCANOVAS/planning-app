@@ -94,11 +94,11 @@
                                                 </td>
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                                                     <div class="flex items-center space-x-3">
-                                                        <a href="{{ url('/plannings/view-monthly-calendar/'.$stat['employe']->id.'/'.$moisActuel.'/'.$anneeActuelle) }}" 
+                                                        <a href="{{ url('/plannings/view-monthly-calendar/'.$stat['employe']->id.'/'.$mois.'/'.$anneeActuelle) }}" 
                                                             class="text-blue-600 hover:text-blue-900">
                                                             <i class="fas fa-eye"></i> Voir
                                                         </a>
-                                                        <a href="#" onclick="modifierPlanning('{{ $stat['employe']->id }}', '{{ $moisActuel }}', '{{ $anneeActuelle }}')" 
+                                                        <a href="#" onclick="modifierPlanning('{{ $stat['employe']->id }}', '{{ $mois }}', '{{ $anneeActuelle }}')" 
                                                             class="text-blue-600 hover:text-blue-900">
                                                             <i class="fas fa-edit"></i> Modifier
                                                         </a>
@@ -136,7 +136,7 @@
     <script>
         function modifierPlanning(employeId, mois, annee) {
             @if(auth()->user() && auth()->user()->isEmployeur())
-                window.location.href = "{{ url('/plannings/create-monthly-calendar') }}" + `?employe_id=${employeId}&mois=${mois}&annee=${annee}`;
+                window.location.href = "{{ url('/plannings/edit-monthly-calendar') }}" + `?employe_id=${employeId}&mois=${mois}&annee=${annee}`;
             @else
                 alert('Vous devez être connecté en tant qu\'employeur pour modifier les plannings.');
             @endif
