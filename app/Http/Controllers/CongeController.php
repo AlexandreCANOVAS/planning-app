@@ -15,44 +15,127 @@ use App\Events\CongeStatusUpdated;
 
 class CongeController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $societe = Auth::user()->societe;
-
-        $conges = Conge::query()
+        
+        // Définir l'année et le mois en cours pour les filtres
+        $maintenant = Carbon::now();
+        $anneeEnCours = $maintenant->year;
+        $moisEnCours = $maintenant->month;
+        
+        // Récupérer les paramètres de filtrage
+        $statut = $request->input('statut');
+        $periode = $request->input('periode');
+        $employe = $request->input('employe');
+        $dateDebut = $request->input('date_debut');
+        $dateFin = $request->input('date_fin');
+        
+        // Construire la requête de base
+        $query = Conge::query()
             ->select('conges.*')
             ->join('employes', 'conges.employe_id', '=', 'employes.id')
             ->where('employes.societe_id', $societe->id)
-            ->with('employe') // Eager loading de la relation employe
-            ->orderBy('conges.date_debut', 'desc')
-            ->get();
+            ->with('employe');
             
-        // Préparation des données pour le graphique mensuel
+        // Filtrer par statut
+        if ($statut && in_array($statut, ['accepte', 'refuse', 'en_attente'])) {
+            $query->where('conges.statut', $statut);
+        }
+        
+        // Filtrer par employé
+        if ($employe) {
+            $query->whereHas('employe', function($q) use ($employe) {
+                $q->where('nom', 'like', "%{$employe}%")
+                  ->orWhere('prenom', 'like', "%{$employe}%");
+            });
+        }
+        
+        // Filtrer par période
+        $anneeEnCours = Carbon::now()->year;
+        $moisEnCours = Carbon::now()->month;
+        
+        if ($dateDebut && $dateFin) {
+            // Si des dates spécifiques sont fournies
+            // Convertir les dates au format Y-m-d
+            $debutFormatted = Carbon::parse($dateDebut)->format('Y-m-d');
+            $finFormatted = Carbon::parse($dateFin)->format('Y-m-d');
+            
+            $query->where(function($q) use ($debutFormatted, $finFormatted) {
+                $q->whereBetween('date_debut', [$debutFormatted, $finFormatted])
+                  ->orWhereBetween('date_fin', [$debutFormatted, $finFormatted])
+                  ->orWhere(function($subq) use ($debutFormatted, $finFormatted) {
+                      $subq->where('date_debut', '<=', $debutFormatted)
+                           ->where('date_fin', '>=', $finFormatted);
+                  });
+            });
+        } else if ($periode) {
+            // Filtrer par période prédéfinie
+            switch ($periode) {
+                case 'mois_courant':
+                    $debut = Carbon::create($anneeEnCours, $moisEnCours, 1)->startOfDay();
+                    $fin = Carbon::create($anneeEnCours, $moisEnCours, 1)->endOfMonth()->endOfDay();
+                    break;
+                case 'trimestre_courant':
+                    $trimestre = ceil($moisEnCours / 3);
+                    $debutTrimestre = ($trimestre - 1) * 3 + 1;
+                    $debut = Carbon::create($anneeEnCours, $debutTrimestre, 1)->startOfDay();
+                    $fin = Carbon::create($anneeEnCours, $debutTrimestre + 2, 1)->endOfMonth()->endOfDay();
+                    break;
+                case 'annee_courante':
+                    $debut = Carbon::create($anneeEnCours, 1, 1)->startOfDay();
+                    $fin = Carbon::create($anneeEnCours, 12, 31)->endOfDay();
+                    break;
+                default:
+                    $debut = null;
+                    $fin = null;
+            }
+            
+            if ($debut && $fin) {
+                $query->where(function($q) use ($debut, $fin) {
+                    $q->whereBetween('date_debut', [$debut, $fin])
+                      ->orWhereBetween('date_fin', [$debut, $fin])
+                      ->orWhere(function($subq) use ($debut, $fin) {
+                          $subq->where('date_debut', '<=', $debut)
+                               ->where('date_fin', '>=', $fin);
+                      });
+                });
+            }
+        }
+        
+        // Exécuter la requête
+        $conges = $query->orderBy('conges.date_debut', 'desc')->get();
+        
+        // Préparer les données pour le graphique
         $congesMensuels = [
             'accepte' => array_fill(0, 12, 0),
             'en_attente' => array_fill(0, 12, 0),
             'refuse' => array_fill(0, 12, 0)
         ];
         
-        // Année en cours
-        $anneeEnCours = Carbon::now()->year;
-        
-        // Parcourir tous les congés pour les répartir par mois et par statut
         foreach ($conges as $conge) {
             $dateDebut = Carbon::parse($conge->date_debut);
-            
-            // Ne compter que les congés de l'année en cours
             if ($dateDebut->year == $anneeEnCours) {
-                $mois = $dateDebut->month - 1; // Les index de tableau commencent à 0
-                $statut = $conge->statut;
-                
-                if (isset($congesMensuels[$statut])) {
-                    $congesMensuels[$statut][$mois]++;
-                }
+                $mois = $dateDebut->month - 1; // Les tableaux commencent à 0
+                $congesMensuels[$conge->statut][$mois]++;
             }
         }
         
-        return view('conges.index', compact('conges', 'congesMensuels'));
+        // Récupérer la liste des employés pour le filtre
+        $employes = Employe::where('societe_id', $societe->id)
+                          ->orderBy('nom')
+                          ->get();
+        
+        return view('conges.index', compact(
+            'conges', 
+            'congesMensuels', 
+            'employes', 
+            'statut', 
+            'periode', 
+            'employe',
+            'dateDebut',
+            'dateFin'
+        ));
     }
 
     public function create()

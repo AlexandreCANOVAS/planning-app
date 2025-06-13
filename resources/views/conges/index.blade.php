@@ -80,7 +80,7 @@
                     <div class="mt-8">
                         <h4 class="text-md font-medium text-gray-700 mb-3">Répartition mensuelle des congés</h4>
                         <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-                            <div class="h-64" id="monthly-chart"></div>
+                            <canvas class="h-64" id="monthly-chart"></canvas>
                         </div>
                     </div>
                 </div>
@@ -89,6 +89,68 @@
             <!-- Liste des congés -->
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
+                    <!-- Filtres et recherche avancée -->
+                    <div class="mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <h4 class="text-sm font-medium text-gray-700 mb-3 flex items-center">
+                            <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                            </svg>
+                            Filtres et recherche
+                        </h4>
+                        
+                        <form action="{{ route('conges.index') }}" method="GET" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <!-- Filtre par statut -->
+                            <div>
+                                <label for="statut" class="block text-xs font-medium text-gray-700 mb-1">Statut</label>
+                                <select id="statut" name="statut" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                    <option value="">Tous les statuts</option>
+                                    <option value="en_attente" {{ isset($statut) && $statut == 'en_attente' ? 'selected' : '' }}>En attente</option>
+                                    <option value="accepte" {{ isset($statut) && $statut == 'accepte' ? 'selected' : '' }}>Accepté</option>
+                                    <option value="refuse" {{ isset($statut) && $statut == 'refuse' ? 'selected' : '' }}>Refusé</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Filtre par période -->
+                            <div>
+                                <label for="periode" class="block text-xs font-medium text-gray-700 mb-1">Période</label>
+                                <select id="periode" name="periode" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                    <option value="">Toutes les périodes</option>
+                                    <option value="mois_courant" {{ isset($periode) && $periode == 'mois_courant' ? 'selected' : '' }}>Mois courant</option>
+                                    <option value="trimestre_courant" {{ isset($periode) && $periode == 'trimestre_courant' ? 'selected' : '' }}>Trimestre courant</option>
+                                    <option value="annee_courante" {{ isset($periode) && $periode == 'annee_courante' ? 'selected' : '' }}>Année courante</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Recherche par employé -->
+                            <div>
+                                <label for="employe" class="block text-xs font-medium text-gray-700 mb-1">Employé</label>
+                                <input type="text" name="employe" id="employe" value="{{ $employe ?? '' }}" placeholder="Rechercher par nom..." class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                            </div>
+                            
+                            <!-- Dates personnalisées -->
+                            <div class="md:col-span-2 grid grid-cols-2 gap-4">
+                                <div>
+                                    <label for="date_debut" class="block text-xs font-medium text-gray-700 mb-1">Date début</label>
+                                    <input type="date" name="date_debut" id="date_debut" value="{{ $dateDebut ?? '' }}" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                                </div>
+                                <div>
+                                    <label for="date_fin" class="block text-xs font-medium text-gray-700 mb-1">Date fin</label>
+                                    <input type="date" name="date_fin" id="date_fin" value="{{ $dateFin ?? '' }}" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                                </div>
+                            </div>
+                            
+                            <!-- Boutons -->
+                            <div class="md:col-span-3 flex justify-end space-x-3 mt-2">
+                                <a href="{{ route('conges.index') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                    Réinitialiser
+                                </a>
+                                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                    Filtrer
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    
                     <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
