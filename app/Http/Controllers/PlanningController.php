@@ -9,6 +9,8 @@ use App\Models\ModificationPlanning;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Notifications\PlanningModifie;
+use App\Notifications\PlanningCreatedNotification;
+use App\Notifications\PlanningUpdatedNotification;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -16,6 +18,285 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class PlanningController extends Controller
 {
+    /**
+     * Comparer les plannings de l'employé connecté et d'un collègue côte à côte
+     * 
+     * @param  \App\Models\Employe  $employe
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function comparerPlannings(Employe $employe, Request $request)
+    {
+        $user = auth()->user();
+        $currentEmploye = $user->employe;
+        
+        if (!$currentEmploye) {
+            return redirect()->route('employe.plannings.index')
+                ->with('error', 'Vous devez être connecté en tant qu\'employé.');
+        }
+        
+        // Vérifier que l'employé connecté n'essaie pas de comparer son propre planning
+        if ($currentEmploye->id === $employe->id) {
+            return redirect()->route('employe.plannings.index')
+                ->with('error', 'Vous ne pouvez pas comparer votre planning avec vous-même.');
+        }
+        
+        // Récupérer l'année et le mois sélectionnés
+        $selectedYear = $request->get('annee', now()->year);
+        $selectedMonth = $request->get('mois', now()->month);
+        
+        // Premier et dernier jour du mois
+        $firstDay = Carbon::createFromDate($selectedYear, $selectedMonth, 1)->startOfMonth();
+        $lastDay = Carbon::createFromDate($selectedYear, $selectedMonth, 1)->endOfMonth();
+        
+        // Récupérer les plannings de l'employé connecté
+        $planningsCurrent = Planning::where('employe_id', $currentEmploye->id)
+            ->whereYear('date', $selectedYear)
+            ->whereMonth('date', $selectedMonth)
+            ->with('lieu')
+            ->get()
+            ->groupBy(function($item) {
+                return $item->date->format('Y-m-d');
+            });
+        
+        // Récupérer les plannings du collègue
+        $planningsCollegue = Planning::where('employe_id', $employe->id)
+            ->whereYear('date', $selectedYear)
+            ->whereMonth('date', $selectedMonth)
+            ->with('lieu')
+            ->get()
+            ->groupBy(function($item) {
+                return $item->date->format('Y-m-d');
+            });
+        
+        // Calculer le total des heures pour l'employé connecté
+        $totalHeuresCurrent = 0;
+        foreach ($planningsCurrent as $dayPlannings) {
+            foreach ($dayPlannings as $planning) {
+                $debut = Carbon::parse($planning->heure_debut);
+                $fin = Carbon::parse($planning->heure_fin);
+                $totalHeuresCurrent += $debut->diffInHours($fin);
+            }
+        }
+        
+        // Calculer le total des heures pour le collègue
+        $totalHeuresCollegue = 0;
+        foreach ($planningsCollegue as $dayPlannings) {
+            foreach ($dayPlannings as $planning) {
+                $debut = Carbon::parse($planning->heure_debut);
+                $fin = Carbon::parse($planning->heure_fin);
+                $totalHeuresCollegue += $debut->diffInHours($fin);
+            }
+        }
+        
+        return view('plannings.comparer-plannings', compact(
+            'currentEmploye',
+            'employe',
+            'planningsCurrent',
+            'planningsCollegue',
+            'firstDay',
+            'lastDay',
+            'selectedYear',
+            'selectedMonth',
+            'totalHeuresCurrent',
+            'totalHeuresCollegue'
+        ));
+    }
+    
+    /**
+     * Proposer un échange de jours de travail entre deux employés
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function proposerEchange(Request $request)
+    {
+        $request->validate([
+            'collegue_id' => 'required|exists:employes,id',
+            'your_day' => 'required|date',
+            'collegue_day' => 'required|date',
+            'motif' => 'required|string|max:500',
+        ]);
+
+        $user = auth()->user();
+        $demandeur = $user->employe;
+        $receveur = Employe::findOrFail($request->collegue_id);
+        
+        // Vérifier que le demandeur a bien un planning pour le jour qu'il propose
+        $planningDemandeur = Planning::where('employe_id', $demandeur->id)
+            ->whereDate('date', $request->your_day)
+            ->exists();
+            
+        if (!$planningDemandeur) {
+            return redirect()->back()->with('error', 'Vous n\'avez pas de planning pour ce jour.');
+        }
+        
+        // Vérifier que le receveur a bien un planning pour le jour demandé
+        $planningReceveur = Planning::where('employe_id', $receveur->id)
+            ->whereDate('date', $request->collegue_day)
+            ->exists();
+            
+        if (!$planningReceveur) {
+            return redirect()->back()->with('error', 'Votre collègue n\'a pas de planning pour ce jour.');
+        }
+        
+        // Créer l'échange
+        $echange = new \App\Models\EchangeJour([
+            'demandeur_id' => $demandeur->id,
+            'receveur_id' => $receveur->id,
+            'jour_demandeur' => $request->your_day,
+            'jour_receveur' => $request->collegue_day,
+            'motif' => $request->motif,
+            'statut' => 'en_attente',
+        ]);
+        
+        $echange->save();
+        
+        // Notifier le receveur (si implémenté)
+        if ($receveur->user) {
+            // $receveur->user->notify(new \App\Notifications\DemandeEchange($echange));
+        }
+        
+        return redirect()->route('employe.plannings.liste-echanges')
+            ->with('success', 'Votre demande d\'\u00e9change a été envoyée à ' . $receveur->prenom . ' ' . $receveur->nom);
+    }
+    
+    /**
+     * Afficher la liste des échanges de jours de travail
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function listeEchanges()
+    {
+        $user = auth()->user();
+        $employe = $user->employe;
+        
+        // Récupérer les échanges où l'employé est demandeur ou receveur
+        $echangesDemandes = \App\Models\EchangeJour::where('demandeur_id', $employe->id)
+            ->with(['demandeur', 'receveur'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+            
+        $echangesRecus = \App\Models\EchangeJour::where('receveur_id', $employe->id)
+            ->with(['demandeur', 'receveur'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+        
+        return view('plannings.echanges', compact('echangesDemandes', 'echangesRecus'));
+    }
+    
+    /**
+     * Accepter une demande d'échange de jours
+     *
+     * @param  \App\Models\EchangeJour  $echange
+     * @return \Illuminate\Http\Response
+     */
+    public function accepterEchange(\App\Models\EchangeJour $echange, Request $request)
+    {
+        $user = auth()->user();
+        $employe = $user->employe;
+        
+        // Vérifier que l'employé est bien le receveur de la demande
+        if ($echange->receveur_id !== $employe->id) {
+            return redirect()->back()->with('error', 'Vous n\'êtes pas autorisé à accepter cette demande.');
+        }
+        
+        // Vérifier que la demande est en attente
+        if (!$echange->estEnAttente()) {
+            return redirect()->back()->with('error', 'Cette demande a déjà été traitée.');
+        }
+        
+        // Récupérer les plannings concernés par l'échange
+        $planningsDemandeur = \App\Models\Planning::where('employe_id', $echange->demandeur_id)
+            ->whereDate('date', $echange->jour_demandeur)
+            ->get();
+            
+        $planningsReceveur = \App\Models\Planning::where('employe_id', $echange->receveur_id)
+            ->whereDate('date', $echange->jour_receveur)
+            ->get();
+            
+        // Vérifier que les plannings existent toujours
+        if ($planningsDemandeur->isEmpty() || $planningsReceveur->isEmpty()) {
+            return redirect()->back()->with('error', 'Les plannings concernés par cet échange n\'existent plus ou ont été modifiés.');
+        }
+        
+        // Échanger les plannings
+        \DB::beginTransaction();
+        try {
+            // Pour chaque planning du demandeur, créer une copie pour le receveur à la date du demandeur
+            foreach ($planningsDemandeur as $planning) {
+                $newPlanning = $planning->replicate();
+                $newPlanning->employe_id = $echange->receveur_id;
+                $newPlanning->save();
+                
+                // Supprimer le planning original du demandeur
+                $planning->delete();
+            }
+            
+            // Pour chaque planning du receveur, créer une copie pour le demandeur à la date du receveur
+            foreach ($planningsReceveur as $planning) {
+                $newPlanning = $planning->replicate();
+                $newPlanning->employe_id = $echange->demandeur_id;
+                $newPlanning->save();
+                
+                // Supprimer le planning original du receveur
+                $planning->delete();
+            }
+            
+            // Mettre à jour le statut de la demande
+            $echange->statut = 'accepte';
+            $echange->commentaire_reponse = $request->commentaire ?? null;
+            $echange->save();
+            
+            \DB::commit();
+        } catch (\Exception $e) {
+            \DB::rollback();
+            return redirect()->back()->with('error', 'Une erreur est survenue lors de l\'échange des plannings: ' . $e->getMessage());
+        }
+        
+        // Notifier le demandeur (si implémenté)
+        if ($echange->demandeur->user) {
+            // $echange->demandeur->user->notify(new \App\Notifications\EchangeAccepte($echange));
+        }
+        
+        return redirect()->route('employe.plannings.liste-echanges')
+            ->with('success', 'Vous avez accepté la demande d\'échange de ' . $echange->demandeur->prenom . ' ' . $echange->demandeur->nom . '. Les plannings ont été mis à jour.');
+    }
+    
+    /**
+     * Refuser une demande d'échange de jours
+     *
+     * @param  \App\Models\EchangeJour  $echange
+     * @return \Illuminate\Http\Response
+     */
+    public function refuserEchange(\App\Models\EchangeJour $echange, Request $request)
+    {
+        $user = auth()->user();
+        $employe = $user->employe;
+        
+        // Vérifier que l'employé est bien le receveur de la demande
+        if ($echange->receveur_id !== $employe->id) {
+            return redirect()->back()->with('error', 'Vous n\'\u00eates pas autorisé à refuser cette demande.');
+        }
+        
+        // Vérifier que la demande est en attente
+        if (!$echange->estEnAttente()) {
+            return redirect()->back()->with('error', 'Cette demande a déjà été traitée.');
+        }
+        
+        // Mettre à jour le statut de la demande
+        $echange->statut = 'refuse';
+        $echange->commentaire_reponse = $request->commentaire ?? null;
+        $echange->save();
+        
+        // Notifier le demandeur (si implémenté)
+        if ($echange->demandeur->user) {
+            // $echange->demandeur->user->notify(new \App\Notifications\EchangeRefuse($echange));
+        }
+        
+        return redirect()->route('employe.plannings.liste-echanges')
+            ->with('success', 'Vous avez refusé la demande d\'\u00e9change de ' . $echange->demandeur->prenom . ' ' . $echange->demandeur->nom);
+    }
     public function index(Request $request)
     {
         $user = auth()->user();
@@ -40,8 +321,9 @@ class PlanningController extends Controller
                 ]);
             }
 
-            $selectedYear = $request->get('annee', now()->year);
-            $selectedMonth = $request->get('mois', now()->month);
+            // Récupérer le mois et l'année depuis la requête ou utiliser le mois et l'année actuels
+            $selectedYear = (int) $request->get('annee', now()->year);
+            $selectedMonth = (int) $request->get('mois', now()->month);
 
             // Récupérer les plannings du mois sélectionné
             $plannings = Planning::where('employe_id', $employe->id)
@@ -522,6 +804,18 @@ class PlanningController extends Controller
             }
 
             DB::commit();
+            
+            // Récupérer les plannings créés pour envoyer une notification
+            $createdPlannings = Planning::where('employe_id', $employe->id)
+                ->whereIn('date', array_keys($data['plannings']))
+                ->orderBy('date')
+                ->get();
+                
+            // Envoyer une notification à l'employé concerné
+            if ($employe->user && !$createdPlannings->isEmpty()) {
+                $employe->user->notify(new PlanningCreatedNotification($createdPlannings->first()));
+            }
+            
             return response()->json(['message' => 'Planning enregistré avec succès']);
         } catch (\Exception $e) {
             DB::rollback();
@@ -741,7 +1035,10 @@ class PlanningController extends Controller
         ]);
 
         // Notifier l'employé de la modification
-        $planning->employe->user->notify(new PlanningModifie($planning));
+        $planning->employe->user->notify(new PlanningUpdatedNotification($planning, [
+            'message' => 'Votre planning a été modifié',
+            'date' => $planning->date->format('Y-m-d')
+        ]));
 
         return redirect()->route('plannings.calendar')
             ->with('success', 'Planning modifié avec succès.');
@@ -1350,6 +1647,21 @@ class PlanningController extends Controller
             }
 
             DB::commit();
+            
+            // Envoyer une notification à l'employé concerné
+            if ($employe->user) {
+                $employe->user->notify(new PlanningUpdatedNotification(
+                    Planning::where('employe_id', $employe->id)
+                        ->whereYear('date', $data['annee'])
+                        ->whereMonth('date', $data['mois'])
+                        ->first(),
+                    [
+                        'message' => 'Votre planning a été mis à jour',
+                        'dates' => implode(', ', array_keys($data['plannings']))
+                    ]
+                ));
+            }
+            
             return response()->json(['message' => 'Planning modifié avec succès']);
         } catch (\Exception $e) {
             DB::rollback();

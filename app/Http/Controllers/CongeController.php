@@ -236,6 +236,10 @@ class CongeController extends Controller
             'nouveau_statut' => $nouveauStatut,
             'commentaire' => $commentaire
         ]);
+        
+        // Envoyer une notification à l'employé concerné
+        $employe = $conge->employe;
+        $employe->user->notify(new \App\Notifications\CongeStatusChangedNotification($conge, $ancienStatut, $nouveauStatut));
 
         try {
             broadcast(new CongeStatusUpdated($conge))->toOthers();
@@ -319,6 +323,23 @@ class CongeController extends Controller
             'duree' => $duree,
             'statut' => 'en_attente'
         ]);
+        
+        // Envoyer une notification aux administrateurs
+        $admins = \App\Models\User::where('role', 'employeur')
+            ->whereHas('societe', function($query) use ($employe) {
+                $query->where('id', $employe->societe_id);
+            })
+            ->get();
+            
+        foreach ($admins as $admin) {
+            $admin->notify(new \App\Notifications\CongeCreatedNotification($conge));
+        }
+
+        try {
+            broadcast(new CongeRequested($conge))->toOthers();
+        } catch (\Exception $e) {
+            \Log::error('Erreur de broadcast: ' . $e->getMessage());
+        }
 
         return redirect()->route('employe.conges.index')
             ->with('success', 'Votre demande de congé a été enregistrée.');
@@ -506,5 +527,25 @@ class CongeController extends Controller
             ->get();
             
         return view('conges.mes-conges', compact('conges', 'autresConges'));
+    }
+    
+    /**
+     * Affiche les détails d'un congé pour un employé
+     */
+    public function showEmploye(Conge $conge)
+    {
+        $employe = Auth::user()->employe;
+        
+        if (!$employe) {
+            return redirect()->route('dashboard')
+                ->with('error', 'Vous devez avoir un profil employé pour accéder à cette page.');
+        }
+        
+        // Vérifier que l'employé a le droit de voir ce congé (soit c'est le sien, soit il est de la même société)
+        if ($conge->employe_id !== $employe->id && $conge->employe->societe_id !== $employe->societe_id) {
+            abort(403, 'Vous n\'\u00eates pas autoris\u00e9 \u00e0 voir cette demande de cong\u00e9.');
+        }
+        
+        return view('conges.show-employe', compact('conge'));
     }
 } 

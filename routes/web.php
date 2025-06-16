@@ -17,7 +17,8 @@ use App\Http\Controllers\{
     AuthenticatedSessionController,
     ComptabiliteController,
     TauxHeuresSupController,
-    TarifController
+    TarifController,
+    EchangeController
 };
 
 use App\Http\Controllers\Auth\{
@@ -95,6 +96,14 @@ Route::middleware(['auth'])->group(function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/home', [PlanningController::class, 'calendarIndex'])->name('home');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    
+    // Routes des notifications
+    Route::prefix('notifications')->name('notifications.')->group(function () {
+        Route::get('/', [NotificationController::class, 'index'])->name('index');
+        Route::get('/unread', [NotificationController::class, 'getUnreadNotifications'])->name('unread');
+        Route::post('/{id}/mark-as-read', [NotificationController::class, 'markAsRead'])->name('mark-as-read');
+        Route::post('/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('mark-all-as-read');
+    });
     
     // Routes d'export PDF accessibles à tous les utilisateurs authentifiés
     Route::get('/plannings/export-pdf/{employe_id}/{mois}/{annee}', [PlanningController::class, 'exportPdf'])
@@ -225,8 +234,23 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/plannings/calendar', [PlanningController::class, 'employeCalendar'])->name('plannings.calendar');
         Route::get('/plannings/download-pdf', [PlanningController::class, 'exportPdfEmploye'])->name('plannings.download-pdf');
         Route::get('/plannings/collegue/{employe}/calendar', [PlanningController::class, 'voirPlanningCollegueCalendar'])->name('plannings.collegue');
+        Route::get('/plannings/collegue/{employe}/compare', [PlanningController::class, 'comparerPlannings'])->name('plannings.comparer');
         Route::post('/plannings/export-pdf-employe', [PlanningController::class, 'exportPdfEmploye'])->name('plannings.export-pdf-employe');
         Route::post('/plannings/demande-modification', [PlanningController::class, 'demandeModification'])->name('plannings.demande-modification');
+        Route::post('/plannings/proposer-echange', [PlanningController::class, 'proposerEchange'])->name('plannings.proposer-echange');
+        Route::get('/plannings/echanges', [PlanningController::class, 'listeEchanges'])->name('plannings.liste-echanges');
+        Route::post('/plannings/echanges/{echange}/accepter', [PlanningController::class, 'accepterEchange'])->name('plannings.accepter-echange');
+        Route::post('/plannings/echanges/{echange}/refuser', [PlanningController::class, 'refuserEchange'])->name('plannings.refuser-echange');
+        
+        // Routes des échanges de planning
+        Route::prefix('echanges')->name('echanges.')->group(function () {
+            Route::get('/', [EchangeController::class, 'index'])->name('index');
+            Route::get('/create', [EchangeController::class, 'create'])->name('create');
+            Route::post('/', [EchangeController::class, 'store'])->name('store');
+            Route::get('/{id}', [EchangeController::class, 'show'])->name('show');
+            Route::post('/{id}/repondre', [EchangeController::class, 'repondre'])->name('repondre');
+            Route::delete('/{id}/annuler', [EchangeController::class, 'annuler'])->name('annuler');
+        });
         
         // Routes des congés
         Route::prefix('conges')->name('conges.')->group(function () {

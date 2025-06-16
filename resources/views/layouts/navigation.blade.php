@@ -18,10 +18,16 @@
                             {{ __('Tableau de bord') }}
                         </x-nav-link>
 
-                        <x-nav-link :href="route('employe.plannings.index')" :active="request()->routeIs('employe.plannings.*')"
+                        <x-nav-link :href="route('employe.plannings.index')" :active="request()->routeIs('employe.plannings.index') || request()->routeIs('employe.plannings.calendar')"
                             class="inline-flex items-center px-1 pt-1 text-sm font-medium leading-5 transition duration-150 ease-in-out {{ request()->cookie('theme', 'light') === 'dark' ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-gray-900' }}">
                             <i class="fas fa-calendar-alt mr-2"></i>
                             {{ __('Plannings') }}
+                        </x-nav-link>
+                        
+                        <x-nav-link :href="route('employe.plannings.liste-echanges')" :active="request()->routeIs('employe.plannings.liste-echanges') || request()->routeIs('employe.plannings.comparer')"
+                            class="inline-flex items-center px-1 pt-1 text-sm font-medium leading-5 transition duration-150 ease-in-out {{ request()->cookie('theme', 'light') === 'dark' ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-gray-900' }}">
+                            <i class="fas fa-exchange-alt mr-2"></i>
+                            {{ __('Échanges') }}
                         </x-nav-link>
 
                         <x-nav-link :href="route('employe.conges.index')" :active="request()->routeIs('employe.conges.*')"
@@ -76,6 +82,9 @@
             </div>
 
             <div class="hidden sm:flex sm:items-center sm:ml-6">
+                <!-- Notifications Dropdown -->
+                @include('partials.notifications-dropdown')
+                
                 <!-- Settings Dropdown -->
                 <div class="ml-3 relative">
                     <x-dropdown align="right" width="48">
@@ -119,11 +128,11 @@
                             </form>
 
                             <!-- Authentication -->
-                            <form method="POST" action="{{ route('logout') }}">
+                            <form method="POST" action="{{ route('logout') }}" id="logout-form">
                                 @csrf
-                                <x-dropdown-link :href="route('logout')"
-                                    onclick="event.preventDefault();
-                                    this.closest('form').submit();" class="flex items-center text-red-600 hover:text-red-700 hover:bg-red-50">
+                                <x-dropdown-link href="#"
+                                    onclick="event.preventDefault(); document.getElementById('logout-form').submit();" 
+                                    class="flex items-center text-red-600 hover:text-red-700 hover:bg-red-50">
                                     <i class="fas fa-sign-out-alt mr-2"></i>
                                     {{ __('Déconnexion') }}
                                 </x-dropdown-link>
