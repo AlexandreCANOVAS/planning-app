@@ -472,4 +472,39 @@ class CongeController extends Controller
             ];
         }));
     }
+    
+    /**
+     * Affiche la liste des congés pour un employé
+     */
+    public function indexEmploye()
+    {
+        $employe = Auth::user()->employe;
+        
+        if (!$employe) {
+            return redirect()->route('dashboard')
+                ->with('error', 'Vous devez avoir un profil employé pour accéder à cette page.');
+        }
+        
+        // Récupérer les congés de l'employé connecté
+        $conges = $employe->conges()
+            ->orderBy('date_debut', 'desc')
+            ->get();
+            
+        // Récupérer les congés des collègues (autres employés de la même société)
+        $autresConges = Conge::query()
+            ->with('employe')
+            ->whereHas('employe', function($query) use ($employe) {
+                $query->where('societe_id', $employe->societe_id)
+                      ->where('id', '!=', $employe->id);
+            })
+            ->where('statut', 'accepte')
+            ->where(function($query) {
+                $query->where('date_debut', '>=', now()->startOfMonth())
+                      ->orWhere('date_fin', '>=', now());
+            })
+            ->orderBy('date_debut')
+            ->get();
+            
+        return view('conges.mes-conges', compact('conges', 'autresConges'));
+    }
 } 

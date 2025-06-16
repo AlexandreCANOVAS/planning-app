@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use App\Models\EmployeFormation;
 
 class Employe extends Model
 {
@@ -17,6 +18,21 @@ class Employe extends Model
         'prenom',
         'email',
         'telephone',
+        'adresse',
+        'date_embauche',
+        'photo_profil',
+        'date_naissance',
+        'numero_securite_sociale',
+        'situation_familiale',
+        'nombre_enfants',
+        'contact_urgence_nom',
+        'contact_urgence_telephone',
+        'poste',
+        'type_contrat',
+        'date_debut_contrat',
+        'date_fin_contrat',
+        'temps_travail',
+        'pourcentage_travail',
         'societe_id',
         'user_id'
     ];
@@ -58,11 +74,43 @@ class Employe extends Model
     /**
      * Relation avec les formations
      */
-    public function formations(): BelongsToMany
+    public function formations()
     {
         return $this->belongsToMany(Formation::class, 'employe_formation')
-            ->withPivot(['date_obtention', 'date_recyclage', 'commentaire'])
+            ->withPivot(['date_obtention', 'date_recyclage', 'last_recyclage', 'commentaire'])
             ->withTimestamps();
+    }
+    
+    /**
+     * Relation avec les documents administratifs
+     */
+    public function documentsAdministratifs()
+    {
+        return $this->hasMany(DocumentAdministratif::class);
+    }
+    
+    /**
+     * Relation avec les matériels attribués
+     */
+    public function materiels()
+    {
+        return $this->hasMany(Materiel::class);
+    }
+    
+    /**
+     * Relation avec les badges d'accès
+     */
+    public function badgesAcces()
+    {
+        return $this->hasMany(BadgeAcces::class);
+    }
+    
+    /**
+     * Relation avec les accès informatiques
+     */
+    public function accesInformatiques()
+    {
+        return $this->hasMany(AccesInformatique::class);
     }
 
     /**

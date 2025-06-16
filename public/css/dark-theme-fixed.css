@@ -1,0 +1,234 @@
+/* Force Dark Theme - Solution élégante et minimaliste */
+
+/* Variables CSS pour le thème sombre */
+:root {
+    /* Couleurs de fond principales */
+    --dark-bg-primary: #0f172a;
+    --dark-bg-secondary: #1e293b;
+    --dark-bg-tertiary: #334155;
+    
+    /* Couleurs de texte */
+    --dark-text-primary: #f1f5f9;
+    --dark-text-secondary: #cbd5e1;
+    
+    /* Couleurs de bordure */
+    --dark-border-color: #475569;
+    
+    /* Couleurs d'accent */
+    --dark-accent: #4f46e5;
+    --dark-success: #059669;
+    --dark-danger: #dc2626;
+    --dark-warning: #d97706;
+    --dark-info: #2563eb;
+}
+
+/* Base du thème sombre */
+html.dark {
+    background-color: var(--dark-bg-primary);
+    color: var(--dark-text-primary);
+}
+
+html.dark body {
+    background-color: var(--dark-bg-primary);
+    color: var(--dark-text-primary);
+}
+
+html.dark .min-h-screen {
+    background-color: var(--dark-bg-primary) !important;
+}
+
+/* Corps et conteneurs principaux */
+html.dark main {
+    background-color: var(--dark-bg-primary);
+}
+
+/* Navigation */
+html.dark nav,
+html.dark header {
+    background-color: var(--dark-bg-secondary);
+    border-bottom: 1px solid var(--dark-border-color);
+}
+
+/* Liens */
+html.dark a {
+    color: var(--dark-accent);
+}
+
+html.dark a:hover {
+    opacity: 0.8;
+}
+
+/* Tableaux */
+html.dark table {
+    border-color: var(--dark-border-color);
+}
+
+html.dark th {
+    background-color: var(--dark-bg-secondary);
+}
+
+html.dark tr:nth-child(odd) td {
+    background-color: var(--dark-bg-secondary);
+}
+
+/* Formulaires */
+html.dark input,
+html.dark select,
+html.dark textarea {
+    background-color: var(--dark-bg-secondary);
+    border: 1px solid var(--dark-border-color);
+    color: var(--dark-text-primary);
+}
+
+/* Boutons */
+html.dark button,
+html.dark .btn,
+html.dark [type="button"],
+html.dark [type="submit"] {
+    background-color: var(--dark-bg-secondary);
+    color: var(--dark-text-primary);
+    border: 1px solid var(--dark-border-color);
+}
+
+html.dark .btn-primary {
+    background-color: var(--dark-accent);
+    color: white;
+}
+
+html.dark .btn-success {
+    background-color: var(--dark-success);
+    color: white;
+}
+
+html.dark .btn-danger {
+    background-color: var(--dark-danger);
+    color: white;
+}
+
+/* CORRECTION POUR LES CARTES DU TABLEAU DE BORD */
+html.dark .bg-white {
+    background-color: var(--dark-bg-secondary) !important;
+}
+
+html.dark .rounded-lg.shadow-sm {
+    background-color: var(--dark-bg-secondary) !important;
+    border-color: var(--dark-border-color) !important;
+}
+
+html.dark .border-l-4 {
+    border-left-width: 4px !important;
+}
+
+/* Préserver les couleurs des bordures colorées */
+html.dark .border-blue-500,
+html.dark .border-green-500,
+html.dark .border-purple-500,
+html.dark .border-yellow-500,
+html.dark .border-red-500 {
+    border-color: inherit !important;
+}
+
+/* Styles pour les textes dans les cartes */
+html.dark .text-gray-500 {
+    color: var(--dark-text-secondary) !important;
+}
+
+html.dark .text-gray-800,
+html.dark .text-gray-900 {
+    color: var(--dark-text-primary) !important;
+}
+
+/* Styles pour les icônes colorées */
+html.dark .text-blue-600,
+html.dark .text-green-600,
+html.dark .text-purple-600,
+html.dark .text-red-600,
+html.dark .text-yellow-600 {
+    /* Garder les couleurs d'accent pour les icônes */
+    color: inherit !important;
+}
+
+/* Alertes */
+html.dark .alert-success {
+    background-color: rgba(5, 150, 105, 0.1);
+    border-left: 4px solid var(--dark-success);
+}
+
+html.dark .alert-danger {
+    background-color: rgba(220, 38, 38, 0.1);
+    border-left: 4px solid var(--dark-danger);
+}
+
+html.dark .alert-warning {
+    background-color: rgba(217, 119, 6, 0.1);
+    border-left: 4px solid var(--dark-warning);
+}
+
+html.dark .alert-info {
+    background-color: rgba(37, 99, 235, 0.1);
+    border-left: 4px solid var(--dark-info);
+}
+
+/* Badges */
+html.dark .badge {
+    background-color: var(--dark-bg-tertiary);
+}
+
+/* Images */
+html.dark img {
+    opacity: 0.9;
+}
+
+/* Styles spécifiques pour les informations des employés */
+html.dark .employe-card,
+html.dark .employe-info,
+html.dark .employe-details,
+html.dark .employee-card,
+html.dark .employee-info,
+html.dark .employee-details {
+    background-color: var(--dark-bg-secondary);
+    border: 1px solid var(--dark-border-color);
+}
+
+/* Styles pour les sections colorées du PDF */
+html.dark .section-standard,
+html.dark .section-supplementaires,
+html.dark .section-nuit,
+html.dark .section-dimanche,
+html.dark .section-feries,
+html.dark .section-absences {
+    filter: brightness(0.8) saturate(0.8);
+}
+
+/* Types de contrat */
+html.dark .cdi-badge,
+html.dark .cdd-badge,
+html.dark .interim-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+}
+
+html.dark .cdi-badge {
+    background-color: var(--dark-success);
+    color: white;
+}
+
+html.dark .cdd-badge {
+    background-color: var(--dark-info);
+    color: white;
+}
+
+html.dark .interim-badge {
+    background-color: var(--dark-warning);
+    color: white;
+}
+
+/* Temps de travail */
+html.dark .full-time {
+    color: var(--dark-success);
+}
+
+html.dark .part-time {
+    color: var(--dark-info);
+}

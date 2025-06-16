@@ -1,0 +1,339 @@
+/* Force Dark Theme - Design élégant et coloré */
+
+/* Variables CSS pour le thème sombre */
+:root {
+    /* Palette principale */
+    --dark-bg-primary: #1a1b26;
+    --dark-bg-secondary: #24283b;
+    --dark-bg-tertiary: #2f334d;
+    --dark-card-bg: #292e42;
+    
+    /* Palette de texte */
+    --dark-text-primary: #c0caf5;
+    --dark-text-secondary: #9aa5ce;
+    --dark-text-muted: #565f89;
+    
+    /* Palette de bordures */
+    --dark-border-color: #3b4261;
+    --dark-border-accent: #414868;
+    
+    /* Palette d'accent */
+    --dark-accent: #7aa2f7;
+    --dark-accent-soft: #3d59a1;
+    --dark-success: #9ece6a;
+    --dark-success-soft: #485e30;
+    --dark-danger: #f7768e;
+    --dark-danger-soft: #8c4351;
+    --dark-warning: #e0af68;
+    --dark-warning-soft: #786443;
+    --dark-info: #7dcfff;
+    --dark-info-soft: #2e6480;
+    --dark-purple: #bb9af7;
+    --dark-purple-soft: #583d7e;
+    
+    /* Effets */
+    --dark-shadow-sm: 0 2px 5px rgba(0, 0, 0, 0.2);
+    --dark-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+    --dark-glow-blue: 0 0 8px rgba(122, 162, 247, 0.3);
+    --dark-glow-green: 0 0 8px rgba(158, 206, 106, 0.3);
+    --dark-glow-red: 0 0 8px rgba(247, 118, 142, 0.3);
+}
+
+/* Base du thème sombre */
+html.dark {
+    background-color: var(--dark-bg-primary);
+    color: var(--dark-text-primary);
+}
+
+html.dark body {
+    background-color: var(--dark-bg-primary);
+    color: var(--dark-text-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+html.dark .min-h-screen {
+    background-color: var(--dark-bg-primary) !important;
+}
+
+/* En-têtes et navigation */
+html.dark header,
+html.dark nav {
+    background-color: var(--dark-bg-secondary) !important;
+    border-color: var(--dark-border-color) !important;
+    box-shadow: var(--dark-shadow-sm) !important;
+}
+
+html.dark .bg-gradient-to-r {
+    background: linear-gradient(to right, #3d59a1, #7aa2f7) !important;
+}
+
+/* Cartes et conteneurs */
+html.dark .bg-white,
+html.dark .bg-gray-50,
+html.dark .bg-gray-100,
+html.dark .bg-gray-200,
+html.dark .rounded-lg.shadow-sm,
+html.dark .overflow-hidden.shadow.rounded-lg {
+    background-color: var(--dark-card-bg) !important;
+    border-color: var(--dark-border-color) !important;
+    box-shadow: var(--dark-shadow-sm) !important;
+}
+
+html.dark .border,
+html.dark .border-gray-100,
+html.dark .border-gray-200,
+html.dark .border-gray-300 {
+    border-color: var(--dark-border-color) !important;
+}
+
+/* Hover effects for cards */
+html.dark .hover\\:shadow-md:hover,
+html.dark .hover\\:border-gray-400:hover {
+    border-color: var(--dark-border-accent) !important;
+    box-shadow: var(--dark-shadow) !important;
+    transform: translateY(-2px);
+}
+
+/* Textes */
+html.dark .text-gray-500,
+html.dark .text-gray-600 {
+    color: var(--dark-text-secondary) !important;
+}
+
+html.dark .text-gray-700,
+html.dark .text-gray-800,
+html.dark .text-gray-900 {
+    color: var(--dark-text-primary) !important;
+}
+
+/* Couleurs d'accent pour les textes */
+html.dark .text-blue-600 {
+    color: var(--dark-accent) !important;
+}
+
+html.dark .text-green-600 {
+    color: var(--dark-success) !important;
+}
+
+html.dark .text-red-600 {
+    color: var(--dark-danger) !important;
+}
+
+html.dark .text-yellow-600,
+html.dark .text-orange-600 {
+    color: var(--dark-warning) !important;
+}
+
+html.dark .text-purple-600 {
+    color: var(--dark-purple) !important;
+}
+
+/* Fonds colorés pour les icônes */
+html.dark .bg-blue-100 {
+    background-color: var(--dark-accent-soft) !important;
+}
+
+html.dark .bg-green-100 {
+    background-color: var(--dark-success-soft) !important;
+}
+
+html.dark .bg-red-100 {
+    background-color: var(--dark-danger-soft) !important;
+}
+
+html.dark .bg-yellow-100,
+html.dark .bg-orange-100 {
+    background-color: var(--dark-warning-soft) !important;
+}
+
+html.dark .bg-purple-100 {
+    background-color: var(--dark-purple-soft) !important;
+}
+
+/* Bordures colorées */
+html.dark .border-blue-500 {
+    border-color: var(--dark-accent) !important;
+}
+
+html.dark .border-green-500 {
+    border-color: var(--dark-success) !important;
+}
+
+html.dark .border-red-500 {
+    border-color: var(--dark-danger) !important;
+}
+
+html.dark .border-yellow-500 {
+    border-color: var(--dark-warning) !important;
+}
+
+html.dark .border-purple-500 {
+    border-color: var(--dark-purple) !important;
+}
+
+/* Boutons */
+html.dark button,
+html.dark .btn,
+html.dark [type="button"],
+html.dark [type="submit"] {
+    background-color: var(--dark-bg-tertiary);
+    color: var(--dark-text-primary);
+    border-color: var(--dark-border-color);
+    transition: all 0.2s ease;
+}
+
+html.dark button:hover,
+html.dark .btn:hover,
+html.dark [type="button"]:hover,
+html.dark [type="submit"]:hover {
+    background-color: var(--dark-border-accent);
+    border-color: var(--dark-border-accent);
+}
+
+html.dark .bg-blue-50 {
+    background-color: var(--dark-accent-soft) !important;
+}
+
+html.dark .bg-blue-50.hover\\:bg-blue-100:hover {
+    background-color: rgba(122, 162, 247, 0.3) !important;
+}
+
+html.dark .text-blue-600 {
+    color: var(--dark-accent) !important;
+}
+
+/* Formulaires */
+html.dark input,
+html.dark select,
+html.dark textarea {
+    background-color: var(--dark-bg-tertiary);
+    border-color: var(--dark-border-color);
+    color: var(--dark-text-primary);
+    transition: all 0.2s ease;
+}
+
+html.dark input:focus,
+html.dark select:focus,
+html.dark textarea:focus {
+    border-color: var(--dark-accent);
+    box-shadow: var(--dark-glow-blue);
+}
+
+/* Tableaux */
+html.dark table {
+    border-color: var(--dark-border-color);
+}
+
+html.dark th {
+    background-color: var(--dark-bg-secondary);
+    color: var(--dark-text-primary);
+}
+
+html.dark tr:nth-child(odd) td {
+    background-color: var(--dark-bg-secondary);
+}
+
+html.dark tr:nth-child(even) td {
+    background-color: var(--dark-bg-tertiary);
+}
+
+html.dark tr:hover td {
+    background-color: var(--dark-border-accent);
+}
+
+/* Alertes */
+html.dark .alert-success {
+    background-color: var(--dark-success-soft);
+    border-left: 4px solid var(--dark-success);
+    color: var(--dark-text-primary);
+}
+
+html.dark .alert-danger {
+    background-color: var(--dark-danger-soft);
+    border-left: 4px solid var(--dark-danger);
+    color: var(--dark-text-primary);
+}
+
+html.dark .alert-warning {
+    background-color: var(--dark-warning-soft);
+    border-left: 4px solid var(--dark-warning);
+    color: var(--dark-text-primary);
+}
+
+html.dark .alert-info {
+    background-color: var(--dark-info-soft);
+    border-left: 4px solid var(--dark-info);
+    color: var(--dark-text-primary);
+}
+
+/* Badges */
+html.dark .badge {
+    background-color: var(--dark-bg-tertiary);
+}
+
+/* Types de contrat */
+html.dark .cdi-badge {
+    background-color: var(--dark-success);
+    color: white;
+}
+
+html.dark .cdd-badge {
+    background-color: var(--dark-info);
+    color: white;
+}
+
+html.dark .interim-badge {
+    background-color: var(--dark-warning);
+    color: white;
+}
+
+/* Temps de travail */
+html.dark .full-time {
+    color: var(--dark-success);
+}
+
+html.dark .part-time {
+    color: var(--dark-info);
+}
+
+/* Styles spécifiques pour les informations des employés */
+html.dark .employe-card,
+html.dark .employe-info,
+html.dark .employe-details,
+html.dark .employee-card,
+html.dark .employee-info,
+html.dark .employee-details {
+    background-color: var(--dark-card-bg);
+    border: 1px solid var(--dark-border-color);
+    box-shadow: var(--dark-shadow-sm);
+}
+
+/* Styles pour les sections colorées du PDF */
+html.dark .section-standard {
+    background-color: var(--dark-bg-tertiary);
+}
+
+html.dark .section-supplementaires {
+    background-color: var(--dark-accent-soft);
+}
+
+html.dark .section-nuit {
+    background-color: var(--dark-purple-soft);
+}
+
+html.dark .section-dimanche {
+    background-color: var(--dark-warning-soft);
+}
+
+html.dark .section-feries {
+    background-color: var(--dark-danger-soft);
+}
+
+html.dark .section-absences {
+    background-color: var(--dark-info-soft);
+}
+
+/* Transitions fluides */
+html.dark * {
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}

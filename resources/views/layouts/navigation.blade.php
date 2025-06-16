@@ -1,11 +1,11 @@
-<nav x-data="{ open: false }" class="bg-white border-b border-gray-100 shadow-sm fixed w-full top-0 z-50">
+<nav x-data="{ open: false }" class="{{ request()->cookie('theme', 'light') === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100' }} border-b shadow-sm fixed w-full top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
             <div class="flex">
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
                     <a href="{{ route('dashboard') }}" class="flex items-center">
-                        <span class="font-semibold text-xl text-gray-800">Planning App</span>
+                        <span class="font-semibold text-xl {{ request()->cookie('theme', 'light') === 'dark' ? 'text-white' : 'text-gray-800' }}">Planify</span>
                     </a>
                 </div>
 
@@ -13,61 +13,61 @@
                 <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
                     @if(Auth::user()->role === 'employe')
                         <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" 
-                            class="inline-flex items-center px-1 pt-1 text-sm font-medium leading-5 transition duration-150 ease-in-out">
+                            class="inline-flex items-center px-1 pt-1 text-sm font-medium leading-5 transition duration-150 ease-in-out {{ request()->cookie('theme', 'light') === 'dark' ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-gray-900' }}">
                             <i class="fas fa-chart-line mr-2"></i>
                             {{ __('Tableau de bord') }}
                         </x-nav-link>
 
                         <x-nav-link :href="route('employe.plannings.index')" :active="request()->routeIs('employe.plannings.*')"
-                            class="inline-flex items-center px-1 pt-1 text-sm font-medium leading-5 transition duration-150 ease-in-out">
+                            class="inline-flex items-center px-1 pt-1 text-sm font-medium leading-5 transition duration-150 ease-in-out {{ request()->cookie('theme', 'light') === 'dark' ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-gray-900' }}">
                             <i class="fas fa-calendar-alt mr-2"></i>
                             {{ __('Plannings') }}
                         </x-nav-link>
 
                         <x-nav-link :href="route('employe.conges.index')" :active="request()->routeIs('employe.conges.*')"
-                            class="inline-flex items-center px-1 pt-1 text-sm font-medium leading-5 transition duration-150 ease-in-out">
+                            class="inline-flex items-center px-1 pt-1 text-sm font-medium leading-5 transition duration-150 ease-in-out {{ request()->cookie('theme', 'light') === 'dark' ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-gray-900' }}">
                             <i class="fas fa-umbrella-beach mr-2"></i>
                             {{ __('Congés') }}
                         </x-nav-link>
                     @else
                         <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" 
-                            class="inline-flex items-center px-1 pt-1 text-sm font-medium leading-5 transition duration-150 ease-in-out">
+                            class="inline-flex items-center px-1 pt-1 text-sm font-medium leading-5 transition duration-150 ease-in-out {{ request()->cookie('theme', 'light') === 'dark' ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-gray-900' }}">
                             <i class="fas fa-chart-line mr-2"></i>
                             {{ __('Tableau de bord') }}
                         </x-nav-link>
 
                         <x-nav-link :href="route('employes.index')" :active="request()->routeIs('employes.*')"
-                            class="inline-flex items-center px-1 pt-1 text-sm font-medium leading-5 transition duration-150 ease-in-out">
+                            class="inline-flex items-center px-1 pt-1 text-sm font-medium leading-5 transition duration-150 ease-in-out {{ request()->cookie('theme', 'light') === 'dark' ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-gray-900' }}">
                             <i class="fas fa-users mr-2"></i>
                             {{ __('Employés') }}
                         </x-nav-link>
 
                         <x-nav-link :href="route('formations.index')" :active="request()->routeIs('formations.*')"
-                            class="inline-flex items-center px-1 pt-1 text-sm font-medium leading-5 transition duration-150 ease-in-out">
+                            class="inline-flex items-center px-1 pt-1 text-sm font-medium leading-5 transition duration-150 ease-in-out {{ request()->cookie('theme', 'light') === 'dark' ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-gray-900' }}">
                             <i class="fas fa-graduation-cap mr-2"></i>
                             {{ __('Formations') }}
                         </x-nav-link>
 
                         <x-nav-link :href="route('plannings.calendar')" :active="request()->routeIs('plannings.*')"
-                            class="inline-flex items-center px-1 pt-1 text-sm font-medium leading-5 transition duration-150 ease-in-out">
+                            class="inline-flex items-center px-1 pt-1 text-sm font-medium leading-5 transition duration-150 ease-in-out {{ request()->cookie('theme', 'light') === 'dark' ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-gray-900' }}">
                             <i class="fas fa-calendar-alt mr-2"></i>
                             {{ __('Plannings') }}
                         </x-nav-link>
 
                         <x-nav-link :href="route('comptabilite.index')" :active="request()->routeIs('comptabilite.*')"
-                            class="inline-flex items-center px-1 pt-1 text-sm font-medium leading-5 transition duration-150 ease-in-out">
+                            class="inline-flex items-center px-1 pt-1 text-sm font-medium leading-5 transition duration-150 ease-in-out {{ request()->cookie('theme', 'light') === 'dark' ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-gray-900' }}">
                             <i class="fas fa-calculator mr-2"></i>
                             {{ __('Comptabilité') }}
                         </x-nav-link>
 
                         <x-nav-link :href="route('conges.index')" :active="request()->routeIs('conges.*')"
-                            class="inline-flex items-center px-1 pt-1 text-sm font-medium leading-5 transition duration-150 ease-in-out">
+                            class="inline-flex items-center px-1 pt-1 text-sm font-medium leading-5 transition duration-150 ease-in-out {{ request()->cookie('theme', 'light') === 'dark' ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-gray-900' }}">
                             <i class="fas fa-umbrella-beach mr-2"></i>
                             {{ __('Congés') }}
                         </x-nav-link>
 
                         <x-nav-link :href="route('lieux.index')" :active="request()->routeIs('lieux.*')"
-                            class="inline-flex items-center px-1 pt-1 text-sm font-medium leading-5 transition duration-150 ease-in-out">
+                            class="inline-flex items-center px-1 pt-1 text-sm font-medium leading-5 transition duration-150 ease-in-out {{ request()->cookie('theme', 'light') === 'dark' ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-gray-900' }}">
                             <i class="fas fa-map-marker-alt mr-2"></i>
                             {{ __('Lieux de travail') }}
                         </x-nav-link>
@@ -80,14 +80,14 @@
                 <div class="ml-3 relative">
                     <x-dropdown align="right" width="48">
                         <x-slot name="trigger">
-                            <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150 hover:bg-gray-50">
+                            <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md {{ request()->cookie('theme', 'light') === 'dark' ? 'text-gray-300 bg-gray-800 hover:text-white hover:bg-gray-700' : 'text-gray-500 bg-white hover:text-gray-700 hover:bg-gray-50' }} focus:outline-none transition ease-in-out duration-150">
                                 <div class="flex items-center">
-                                    <div class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center mr-2">
-                                        <i class="fas fa-user text-gray-600"></i>
+                                    <div class="h-8 w-8 rounded-full {{ request()->cookie('theme', 'light') === 'dark' ? 'bg-gray-700' : 'bg-gray-200' }} flex items-center justify-center mr-2">
+                                        <i class="fas fa-user {{ request()->cookie('theme', 'light') === 'dark' ? 'text-gray-300' : 'text-gray-600' }}"></i>
                                     </div>
                                     <div>
-                                        <div class="font-medium text-gray-900">{{ Auth::user()->name }}</div>
-                                        <div class="text-xs text-gray-500">{{ Auth::user()->email }}</div>
+                                        <div class="font-medium {{ request()->cookie('theme', 'light') === 'dark' ? 'text-white' : 'text-gray-900' }}">{{ Auth::user()->name }}</div>
+                                        <div class="text-xs {{ request()->cookie('theme', 'light') === 'dark' ? 'text-gray-300' : 'text-gray-500' }}">{{ Auth::user()->email }}</div>
                                     </div>
                                 </div>
                                 <div class="ml-1">
@@ -103,6 +103,20 @@
                                 <i class="fas fa-user-cog mr-2"></i>
                                 {{ __('Profil') }}
                             </x-dropdown-link>
+
+                            <!-- Bouton de basculement de thème -->
+                            <form method="POST" action="{{ route('theme.toggle') }}">
+                                @csrf
+                                <button type="submit" class="w-full text-left px-4 py-2 text-sm leading-5 text-gray-700 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 transition duration-150 ease-in-out flex items-center dark:text-gray-300 dark:hover:bg-gray-700">
+                                    @if(request()->cookie('theme', 'light') === 'dark')
+                                        <i class="fas fa-sun mr-2"></i>
+                                        {{ __('Thème clair') }}
+                                    @else
+                                        <i class="fas fa-moon mr-2"></i>
+                                        {{ __('Thème sombre') }}
+                                    @endif
+                                </button>
+                            </form>
 
                             <!-- Authentication -->
                             <form method="POST" action="{{ route('logout') }}">
@@ -199,6 +213,20 @@
                     <i class="fas fa-user-cog mr-2"></i>
                     {{ __('Profil') }}
                 </x-responsive-nav-link>
+
+                <!-- Bouton de basculement de thème pour mobile -->
+                <form method="POST" action="{{ route('theme.toggle') }}">
+                    @csrf
+                    <button type="submit" class="w-full text-left block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300 focus:outline-none focus:text-gray-800 focus:bg-gray-50 focus:border-gray-300 transition duration-150 ease-in-out flex items-center dark:text-gray-300 dark:hover:bg-gray-700">
+                        @if(request()->cookie('theme', 'light') === 'dark')
+                            <i class="fas fa-sun mr-2"></i>
+                            {{ __('Thème clair') }}
+                        @else
+                            <i class="fas fa-moon mr-2"></i>
+                            {{ __('Thème sombre') }}
+                        @endif
+                    </button>
+                </form>
 
                 <!-- Authentication -->
                 <form method="POST" action="{{ route('logout') }}">

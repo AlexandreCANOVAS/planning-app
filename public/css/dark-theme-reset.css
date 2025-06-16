@@ -1,0 +1,145 @@
+/* Force Dark Theme - Reset complet sans aucun fond noir */
+
+/* Variables CSS pour le thème sombre */
+:root {
+    --dark-text-primary: #f3f4f6;
+    --dark-text-secondary: #d1d5db;
+    --dark-accent: #3b82f6;
+    --dark-success: #10b981;
+    --dark-danger: #ef4444;
+    --dark-warning: #f59e0b;
+}
+
+/* Base du thème sombre - fond transparent partout */
+html.dark {
+    background-color: #111827;
+    color: var(--dark-text-primary);
+}
+
+html.dark body {
+    background-color: #111827;
+    color: var(--dark-text-primary);
+}
+
+/* RESET COMPLET - Suppression de tous les fonds noirs et gris */
+html.dark * {
+    background-color: transparent !important;
+}
+
+/* Correction des textes */
+html.dark .text-gray-500,
+html.dark .text-gray-600,
+html.dark .text-sm.text-gray-500,
+html.dark [class*="text-gray-"] {
+    color: var(--dark-text-secondary) !important;
+}
+
+html.dark .text-gray-700,
+html.dark .text-gray-800,
+html.dark .text-gray-900,
+html.dark .text-black {
+    color: var(--dark-text-primary) !important;
+}
+
+/* Préserver les couleurs des textes spéciaux */
+html.dark .text-blue-600 {
+    color: var(--dark-accent) !important;
+}
+
+html.dark .text-green-600 {
+    color: var(--dark-success) !important;
+}
+
+html.dark .text-red-600 {
+    color: var(--dark-danger) !important;
+}
+
+html.dark .text-yellow-600,
+html.dark .text-orange-600 {
+    color: var(--dark-warning) !important;
+}
+
+/* Styles pour les badges et indicateurs - exceptions pour les couleurs de fond */
+html.dark .badge,
+html.dark .cdi-badge,
+html.dark .cdd-badge,
+html.dark .interim-badge,
+html.dark .btn-primary,
+html.dark .btn-success,
+html.dark .btn-danger,
+html.dark .btn-warning,
+html.dark .btn-info {
+    background-color: inherit !important; /* Préserver les couleurs d'origine */
+}
+
+/* Bordures subtiles pour les cartes et conteneurs */
+html.dark .card,
+html.dark .shadow,
+html.dark .shadow-sm,
+html.dark .shadow-md,
+html.dark .shadow-lg,
+html.dark .border,
+html.dark .border-t,
+html.dark .border-b,
+html.dark .border-l,
+html.dark .border-r {
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    box-shadow: none !important;
+}
+
+/* Styles pour les formulaires */
+html.dark input,
+html.dark select,
+html.dark textarea {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    color: var(--dark-text-primary) !important;
+}
+
+/* Styles pour les en-têtes de tableau */
+html.dark th {
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Styles pour les lignes de tableau */
+html.dark tr {
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Styles pour les cellules de tableau */
+html.dark td {
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Styles pour les liens */
+html.dark a {
+    color: var(--dark-accent) !important;
+}
+
+/* Styles pour les boutons */
+html.dark button,
+html.dark .btn {
+    color: var(--dark-text-primary) !important;
+}
+
+/* Styles pour les sections spéciales */
+html.dark .navbar,
+html.dark .header,
+html.dark .footer {
+    background-color: rgba(17, 24, 39, 0.8) !important;
+}
+
+/* Styles pour les modals */
+html.dark .modal-content {
+    background-color: #1f2937 !important;
+}
+
+/* Styles pour les dropdowns */
+html.dark .dropdown-menu {
+    background-color: #1f2937 !important;
+}
+
+/* Styles pour les tooltips */
+html.dark .tooltip {
+    background-color: #1f2937 !important;
+}

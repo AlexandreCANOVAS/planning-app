@@ -1,0 +1,78 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Employe;
+use App\Models\Formation;
+use App\Models\Planning;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
+
+class EmployeController extends Controller
+{
+    // Autres méthodes du contrôleur...
+
+    /**
+     * Affiche les formations d'un employé ou de tous les employés
+     */
+    public function formations(Request $request)
+    {
+        $user = auth()->user();
+        
+        if (!$user->societe) {
+            return redirect()->route('societes.create')
+                ->with('error', 'Vous devez d\'abord créer votre société.');
+        }
+
+        if ($request->route('employe')) {
+            // Récupérer l'ID de l'employé
+            $employeId = $request->route('employe');
+            
+            try {
+                // Charger l'employé de base
+                $employe = Employe::findOrFail($employeId);
+                
+                // Récupérer les formations directement depuis la base de données
+                $formations = Formation::join('employe_formation', 'formations.id', '=', 'employe_formation.formation_id')
+                    ->where('employe_formation.employe_id', $employeId)
+                    ->select(
+                        'formations.*',
+                        'employe_formation.date_obtention',
+                        'employe_formation.date_recyclage',
+                        'employe_formation.last_recyclage',
+                        'employe_formation.commentaire',
+                        'employe_formation.employe_id',
+                        'employe_formation.formation_id'
+                    )
+                    ->get();
+                
+                // Déboguer le nombre de formations trouvées
+                Log::debug("Nombre de formations trouvées pour l'employé #{$employeId}: " . $formations->count());
+                
+                // Créer une collection pour les employés
+                $employes = collect([$employe]);
+                
+                // Retourner la vue avec les données
+                return view('employes.formations', compact('employes', 'employe', 'formations'));
+                
+            } catch (\Exception $e) {
+                Log::error('Erreur lors du chargement des formations pour l\'employé #' . $employeId . ': ' . $e->getMessage());
+                return redirect()->route('employes.index')
+                    ->with('error', 'Impossible de charger les formations de cet employé.');
+            }
+        } else {
+            // Charger tous les employés avec leurs formations et les données pivot complètes
+            $employes = Employe::where('societe_id', $user->societe_id)
+                ->with(['formations' => function($query) {
+                    $query->select('formations.*', 'employe_formation.date_obtention', 'employe_formation.date_recyclage', 'employe_formation.last_recyclage', 'employe_formation.commentaire');
+                }])
+                ->get();
+            
+            return view('employes.formations', compact('employes'));
+        }
+    }
+
+    // Autres méthodes du contrôleur...
+}

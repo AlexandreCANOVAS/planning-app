@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\{
+    ThemeController,
     ProfileController,
     SocieteController,
     EmployeController,
@@ -75,6 +76,14 @@ Route::middleware('auth')->group(function () {
     Route::get('verify-email', [EmailVerificationPromptController::class, 'show'])->name('verification.notice');
     Route::get('verify-email/{id}/{hash}', [VerifyEmailController::class, 'verify'])->name('verification.verify');
     Route::post('email/verification-notification', [EmailVerificationNotificationController::class, 'store'])->name('verification.send');
+    
+    // Route pour changer le thème
+    Route::post('/theme/toggle', [ThemeController::class, 'toggleTheme'])->name('theme.toggle');
+    
+    // Routes pour le profil utilisateur
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
 // Routes pour le changement de mot de passe (doivent être définies avant les autres routes authentifiées)
@@ -109,11 +118,24 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::put('/{employe}', [EmployeController::class, 'update'])->name('employes.update');
             Route::delete('/{employe}', [EmployeController::class, 'destroy'])->name('employes.destroy');
             Route::get('/{employe}/stats', [EmployeController::class, 'stats'])->name('employes.stats');
-            Route::get('/formations', [EmployeController::class, 'formations'])->name('employes.formations');
+            Route::get('/{employe}/formations', [EmployeController::class, 'formations'])->name('employes.formations');
+            Route::get('/{employe}/details', [EmployeController::class, 'show'])->name('employes.show');
         });
         
         // Routes des lieux de travail
-        Route::resource('lieux', LieuController::class);
+        Route::get('/lieux', [LieuController::class, 'index'])->name('lieux.index');
+        Route::get('/lieux/create', [LieuController::class, 'create'])->name('lieux.create');
+        Route::post('/lieux', [LieuController::class, 'store'])->name('lieux.store');
+        Route::get('/lieux/{lieu}/edit', [LieuController::class, 'edit'])->name('lieux.edit');
+        Route::put('/lieux/{lieu}', [LieuController::class, 'update'])->name('lieux.update');
+        Route::delete('/lieux/{lieu}', [LieuController::class, 'destroy'])->name('lieux.destroy');
+        Route::delete('/lieux/{lieu}/force', [LieuController::class, 'forceDestroy'])->name('lieux.forceDestroy');
+        
+        // Nouvelles routes pour les actions rapides des lieux
+        Route::get('/lieux/{lieu}/plannings', [LieuController::class, 'plannings'])->name('lieux.plannings');
+        Route::get('/lieux/{lieu}/duplicate', [LieuController::class, 'duplicate'])->name('lieux.duplicate');
+        Route::get('/lieux/export/pdf', [LieuController::class, 'exportPdf'])->name('lieux.export.pdf');
+        Route::get('/lieux/export/excel', [LieuController::class, 'exportExcel'])->name('lieux.export.excel');
         
         // Routes des plannings
         Route::prefix('plannings')->group(function () {
@@ -179,12 +201,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('/tarifs/{tarif}', [TarifController::class, 'update'])->name('tarifs.update');
         Route::delete('/tarifs/{tarif}', [TarifController::class, 'destroy'])->name('tarifs.destroy');
 
+        // Routes pour les formations
+        Route::resource('formations', FormationController::class);
+
         // Routes pour les exports
         Route::prefix('export')->name('export.')->group(function () {
             Route::get('/plannings', [ExportController::class, 'exportPlannings'])->name('plannings');
             Route::get('/compta', [ExportController::class, 'exportCompta'])->name('compta');
             Route::get('/comptabilite', [ExportController::class, 'exportComptabilite'])->name('comptabilite');
         });
+    });
+
+    // Routes API pour la carte interactive
+    Route::prefix('api')->name('api.')->group(function () {
+        Route::get('/lieux', [\App\Http\Controllers\Api\LieuController::class, 'index'])->name('lieux.index');
+        Route::get('/lieux/{lieu}', [\App\Http\Controllers\Api\LieuController::class, 'show'])->name('lieux.show');
     });
 
     // Routes pour les employés
@@ -195,34 +226,23 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/plannings/download-pdf', [PlanningController::class, 'exportPdfEmploye'])->name('plannings.download-pdf');
         Route::get('/plannings/collegue/{employe}/calendar', [PlanningController::class, 'voirPlanningCollegueCalendar'])->name('plannings.collegue');
         Route::post('/plannings/export-pdf-employe', [PlanningController::class, 'exportPdfEmploye'])->name('plannings.export-pdf-employe');
+        Route::post('/plannings/demande-modification', [PlanningController::class, 'demandeModification'])->name('plannings.demande-modification');
         
         // Routes des congés
         Route::prefix('conges')->name('conges.')->group(function () {
-            Route::get('/', [CongeController::class, 'mesConges'])->name('index');
-            Route::get('/calendar', [CongeController::class, 'calendar'])->name('calendar');
-            Route::get('/events', [CongeController::class, 'getCongesEvents'])->name('events');
+            Route::get('/', [CongeController::class, 'indexEmploye'])->name('index');
+            Route::get('/create', [CongeController::class, 'createEmploye'])->name('create');
+            Route::post('/', [CongeController::class, 'storeEmploye'])->name('store');
             Route::post('/demande', [CongeController::class, 'demandeConge'])->name('demande');
+            Route::get('/calendar', [CongeController::class, 'employeCalendar'])->name('calendar');
+            Route::get('/calendar/events', [CongeController::class, 'getEmployeEvents'])->name('calendar.events');
+            Route::get('/{conge}', [CongeController::class, 'showEmploye'])->name('show');
+            Route::get('/{conge}/edit', [CongeController::class, 'editEmploye'])->name('edit');
+            Route::put('/{conge}', [CongeController::class, 'updateEmploye'])->name('update');
+            Route::delete('/{conge}', [CongeController::class, 'destroyEmploye'])->name('destroy');
             Route::delete('/{conge}/annuler', [CongeController::class, 'annulerConge'])->name('annuler');
         });
-        
-        // Route pour l'export du planning mensuel employé
-        Route::post('/plannings/export-mensuel', [PlanningController::class, 'exportMensuel'])->name('plannings.export');
     });
-
-    // Routes communes
-    Route::get('/export/plannings', [ExportController::class, 'exportPlannings'])->name('export.plannings');
-    
-    // Routes du profil
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
-    // Routes pour les formations
-    Route::resource('formations', FormationController::class);
-
-    // Notifications
-    Route::post('/notifications/{id}/mark-as-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-as-read');
-    Route::post('/notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-as-read');
 });
 
 require __DIR__.'/auth.php';

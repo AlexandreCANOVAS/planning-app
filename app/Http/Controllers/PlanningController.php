@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Planning;
 use App\Models\Lieu;
 use App\Models\Employe;
+use App\Models\ModificationPlanning;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Notifications\PlanningModifie;
@@ -42,18 +43,127 @@ class PlanningController extends Controller
             $selectedYear = $request->get('annee', now()->year);
             $selectedMonth = $request->get('mois', now()->month);
 
+            // Récupérer les plannings du mois sélectionné
             $plannings = Planning::where('employe_id', $employe->id)
-                ->where('societe_id', $user->societe_id) // Ajout du filtre par société
+                ->where('societe_id', $user->societe_id)
                 ->whereYear('date', $selectedYear)
                 ->whereMonth('date', $selectedMonth)
                 ->with(['lieu', 'societe'])
                 ->get();
 
+            // Calculer les statistiques
+            $totalHeures = $plannings->sum('heures_travaillees');
+            
+            // Heures supplémentaires (au-delà de 35h par semaine)
+            $heuresSupplementaires = 0;
+            $planningsParSemaine = $plannings->groupBy(function($planning) {
+                return $planning->date->format('W'); // Numéro de semaine
+            });
+            
+            foreach ($planningsParSemaine as $planningsSemaine) {
+                $heuresSemaine = $planningsSemaine->sum('heures_travaillees');
+                if ($heuresSemaine > 35) {
+                    $heuresSupplementaires += ($heuresSemaine - 35);
+                }
+            }
+            
+            // Heures de nuit (entre 22h et 6h)
+            $heuresNuit = $plannings->filter(function($planning) {
+                $debut = Carbon::parse($planning->heure_debut);
+                $fin = Carbon::parse($planning->heure_fin);
+                return ($debut->hour >= 22 || $debut->hour < 6 || $fin->hour >= 22 || $fin->hour < 6);
+            })->sum('heures_travaillees');
+            
+            // Jours fériés travaillés
+            $joursFeries = $plannings->filter(function($planning) {
+                // Vérifier si le jour est férié (à implémenter selon la logique de l'application)
+                // Exemple simplifié : on considère que les jours fériés sont marqués dans un champ spécifique
+                return $planning->lieu && $planning->lieu->nom === 'Jour Férié';
+            })->count();
+            
+            // Dimanches travaillés
+            $dimanchesTravailles = $plannings->filter(function($planning) {
+                return $planning->date->dayOfWeek === Carbon::SUNDAY;
+            })->count();
+            
+            // Récupérer les données pour le graphique d'évolution sur 6 mois
+            $donneesGraphique = [];
+            $moisActuel = Carbon::create($selectedYear, $selectedMonth);
+            
+            for ($i = 5; $i >= 0; $i--) {
+                $moisPrecedent = $moisActuel->copy()->subMonths($i);
+                $planningsMois = Planning::where('employe_id', $employe->id)
+                    ->where('societe_id', $user->societe_id)
+                    ->whereYear('date', $moisPrecedent->year)
+                    ->whereMonth('date', $moisPrecedent->month)
+                    ->get();
+                
+                $donneesGraphique[] = [
+                    'mois' => $moisPrecedent->locale('fr')->isoFormat('MMM'),
+                    'heures' => $planningsMois->sum('heures_travaillees')
+                ];
+            }
+            
+            // Récupérer les modifications récentes du planning (derniers 30 jours)
+            $modifications = ModificationPlanning::where('employe_id', $employe->id)
+                ->where('date_demande', '>=', now()->subDays(30))
+                ->orderBy('date_demande', 'desc')
+                ->with(['planning', 'nouveauLieu'])
+                ->take(5)
+                ->get();
+            
+            // Préparer les données du calendrier
+            $debutMois = Carbon::create($selectedYear, $selectedMonth, 1);
+            $finMois = $debutMois->copy()->endOfMonth();
+            $planningData = [];
+            
+            // Initialiser le tableau avec tous les jours du mois
+            for ($jour = $debutMois->copy(); $jour->lte($finMois); $jour->addDay()) {
+                $date = $jour->format('Y-m-d');
+                $planningData[$date] = [
+                    'date' => $jour->format('d'),
+                    'jour_semaine' => $jour->locale('fr')->isoFormat('ddd'),
+                    'type' => 'normal',
+                    'planning' => null
+                ];
+                
+                // Marquer les week-ends
+                if ($jour->isWeekend()) {
+                    $planningData[$date]['type'] = 'weekend';
+                }
+            }
+            
+            // Ajouter les plannings
+            foreach ($plannings as $planning) {
+                $date = $planning->date->format('Y-m-d');
+                if (isset($planningData[$date])) {
+                    $planningData[$date]['planning'] = $planning;
+                    
+                    // Déterminer le type de jour
+                    if ($planning->lieu) {
+                        if ($planning->lieu->nom === 'CP') {
+                            $planningData[$date]['type'] = 'conge';
+                        } elseif ($planning->lieu->nom === 'Formation') {
+                            $planningData[$date]['type'] = 'formation';
+                        } elseif ($planning->lieu->nom === 'Jour Férié') {
+                            $planningData[$date]['type'] = 'ferie';
+                        }
+                    }
+                }
+            }
+
             return view('plannings.employe', [
                 'selectedYear' => $selectedYear,
                 'selectedMonth' => $selectedMonth,
                 'plannings' => $plannings,
-                'totalHeures' => $plannings->sum('heures_travaillees')
+                'totalHeures' => $totalHeures,
+                'heuresSupplementaires' => $heuresSupplementaires,
+                'heuresNuit' => $heuresNuit,
+                'joursFeries' => $joursFeries,
+                'dimanchesTravailles' => $dimanchesTravailles,
+                'donneesGraphique' => $donneesGraphique,
+                'modifications' => $modifications,
+                'planningData' => $planningData
             ]);
         }
 
@@ -1501,5 +1611,55 @@ class PlanningController extends Controller
         }
 
         return response()->json(['success' => true]);
+    }
+    
+    /**
+     * Traite une demande de modification de planning.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function demandeModification(Request $request)
+    {
+        $user = auth()->user();
+        $employe = $user->employe;
+        
+        if (!$employe) {
+            return response()->json(['error' => 'Profil employé non trouvé'], 404);
+        }
+        
+        $validated = $request->validate([
+            'planning_id' => 'nullable|exists:plannings,id',
+            'type_modification' => 'required|in:horaires,lieu,absence,autre',
+            'motif' => 'required|string|min:5',
+            'details' => 'nullable|string',
+            'nouvelle_date' => 'nullable|date',
+            'nouveau_lieu_id' => 'nullable|exists:lieux,id',
+            'nouvelle_heure_debut' => 'nullable|date_format:H:i',
+            'nouvelle_heure_fin' => 'nullable|date_format:H:i|after:nouvelle_heure_debut',
+        ]);
+        
+        // Créer la demande de modification
+        $modification = ModificationPlanning::create([
+            'employe_id' => $employe->id,
+            'planning_id' => $validated['planning_id'] ?? null,
+            'type_modification' => $validated['type_modification'],
+            'date_demande' => now(),
+            'statut' => 'en_attente',
+            'motif' => $validated['motif'],
+            'details' => $validated['details'] ?? null,
+            'nouvelle_date' => $validated['nouvelle_date'] ?? null,
+            'nouveau_lieu_id' => $validated['nouveau_lieu_id'] ?? null,
+            'nouvelle_heure_debut' => $validated['nouvelle_heure_debut'] ?? null,
+            'nouvelle_heure_fin' => $validated['nouvelle_heure_fin'] ?? null,
+        ]);
+        
+        // Notifier l'employeur (à implémenter si nécessaire)
+        // $employe->societe->employeur->notify(new DemandeModificationPlanning($modification));
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Votre demande de modification a été enregistrée et sera traitée prochainement.'
+        ]);
     }
 }

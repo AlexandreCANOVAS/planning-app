@@ -1,0 +1,312 @@
+/* Force Dark Theme - Design épuré et élégant */
+
+/* Variables CSS pour le thème sombre */
+:root {
+    /* Palette principale - tons uniformes */
+    --dark-bg-primary: #1a1c2c;
+    --dark-bg-secondary: #1e2235;
+    --dark-bg-tertiary: #232740;
+    
+    /* Palette de texte */
+    --dark-text-primary: #e2e8f0;
+    --dark-text-secondary: #a0aec0;
+    
+    /* Palette de bordures - subtiles */
+    --dark-border-color: rgba(255, 255, 255, 0.1);
+    
+    /* Palette d'accent */
+    --dark-accent: #7aa2f7;
+    --dark-success: #9ece6a;
+    --dark-danger: #f7768e;
+    --dark-warning: #e0af68;
+    --dark-info: #7dcfff;
+    --dark-purple: #bb9af7;
+}
+
+/* Base du thème sombre - fond uniforme */
+html.dark {
+    background-color: var(--dark-bg-primary);
+    color: var(--dark-text-primary);
+}
+
+html.dark body {
+    background-color: var(--dark-bg-primary);
+    color: var(--dark-text-primary);
+}
+
+html.dark .min-h-screen {
+    background-color: var(--dark-bg-primary) !important;
+}
+
+/* Supprimer tous les fonds de cartes et conteneurs */
+html.dark .bg-white,
+html.dark .bg-gray-50,
+html.dark .bg-gray-100,
+html.dark .bg-gray-200,
+html.dark .bg-gray-800,
+html.dark .bg-gray-900,
+html.dark .rounded-lg.shadow-sm,
+html.dark .overflow-hidden.shadow.rounded-lg,
+html.dark [class*="bg-gray-"],
+html.dark [class*="bg-white"] {
+    background-color: transparent !important;
+    box-shadow: none !important;
+}
+
+/* Bordures subtiles */
+html.dark .border,
+html.dark .border-gray-100,
+html.dark .border-gray-200,
+html.dark .border-gray-300,
+html.dark .shadow,
+html.dark .shadow-sm,
+html.dark .shadow-md,
+html.dark .shadow-lg {
+    border-color: var(--dark-border-color) !important;
+    box-shadow: none !important;
+}
+
+/* Textes */
+html.dark .text-gray-500,
+html.dark .text-gray-600 {
+    color: var(--dark-text-secondary) !important;
+}
+
+html.dark .text-gray-700,
+html.dark .text-gray-800,
+html.dark .text-gray-900 {
+    color: var(--dark-text-primary) !important;
+}
+
+/* Couleurs d'accent pour les textes - préserver */
+html.dark .text-blue-600 {
+    color: var(--dark-accent) !important;
+}
+
+html.dark .text-green-600 {
+    color: var(--dark-success) !important;
+}
+
+html.dark .text-red-600 {
+    color: var(--dark-danger) !important;
+}
+
+html.dark .text-yellow-600,
+html.dark .text-orange-600 {
+    color: var(--dark-warning) !important;
+}
+
+html.dark .text-purple-600 {
+    color: var(--dark-purple) !important;
+}
+
+/* Fonds colorés pour les icônes - subtils */
+html.dark .bg-blue-100,
+html.dark .bg-green-100,
+html.dark .bg-red-100,
+html.dark .bg-yellow-100,
+html.dark .bg-orange-100,
+html.dark .bg-purple-100 {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Bordures colorées - préserver */
+html.dark .border-blue-500 {
+    border-color: var(--dark-accent) !important;
+}
+
+html.dark .border-green-500 {
+    border-color: var(--dark-success) !important;
+}
+
+html.dark .border-red-500 {
+    border-color: var(--dark-danger) !important;
+}
+
+html.dark .border-yellow-500 {
+    border-color: var(--dark-warning) !important;
+}
+
+html.dark .border-purple-500 {
+    border-color: var(--dark-purple) !important;
+}
+
+/* Boutons - design épuré */
+html.dark button,
+html.dark .btn,
+html.dark [type="button"],
+html.dark [type="submit"] {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: var(--dark-text-primary);
+    border: 1px solid var(--dark-border-color);
+}
+
+html.dark button:hover,
+html.dark .btn:hover,
+html.dark [type="button"]:hover,
+html.dark [type="submit"]:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+html.dark .bg-blue-50 {
+    background-color: rgba(122, 162, 247, 0.1) !important;
+}
+
+html.dark .bg-blue-50.hover\\:bg-blue-100:hover {
+    background-color: rgba(122, 162, 247, 0.2) !important;
+}
+
+/* Formulaires - design épuré */
+html.dark input,
+html.dark select,
+html.dark textarea {
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--dark-border-color);
+    color: var(--dark-text-primary);
+}
+
+html.dark input:focus,
+html.dark select:focus,
+html.dark textarea:focus {
+    border-color: var(--dark-accent);
+    box-shadow: none;
+}
+
+/* Tableaux - design épuré */
+html.dark table {
+    border-color: var(--dark-border-color);
+}
+
+html.dark th {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: var(--dark-text-primary);
+}
+
+html.dark tr:nth-child(odd) td {
+    background-color: transparent;
+}
+
+html.dark tr:nth-child(even) td {
+    background-color: rgba(255, 255, 255, 0.02);
+}
+
+html.dark tr:hover td {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Alertes - design épuré */
+html.dark .alert-success {
+    background-color: rgba(158, 206, 106, 0.1);
+    border-left: 2px solid var(--dark-success);
+    color: var(--dark-text-primary);
+}
+
+html.dark .alert-danger {
+    background-color: rgba(247, 118, 142, 0.1);
+    border-left: 2px solid var(--dark-danger);
+    color: var(--dark-text-primary);
+}
+
+html.dark .alert-warning {
+    background-color: rgba(224, 175, 104, 0.1);
+    border-left: 2px solid var(--dark-warning);
+    color: var(--dark-text-primary);
+}
+
+html.dark .alert-info {
+    background-color: rgba(125, 207, 255, 0.1);
+    border-left: 2px solid var(--dark-info);
+    color: var(--dark-text-primary);
+}
+
+/* Badges - design épuré */
+html.dark .badge {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Types de contrat - préserver les couleurs */
+html.dark .cdi-badge {
+    background-color: var(--dark-success);
+    color: white;
+}
+
+html.dark .cdd-badge {
+    background-color: var(--dark-info);
+    color: white;
+}
+
+html.dark .interim-badge {
+    background-color: var(--dark-warning);
+    color: white;
+}
+
+/* Temps de travail */
+html.dark .full-time {
+    color: var(--dark-success);
+}
+
+html.dark .part-time {
+    color: var(--dark-info);
+}
+
+/* Styles spécifiques pour les informations des employés */
+html.dark .employe-card,
+html.dark .employe-info,
+html.dark .employe-details,
+html.dark .employee-card,
+html.dark .employee-info,
+html.dark .employee-details {
+    background-color: transparent;
+    border: 1px solid var(--dark-border-color);
+}
+
+/* Styles pour les sections colorées du PDF */
+html.dark .section-standard {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+html.dark .section-supplementaires {
+    background-color: rgba(122, 162, 247, 0.1);
+}
+
+html.dark .section-nuit {
+    background-color: rgba(187, 154, 247, 0.1);
+}
+
+html.dark .section-dimanche {
+    background-color: rgba(224, 175, 104, 0.1);
+}
+
+html.dark .section-feries {
+    background-color: rgba(247, 118, 142, 0.1);
+}
+
+html.dark .section-absences {
+    background-color: rgba(125, 207, 255, 0.1);
+}
+
+/* Transitions fluides */
+html.dark * {
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Styles pour les en-têtes de gradient */
+html.dark .bg-gradient-to-r {
+    background: linear-gradient(to right, #1a1c2c, #232740) !important;
+}
+
+/* Supprimer les fonds de cartes spécifiques */
+html.dark .bg-gray-50.rounded-xl,
+html.dark .bg-white.rounded-lg {
+    background-color: transparent !important;
+    border: 1px solid var(--dark-border-color);
+}
+
+/* Supprimer les ombres */
+html.dark .shadow,
+html.dark .shadow-sm,
+html.dark .shadow-md,
+html.dark .shadow-lg,
+html.dark .shadow-xl {
+    box-shadow: none !important;
+}

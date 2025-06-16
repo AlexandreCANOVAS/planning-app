@@ -1,0 +1,64 @@
+/* Force Dark Theme - SOLUTION RADICALE SANS AUCUN FOND */
+
+/* Base du thème sombre - uniquement le fond principal */
+html.dark {
+    background-color: #111827;
+    color: #f3f4f6;
+}
+
+html.dark body {
+    background-color: #111827;
+    color: #f3f4f6;
+}
+
+/* SUPPRESSION TOTALE DE TOUS LES FONDS */
+html.dark * {
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+}
+
+/* Correction des textes */
+html.dark .text-gray-500,
+html.dark .text-gray-600,
+html.dark .text-gray-700,
+html.dark .text-gray-800,
+html.dark .text-gray-900,
+html.dark .text-black,
+html.dark .text-sm,
+html.dark .text-md,
+html.dark .text-lg,
+html.dark .text-xl,
+html.dark [class*="text-gray-"] {
+    color: #f3f4f6 !important;
+    background-color: transparent !important;
+}
+
+/* Préserver uniquement les couleurs d'accent pour les éléments fonctionnels */
+html.dark .text-blue-600 { color: #3b82f6 !important; }
+html.dark .text-green-600 { color: #10b981 !important; }
+html.dark .text-red-600 { color: #ef4444 !important; }
+html.dark .text-yellow-600 { color: #f59e0b !important; }
+
+/* Bordures subtiles */
+html.dark .border,
+html.dark .border-t,
+html.dark .border-b,
+html.dark .border-l,
+html.dark .border-r {
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Styles pour les formulaires */
+html.dark input,
+html.dark select,
+html.dark textarea {
+    border-color: rgba(255, 255, 255, 0.2) !important;
+    color: #f3f4f6 !important;
+}
+
+/* Styles pour les liens */
+html.dark a {
+    color: #3b82f6 !important;
+}

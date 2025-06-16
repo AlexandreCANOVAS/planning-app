@@ -1,0 +1,193 @@
+/* Force Dark Theme - SOLUTION NUCLÉAIRE SANS AUCUN FOND */
+
+/* Base du thème sombre - uniquement le fond principal */
+html.dark {
+    background-color: #111827;
+    color: #f3f4f6;
+}
+
+html.dark body {
+    background-color: #111827;
+    color: #f3f4f6;
+}
+
+/* SUPPRESSION TOTALE DE TOUS LES FONDS - APPROCHE NUCLÉAIRE */
+html.dark *,
+html.dark *::before,
+html.dark *::after {
+    background: none !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+}
+
+/* Cibler spécifiquement les cartes et conteneurs */
+html.dark .card,
+html.dark .shadow,
+html.dark .shadow-sm,
+html.dark .shadow-md,
+html.dark .shadow-lg,
+html.dark .shadow-xl,
+html.dark .rounded-lg,
+html.dark .rounded-md,
+html.dark .rounded-sm,
+html.dark .rounded-xl,
+html.dark .bg-white,
+html.dark .bg-gray-50,
+html.dark .bg-gray-100,
+html.dark .bg-gray-200,
+html.dark .bg-gray-300,
+html.dark .bg-gray-400,
+html.dark .bg-gray-500,
+html.dark .bg-gray-600,
+html.dark .bg-gray-700,
+html.dark .bg-gray-800,
+html.dark .bg-gray-900,
+html.dark [class*="bg-"],
+html.dark [class*="shadow"],
+html.dark [class*="card"],
+html.dark [class*="rounded"] {
+    background: none !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+}
+
+/* Cibler les éléments spécifiques du tableau de bord */
+html.dark .actions-rapides,
+html.dark .activite-recente,
+html.dark .documents-exports,
+html.dark .employes-service,
+html.dark .statistiques,
+html.dark .card-stats,
+html.dark .card-action,
+html.dark .card-document,
+html.dark .card-export,
+html.dark [id*="card"],
+html.dark [class*="card"],
+html.dark [id*="container"],
+html.dark [class*="container"],
+html.dark [id*="box"],
+html.dark [class*="box"],
+html.dark [id*="panel"],
+html.dark [class*="panel"] {
+    background: none !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+}
+
+/* Cibler les éléments de navigation */
+html.dark nav,
+html.dark header,
+html.dark .navbar,
+html.dark .sidebar,
+html.dark .nav-item,
+html.dark .nav-link,
+html.dark .dropdown,
+html.dark .dropdown-menu,
+html.dark .dropdown-item {
+    background: none !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+}
+
+/* Cibler les boutons et actions */
+html.dark button,
+html.dark .btn,
+html.dark [type="button"],
+html.dark [type="submit"],
+html.dark .action-button,
+html.dark .action-link {
+    background: none !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+/* Cibler les formulaires */
+html.dark input,
+html.dark select,
+html.dark textarea,
+html.dark .form-control,
+html.dark .input-group,
+html.dark .form-group {
+    background: none !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    color: #f3f4f6 !important;
+}
+
+/* Cibler les tableaux */
+html.dark table,
+html.dark tr,
+html.dark td,
+html.dark th,
+html.dark thead,
+html.dark tbody,
+html.dark tfoot {
+    background: none !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Cibler les modals et popups */
+html.dark .modal,
+html.dark .modal-content,
+html.dark .modal-header,
+html.dark .modal-body,
+html.dark .modal-footer,
+html.dark .popup,
+html.dark .tooltip,
+html.dark .popover {
+    background: none !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+}
+
+/* Correction des textes */
+html.dark .text-gray-500,
+html.dark .text-gray-600,
+html.dark .text-gray-700,
+html.dark .text-gray-800,
+html.dark .text-gray-900,
+html.dark .text-black,
+html.dark .text-sm,
+html.dark .text-md,
+html.dark .text-lg,
+html.dark .text-xl,
+html.dark [class*="text-gray-"] {
+    color: #f3f4f6 !important;
+    background-color: transparent !important;
+}
+
+/* Préserver uniquement les couleurs d'accent pour les éléments fonctionnels */
+html.dark .text-blue-600 { color: #3b82f6 !important; }
+html.dark .text-green-600 { color: #10b981 !important; }
+html.dark .text-red-600 { color: #ef4444 !important; }
+html.dark .text-yellow-600 { color: #f59e0b !important; }
+
+/* Styles pour les liens */
+html.dark a {
+    color: #3b82f6 !important;
+}
+
+/* Cibler spécifiquement les éléments du tableau de bord visibles sur la capture d'écran */
+html.dark .actions-rapides,
+html.dark .activite-recente,
+html.dark .documents-exports,
+html.dark .employes-service,
+html.dark [id*="dashboard"],
+html.dark [class*="dashboard"] {
+    background: none !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+}

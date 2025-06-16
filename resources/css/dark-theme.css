@@ -1,0 +1,800 @@
+/* Styles pour le thème sombre */
+html.dark {
+    --tw-bg-opacity: 1;
+    --tw-text-opacity: 1;
+    color-scheme: dark;
+}
+
+/* Règle globale pour le fond principal */
+html.dark {
+    background-color: rgb(17, 24, 39);
+    color: rgb(255, 255, 255);
+}
+
+html.dark body {
+    background-color: rgb(17, 24, 39);
+    color: rgb(255, 255, 255);
+}
+
+/* Règles pour les éléments de fond */
+html.dark .bg-white,
+html.dark .bg-gray-50,
+html.dark .bg-gray-100,
+html.dark .bg-gray-200 {
+    background-color: rgb(31, 41, 55) !important;
+    color: rgb(229, 231, 235) !important;
+}
+
+/* Exceptions pour les éléments qui doivent conserver leurs couleurs spécifiques */
+html.dark .btn-primary,
+html.dark .btn-success,
+html.dark .btn-info,
+html.dark .btn-warning,
+html.dark .btn-danger,
+html.dark button[class*="rechercher"],
+html.dark button[class*="ajouter"],
+html.dark a[class*="rechercher"],
+html.dark a[class*="ajouter"],
+html.dark .disponible,
+html.dark .en-service,
+html.dark .progress-bar-danger,
+html.dark .progress-bar-warning,
+html.dark .progress-bar-success,
+html.dark [class*="bg-blue-"],
+html.dark [class*="bg-green-"],
+html.dark [class*="bg-yellow-"],
+html.dark [class*="bg-purple-"],
+html.dark [class*="bg-red-"] {
+    background-color: inherit !important;
+}
+
+/* Styles spécifiques pour la navigation */
+html.dark nav,
+html.dark header,
+html.dark footer,
+html.dark .navbar,
+html.dark .nav-item,
+html.dark .nav-link,
+html.dark .sidebar,
+html.dark .topbar,
+html.dark .header,
+html.dark .footer {
+    background-color: var(--dark-bg-primary) !important;
+    color: var(--dark-text-secondary) !important;
+    border-color: var(--dark-border-color) !important;
+}
+
+/* Styles spécifiques pour les boutons d'action */
+html.dark button,
+html.dark .btn,
+html.dark [type="button"],
+html.dark [type="submit"],
+html.dark [role="button"] {
+    background-color: var(--dark-bg-tertiary) !important;
+    color: var(--dark-text-secondary) !important;
+    border-color: var(--dark-border-color) !important;
+}
+
+/* Exceptions pour les cartes et conteneurs */
+html.dark .card,
+html.dark .container,
+html.dark .card-body,
+html.dark .dropdown-menu,
+html.dark .modal-content,
+html.dark .offcanvas,
+html.dark .popover,
+html.dark .toast,
+html.dark .list-group-item,
+html.dark div[class*="rounded-lg"],
+html.dark div[class*="shadow"],
+html.dark div[class*="p-6"],
+html.dark div[class*="p-4"],
+html.dark div[class*="p-5"],
+html.dark .employe-card,
+html.dark .employe-details,
+html.dark .planning-card,
+html.dark .formation-card,
+html.dark .conge-card,
+html.dark .lieu-card,
+html.dark .comptabilite-card,
+html.dark .pdf-preview,
+html.dark .stats-card,
+html.dark .profile-card,
+html.dark #tableau-de-bord-des-employes,
+html.dark [id*="tableau"] {
+    background-color: var(--dark-bg-secondary) !important;
+}
+
+/* Styles spécifiques pour les informations des employés */
+html.dark .employe-info,
+html.dark .employe-contact,
+html.dark .employe-poste,
+html.dark .employe-contrat,
+html.dark .employe-personnel,
+html.dark .situation-familiale,
+html.dark .contact-urgence,
+html.dark .date-embauche,
+html.dark .adresse,
+html.dark .securite-sociale,
+html.dark .temps-travail {
+    background-color: var(--dark-bg-secondary) !important;
+    color: var(--dark-text-secondary) !important;
+}
+
+/* Styles spécifiques pour les éléments de comptabilité et PDF */
+html.dark .comptabilite-section,
+html.dark .pdf-section,
+html.dark .heures-section,
+html.dark .heures-totales,
+html.dark .heures-supplementaires,
+html.dark .heures-nuit,
+html.dark .heures-dimanche,
+html.dark .heures-feries,
+html.dark .absences,
+html.dark .recap-visuel,
+html.dark .heures-par-semaine {
+    background-color: var(--dark-bg-secondary) !important;
+    color: var(--dark-text-secondary) !important;
+}
+
+/* Styles pour les sections colorées du PDF */
+html.dark .section-standard,
+html.dark .section-supplementaires,
+html.dark .section-nuit,
+html.dark .section-dimanche,
+html.dark .section-feries,
+html.dark .section-absences {
+    filter: brightness(0.8) saturate(0.8) !important;
+}
+
+/* Règle pour forcer le fond sombre sur le body et tous les conteneurs principaux */
+html.dark,
+html.dark body,
+html.dark #app,
+html.dark main,
+html.dark div,
+html.dark section {
+    background-color: var(--dark-bg-primary) !important;
+}
+
+/* Styles de base pour le corps et le fond */
+html.dark body,
+html.dark .min-h-screen,
+html.dark .bg-gray-50,
+html.dark .bg-gray-100,
+html.dark [class*="bg-gray"] {
+    background-color: var(--dark-bg-primary) !important;
+    color: var(--dark-text-secondary) !important;
+}
+
+/* Styles pour les cartes et conteneurs */
+html.dark .card,
+html.dark .container,
+html.dark .card-body,
+html.dark .dropdown-menu,
+html.dark .modal-content,
+html.dark .offcanvas,
+html.dark .popover,
+html.dark .toast,
+html.dark .list-group-item,
+html.dark div[class*="bg-white"],
+html.dark section[class*="bg-white"] {
+    background-color: var(--dark-bg-secondary) !important;
+    color: var(--dark-text-secondary) !important;
+    border-color: var(--dark-border-color) !important;
+}
+
+html.dark .bg-white,
+html.dark div[class*="rounded-lg"],
+html.dark div[class*="shadow"],
+html.dark div[class*="p-6"],
+html.dark div[class*="my-6"],
+html.dark div[class*="mb-6"] {
+    background-color: var(--dark-bg-secondary) !important;
+    color: var(--dark-text-secondary) !important;
+}
+
+html.dark .bg-gray-50 {
+    background-color: rgb(17, 24, 39) !important;
+}
+
+html.dark .bg-gray-100 {
+    background-color: rgb(31, 41, 55) !important;
+}
+
+html.dark .text-gray-500 {
+    color: rgb(156, 163, 175) !important;
+}
+
+html.dark .text-gray-600 {
+    color: rgb(156, 163, 175) !important;
+}
+
+html.dark .text-gray-700 {
+    color: rgb(209, 213, 219) !important;
+}
+
+html.dark .text-gray-800 {
+    color: rgb(229, 231, 235) !important;
+}
+
+html.dark .text-gray-900 {
+    color: rgb(249, 250, 251) !important;
+}
+
+html.dark .border-gray-100 {
+    border-color: rgb(31, 41, 55) !important;
+}
+
+html.dark .border-gray-200 {
+    border-color: rgb(55, 65, 81) !important;
+}
+
+html.dark .border-gray-300 {
+    border-color: rgb(75, 85, 99) !important;
+}
+
+html.dark .shadow-sm {
+    --tw-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
+    --tw-shadow-colored: 0 1px 2px 0 var(--tw-shadow-color);
+    box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+
+.dark .shadow {
+    --tw-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.5), 0 1px 2px -1px rgba(0, 0, 0, 0.5);
+    --tw-shadow-colored: 0 1px 3px 0 var(--tw-shadow-color), 0 1px 2px -1px var(--tw-shadow-color);
+    box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+
+/* Styles pour les tableaux */
+html.dark table,
+html.dark tbody,
+html.dark thead,
+html.dark tr,
+html.dark td,
+html.dark th {
+    background-color: var(--dark-bg-secondary) !important;
+    color: var(--dark-text-secondary) !important;
+    border-color: var(--dark-border-color) !important;
+}
+
+/* Force le fond sombre sur tous les éléments de tableau */
+html.dark table *,
+html.dark tbody *,
+html.dark thead *,
+html.dark tr *,
+html.dark td *,
+html.dark th * {
+    background-color: transparent !important;
+}
+
+html.dark th {
+    background-color: var(--dark-bg-tertiary) !important;
+    color: var(--dark-text-primary) !important;
+}
+
+html.dark tr:nth-child(even) {
+    background-color: rgba(55, 65, 81, 0.5) !important;
+}
+
+html.dark tr:hover {
+    background-color: var(--dark-bg-tertiary) !important;
+}
+
+/* Styles pour les en-têtes de section et titres */
+html.dark h1, 
+html.dark h2, 
+html.dark h3, 
+html.dark h4, 
+html.dark h5, 
+html.dark h6,
+html.dark .h1, 
+html.dark .h2, 
+html.dark .h3, 
+html.dark .h4, 
+html.dark .h5, 
+html.dark .h6 {
+    color: var(--dark-text-primary) !important;
+}
+
+/* Styles pour tous les textes */
+html.dark p,
+html.dark span,
+html.dark div,
+html.dark label,
+html.dark strong,
+html.dark em,
+html.dark small {
+    color: var(--dark-text-secondary) !important;
+}
+
+/* Force la couleur du texte pour les éléments spécifiques */
+html.dark .text-gray-500,
+html.dark .text-gray-600,
+html.dark .text-gray-700,
+html.dark .text-gray-800,
+html.dark .text-gray-900,
+html.dark [class*="text-gray-"] {
+    color: var(--dark-text-secondary) !important;
+}
+
+/* Styles spécifiques pour les détails des plannings */
+html.dark td span,
+html.dark td div,
+html.dark td p,
+html.dark td small,
+html.dark td strong {
+    color: var(--dark-text-secondary) !important;
+}
+
+/* Styles pour les formulaires */
+html.dark input, 
+html.dark select, 
+html.dark textarea {
+    background-color: rgb(55, 65, 81);
+    color: rgb(229, 231, 235);
+    border-color: rgb(75, 85, 99);
+}
+
+html.dark input:focus, 
+html.dark select:focus, 
+html.dark textarea:focus {
+    border-color: rgb(59, 130, 246);
+}
+
+/* Styles pour les boutons */
+html.dark button.bg-blue-600 {
+    background-color: rgb(37, 99, 235);
+}
+
+html.dark button.bg-blue-600:hover {
+    background-color: rgb(29, 78, 216);
+}
+
+html.dark button.bg-gray-200 {
+    background-color: rgb(55, 65, 81);
+    color: rgb(229, 231, 235);
+}
+
+html.dark button.bg-gray-200:hover {
+    background-color: rgb(75, 85, 99);
+}
+
+/* Styles pour les cartes */
+html.dark .bg-green-100 {
+    background-color: rgba(6, 78, 59, 0.5) !important;
+    color: rgb(167, 243, 208) !important;
+}
+
+html.dark .bg-red-100 {
+    background-color: rgba(127, 29, 29, 0.5) !important;
+    color: rgb(252, 165, 165) !important;
+}
+
+html.dark .bg-yellow-100 {
+    background-color: rgba(120, 53, 15, 0.5) !important;
+    color: rgb(253, 230, 138) !important;
+}
+
+html.dark .bg-blue-100 {
+    background-color: rgba(30, 58, 138, 0.5) !important;
+    color: rgb(191, 219, 254) !important;
+}
+
+/* Styles pour les éléments spécifiques */
+html.dark nav,
+html.dark header,
+html.dark footer,
+html.dark .navbar,
+html.dark .sidebar,
+html.dark .footer,
+html.dark .header {
+    background-color: rgb(31, 41, 55) !important;
+    color: rgb(229, 231, 235) !important;
+    border-color: rgb(55, 65, 81) !important;
+}
+
+/* Forcer le thème sombre sur les éléments avec des classes de couleur explicites */
+html.dark .bg-white,
+html.dark [class*="bg-white"] {
+    background-color: rgb(31, 41, 55) !important;
+}
+
+html.dark .text-gray-800,
+html.dark .text-gray-900 {
+    color: rgb(229, 231, 235) !important;
+}
+
+html.dark .text-gray-500,
+html.dark .text-gray-600,
+html.dark .text-gray-700 {
+    color: rgb(209, 213, 219) !important;
+}
+
+html.dark .border-gray-100,
+html.dark .border-gray-200,
+html.dark .border-b,
+html.dark .border-t,
+html.dark .border-l,
+html.dark .border-r {
+    border-color: rgb(55, 65, 81) !important;
+}
+
+/* Styles pour les liens */
+html.dark a {
+    color: rgb(96, 165, 250) !important;
+}
+
+html.dark a:hover {
+    color: rgb(147, 197, 253) !important;
+}
+
+/* Styles pour les éléments de navigation */
+html.dark .nav-link,
+html.dark .navbar-nav .nav-link,
+html.dark .nav-tabs .nav-link {
+    color: rgb(209, 213, 219) !important;
+}
+
+html.dark .nav-link:hover,
+html.dark .navbar-nav .nav-link:hover,
+html.dark .nav-tabs .nav-link:hover {
+    color: rgb(255, 255, 255) !important;
+}
+
+/* Styles pour les badges */
+html.dark .badge {
+    background-color: rgb(55, 65, 81) !important;
+    color: rgb(229, 231, 235) !important;
+}
+
+/* Styles pour les alertes */
+html.dark .alert {
+    background-color: rgb(31, 41, 55) !important;
+    color: rgb(229, 231, 235) !important;
+    border-color: rgb(55, 65, 81) !important;
+}
+
+/* Styles pour les modals */
+html.dark .modal-header,
+html.dark .modal-footer {
+    background-color: rgb(31, 41, 55) !important;
+    border-color: rgb(55, 65, 81) !important;
+}
+
+/* Styles pour les tooltips */
+html.dark .tooltip-inner {
+    background-color: rgb(31, 41, 55) !important;
+    color: rgb(229, 231, 235) !important;
+}
+
+/* Styles pour les dropdown menus */
+html.dark .dropdown-item {
+    color: rgb(209, 213, 219) !important;
+}
+
+html.dark .dropdown-item:hover {
+    background-color: rgb(55, 65, 81) !important;
+    color: rgb(255, 255, 255) !important;
+}
+
+/* Styles pour les icônes */
+html.dark .fa,
+html.dark .fas,
+html.dark .far,
+html.dark .fal,
+html.dark .fab {
+    color: inherit;
+}
+
+/* Styles pour les boutons outline */
+html.dark .btn-outline-primary,
+html.dark .btn-outline-secondary,
+html.dark .btn-outline-success,
+html.dark .btn-outline-danger,
+html.dark .btn-outline-warning,
+html.dark .btn-outline-info {
+    color: rgb(209, 213, 219) !important;
+    border-color: rgb(75, 85, 99) !important;
+}
+
+html.dark .btn-outline-primary:hover,
+html.dark .btn-outline-secondary:hover,
+html.dark .btn-outline-success:hover,
+html.dark .btn-outline-danger:hover,
+html.dark .btn-outline-warning:hover,
+html.dark .btn-outline-info:hover {
+    background-color: rgb(55, 65, 81) !important;
+    color: rgb(255, 255, 255) !important;
+}
+
+/* Styles spécifiques pour le tableau de bord */
+html.dark .min-h-screen,
+html.dark body {
+    background-color: rgb(17, 24, 39) !important;
+}
+
+/* Styles pour les cartes statistiques */
+html.dark [class*="bg-blue-"],
+html.dark [class*="bg-green-"],
+html.dark [class*="bg-yellow-"],
+html.dark [class*="bg-purple-"],
+html.dark [class*="bg-red-"],
+html.dark [class*="bg-indigo-"],
+html.dark [class*="bg-pink-"] {
+    filter: brightness(0.8) saturate(0.8);
+}
+
+/* Styles pour les éléments de recherche et filtres */
+html.dark input[type="search"],
+html.dark input[type="text"],
+html.dark input[type="email"],
+html.dark input[type="password"],
+html.dark select,
+html.dark textarea,
+html.dark .form-control,
+html.dark [placeholder*="Rechercher"],
+html.dark [placeholder*="rechercher"],
+html.dark [placeholder*="Search"],
+html.dark [placeholder*="search"] {
+    background-color: var(--dark-bg-tertiary) !important;
+    color: var(--dark-text-secondary) !important;
+    border-color: var(--dark-border-color) !important;
+}
+
+/* Styles pour les boutons de recherche et d'action */
+html.dark .btn-primary,
+html.dark .btn-secondary,
+html.dark .btn-success,
+html.dark .btn-info,
+html.dark .btn-warning,
+html.dark .btn-danger,
+html.dark button[type="submit"],
+html.dark button[type="button"],
+html.dark [class*="rechercher"],
+html.dark [class*="ajouter"] {
+    filter: brightness(0.85);
+}
+
+/* Styles spécifiques pour le bouton de recherche */
+html.dark button[class*="rechercher"],
+html.dark button[class*="search"],
+html.dark a[class*="rechercher"],
+html.dark a[class*="search"],
+html.dark [class*="btn-primary"],
+html.dark [class*="btn-blue"] {
+    background-color: rgb(37, 99, 235) !important;
+    color: white !important;
+}
+
+/* Styles spécifiques pour le bouton d'ajout d'employé */
+html.dark [class*="btn-success"],
+html.dark [class*="btn-green"],
+html.dark [class*="ajouter"],
+html.dark a[class*="ajouter"],
+html.dark button[class*="ajouter"] {
+    background-color: rgb(22, 163, 74) !important;
+    color: white !important;
+}
+
+/* Styles pour les icônes dans les cartes */
+html.dark .fa,
+html.dark .fas,
+html.dark .far,
+html.dark .fal,
+html.dark .fab {
+    color: inherit !important;
+}
+
+/* Styles pour les avatars et images de profil */
+html.dark img,
+html.dark .avatar,
+html.dark .profile-image {
+    filter: brightness(0.9);
+}
+
+/* Styles spécifiques pour les éléments de planification */
+html.dark .planning-card,
+html.dark .planning-header,
+html.dark .planning-body,
+html.dark .planning-footer,
+html.dark .planning-item,
+html.dark .planning-month,
+html.dark .planning-details {
+    background-color: var(--dark-bg-secondary) !important;
+    color: var(--dark-text-secondary) !important;
+    border-color: var(--dark-border-color) !important;
+}
+
+/* Styles pour les détails des plannings */
+html.dark .details-par-lieu,
+html.dark .details-heures,
+html.dark .details-jours {
+    color: var(--dark-text-secondary) !important;
+}
+
+/* Styles pour les sélecteurs et dropdowns */
+html.dark select.form-select,
+html.dark .dropdown-toggle,
+html.dark .form-control {
+    background-color: var(--dark-bg-tertiary) !important;
+    color: var(--dark-text-secondary) !important;
+    border-color: var(--dark-border-color) !important;
+}
+
+/* Styles pour les boutons d'action */
+html.dark .btn-primary,
+html.dark .btn-success,
+html.dark .btn-info,
+html.dark .btn-warning,
+html.dark .btn-danger,
+html.dark .btn-secondary {
+    border-color: var(--dark-border-color) !important;
+}
+
+/* Styles pour les boutons d'action spécifiques */
+html.dark .btn-voir,
+html.dark .btn-modifier,
+html.dark .btn-supprimer,
+html.dark a[title="Voir"],
+html.dark a[title="Modifier"],
+html.dark a[title="Supprimer"],
+html.dark button[title="Voir"],
+html.dark button[title="Modifier"],
+html.dark button[title="Supprimer"],
+html.dark a.text-blue-600,
+html.dark a.text-red-600 {
+    background-color: var(--dark-bg-tertiary) !important;
+    color: var(--dark-text-secondary) !important;
+}
+
+/* Styles spécifiques pour les icônes dans les boutons */
+html.dark a i.fa-eye,
+html.dark a i.fa-edit,
+html.dark a i.fa-trash,
+html.dark button i.fa-eye,
+html.dark button i.fa-edit,
+html.dark button i.fa-trash {
+    color: var(--dark-text-secondary) !important;
+}
+
+/* Styles pour les informations des employés */
+html.dark .employe-info,
+html.dark .employe-details,
+html.dark .employe-contact,
+html.dark .employe-poste,
+html.dark .employe-contrat {
+    color: var(--dark-text-secondary) !important;
+}
+
+/* Styles pour les cartes d'employés */
+html.dark [class*="rounded-lg"],
+html.dark [class*="shadow"],
+html.dark [class*="p-6"],
+html.dark [class*="p-4"],
+html.dark [class*="p-5"],
+html.dark [class*="my-6"],
+html.dark [class*="my-4"],
+html.dark [class*="my-5"],
+html.dark [class*="mb-6"],
+html.dark [class*="mb-4"],
+html.dark [class*="mb-5"] {
+    background-color: var(--dark-bg-secondary) !important;
+    color: var(--dark-text-secondary) !important;
+    border-color: var(--dark-border-color) !important;
+}
+
+/* Styles pour les barres de progression */
+html.dark .progress,
+html.dark [class*="progress"] {
+    background-color: var(--dark-bg-tertiary) !important;
+}
+
+/* Conserver les couleurs des barres de progression mais les assombrir */
+html.dark [class*="charge-de-travail"] {
+    background-color: rgba(55, 65, 81, 0.5) !important;
+}
+
+/* Styles spécifiques pour les barres de progression colorées */
+html.dark [class*="bg-red-"].progress-bar,
+html.dark [class*="bg-yellow-"].progress-bar,
+html.dark [class*="bg-green-"].progress-bar,
+html.dark .progress-bar,
+html.dark [class*="charge-de-travail"] .progress-bar {
+    filter: brightness(0.8) !important;
+    opacity: 0.9 !important;
+}
+
+/* Styles spécifiques pour les différentes barres de progression */
+html.dark .progress-bar-danger,
+html.dark .progress-bar-red,
+html.dark .progress-bar-100 {
+    background-color: rgb(220, 38, 38) !important;
+}
+
+html.dark .progress-bar-warning,
+html.dark .progress-bar-yellow,
+html.dark .progress-bar-50 {
+    background-color: rgb(234, 179, 8) !important;
+}
+
+html.dark .progress-bar-success,
+html.dark .progress-bar-green,
+html.dark .progress-bar-0 {
+    background-color: rgb(22, 163, 74) !important;
+}
+
+/* Styles pour les badges et étiquettes */
+html.dark .badge,
+html.dark [class*="badge"],
+html.dark [class*="disponible"],
+html.dark [class*="en-service"] {
+    background-color: var(--dark-bg-tertiary) !important;
+    color: var(--dark-text-primary) !important;
+}
+
+/* Styles spécifiques pour le badge Disponible */
+html.dark .disponible,
+html.dark span:contains("Disponible"),
+html.dark [class*="disponible"] {
+    background-color: rgba(22, 163, 74, 0.8) !important;
+    color: white !important;
+}
+
+/* Styles spécifiques pour le badge En service */
+html.dark .en-service,
+html.dark span:contains("En service"),
+html.dark [class*="en-service"] {
+    background-color: rgba(37, 99, 235, 0.8) !important;
+    color: white !important;
+}
+
+/* Styles spécifiques pour les cartes statistiques du tableau de bord */
+html.dark [class*="bg-blue-"],
+html.dark [class*="bg-green-"],
+html.dark [class*="bg-yellow-"],
+html.dark [class*="bg-purple-"],
+html.dark [class*="bg-red-"],
+html.dark [class*="bg-indigo-"],
+html.dark [class*="bg-pink-"] {
+    filter: brightness(0.8) saturate(0.8) !important;
+}
+
+/* Styles spécifiques pour les statistiques du tableau de bord */
+html.dark #tableau-de-bord-des-employes,
+html.dark [id*="tableau"],
+html.dark [class*="stats"],
+html.dark [class*="stat"],
+html.dark [class*="indicator"],
+html.dark [class*="counter"] {
+    background-color: var(--dark-bg-secondary) !important;
+    color: var(--dark-text-secondary) !important;
+}
+
+/* Styles spécifiques pour les cartes statistiques du tableau de bord */
+html.dark [class*="bg-blue-100"],
+html.dark [class*="bg-green-100"],
+html.dark [class*="bg-yellow-100"],
+html.dark [class*="bg-purple-100"] {
+    background-color: var(--dark-bg-secondary) !important;
+    border: 1px solid var(--dark-border-color) !important;
+}
+
+/* Conserver les icônes colorées dans les cartes statistiques */
+html.dark [class*="bg-blue-100"] svg,
+html.dark [class*="bg-green-100"] svg,
+html.dark [class*="bg-yellow-100"] svg,
+html.dark [class*="bg-purple-100"] svg {
+    filter: brightness(0.8) !important;
+}
+
+/* Conserver la couleur des textes dans les cartes colorées */
+html.dark [class*="bg-blue-"] *,
+html.dark [class*="bg-green-"] *,
+html.dark [class*="bg-yellow-"] *,
+html.dark [class*="bg-purple-"] *,
+html.dark [class*="bg-red-"] *,
+html.dark [class*="bg-indigo-"] *,
+html.dark [class*="bg-pink-"] * {
+    color: inherit !important;
+}

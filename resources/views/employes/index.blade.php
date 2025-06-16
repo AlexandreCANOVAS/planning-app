@@ -138,20 +138,61 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                             </svg>
                         </a>
-                        <div class="relative" x-data="{open: false}">
-                            <button @click="open = !open" class="px-3 py-1.5 rounded-md bg-gray-100 text-gray-700 hover:bg-blue-50 transition-colors duration-150">
-                                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                                </svg>
-                            </button>
-                            <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50">
-                                <div class="py-1">
-                                    <p class="px-4 py-2 text-xs font-semibold text-gray-500">Statistiques par employé</p>
-                                    @foreach($employes as $emp)
-                                        <a href="{{ route('employes.stats', $emp) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50">
-                                            {{ $emp->prenom }} {{ $emp->nom }}
-                                        </a>
-                                    @endforeach
+                        <div class="flex space-x-2">
+                            <!-- Bouton des détails -->
+                            <div class="relative" x-data="{openDetails: false}">
+                                <button @click="openDetails = !openDetails" class="px-3 py-1.5 rounded-md bg-purple-100 text-purple-700 hover:bg-purple-50 transition-colors duration-150">
+                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                    </svg>
+                                </button>
+                                <div x-show="openDetails" @click.away="openDetails = false" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50">
+                                    <div class="py-1">
+                                        <p class="px-4 py-2 text-xs font-semibold text-gray-500">Détails par employé</p>
+                                        @foreach($employes as $emp)
+                                            <a href="{{ route('employes.show', $emp) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50">
+                                                {{ $emp->prenom }} {{ $emp->nom }}
+                                            </a>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Bouton des formations -->
+                            <div class="relative" x-data="{openFormations: false}">
+                                <button @click="openFormations = !openFormations" class="px-3 py-1.5 rounded-md bg-green-100 text-green-700 hover:bg-green-50 transition-colors duration-150">
+                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                                    </svg>
+                                </button>
+                                <div x-show="openFormations" @click.away="openFormations = false" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50">
+                                    <div class="py-1">
+                                        <p class="px-4 py-2 text-xs font-semibold text-gray-500">Formations par employé</p>
+                                        @foreach($employes as $emp)
+                                            <a href="{{ route('employes.formations', $emp) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-green-50">
+                                                {{ $emp->prenom }} {{ $emp->nom }}
+                                            </a>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Bouton des statistiques -->
+                            <div class="relative" x-data="{openStats: false}">
+                                <button @click="openStats = !openStats" class="px-3 py-1.5 rounded-md bg-gray-100 text-gray-700 hover:bg-blue-50 transition-colors duration-150">
+                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                    </svg>
+                                </button>
+                                <div x-show="openStats" @click.away="openStats = false" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50">
+                                    <div class="py-1">
+                                        <p class="px-4 py-2 text-xs font-semibold text-gray-500">Statistiques par employé</p>
+                                        @foreach($employes as $emp)
+                                            <a href="{{ route('employes.stats', $emp) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50">
+                                                {{ $emp->prenom }} {{ $emp->nom }}
+                                            </a>
+                                        @endforeach
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -196,6 +237,11 @@
                                         <a href="{{ route('employes.edit', $employe) }}" class="text-blue-600 hover:text-blue-800">
                                             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                            </svg>
+                                        </a>
+                                        <a href="{{ route('employes.formations', $employe) }}" class="text-green-600 hover:text-green-800" title="Voir les formations et diplômes">
+                                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
                                             </svg>
                                         </a>
                                         <form action="{{ route('employes.destroy', $employe) }}" method="POST" class="inline-block" onsubmit="return confirm('Voulez-vous vraiment supprimer cet employé ?')">
@@ -337,6 +383,7 @@
                                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         <div class="flex space-x-2">
                                             <a href="{{ route('employes.edit', $employe) }}" class="text-blue-600 hover:text-blue-900">Modifier</a>
+                                            <a href="{{ route('employes.formations', $employe) }}" class="text-green-600 hover:text-green-900">Formations</a>
                                             <form action="{{ route('employes.destroy', $employe) }}" method="POST" class="inline-block" onsubmit="return confirm('Voulez-vous vraiment supprimer cet employé ?')">
                                                 @csrf
                                                 @method('DELETE')
