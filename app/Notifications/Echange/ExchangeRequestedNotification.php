@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Notifications;
+namespace App\Notifications\Echange;
 
 use App\Models\EchangeJour;
 use Illuminate\Bus\Queueable;

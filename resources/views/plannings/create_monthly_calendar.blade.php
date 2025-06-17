@@ -6,7 +6,7 @@ use App\Models\Lieu;
 @endphp
 
 <div class="py-12">
-    <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+    <div class="max-w-6xl mx-auto sm:px-8 lg:px-8">
         <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-xl font-semibold">
@@ -40,14 +40,10 @@ use App\Models\Lieu;
                     </button>
                     <button 
                         type="button" 
-                        onclick="creerPlanning()"
-                        class="px-4 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600 transition-colors duration-200"
+                        onclick="ajouterReposSelection()"
+                        class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors duration-200"
                     >
-                        @if(request()->has('from_modification'))
-                            Modifier le planning
-                        @else
-                            Créer le planning
-                        @endif
+                        Ajouter les jours de repos (RH)
                     </button>
                     <a href="{{ route('plannings.calendar') }}" 
                        class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors duration-200">
@@ -56,17 +52,20 @@ use App\Models\Lieu;
                 </div>
             </div>
 
-            <h3 class="text-lg mb-4">{{ \Carbon\Carbon::create(null, $mois, 1)->locale('fr')->monthName }} {{ $annee }}</h3>
-
-            <!-- Calendrier -->
-            <div class="grid grid-cols-7 gap-1 mb-6">
-                <div class="text-center font-semibold">Lun</div>
-                <div class="text-center font-semibold">Mar</div>
-                <div class="text-center font-semibold">Mer</div>
-                <div class="text-center font-semibold">Jeu</div>
-                <div class="text-center font-semibold">Ven</div>
-                <div class="text-center font-semibold">Sam</div>
-                <div class="text-center font-semibold">Dim</div>
+            <!-- Calendrier du mois actuel (à remplir) -->
+            <div class="max-w-5xl mx-auto current-calendar mb-8">
+                <div class="flex items-center mb-4">
+                    <h3 class="text-lg font-semibold">Mois actuel : {{ Carbon\Carbon::create($annee, $mois, 1)->locale('fr')->monthName }} {{ $annee }}</h3>
+                    <span class="text-sm text-blue-500 ml-2 px-2 py-1 border border-blue-300 rounded-md">(En cours de création)</span>
+                </div>
+                <div class="grid grid-cols-7 gap-1 mb-6">
+                    <div class="text-center font-semibold">Lun</div>
+                    <div class="text-center font-semibold">Mar</div>
+                    <div class="text-center font-semibold">Mer</div>
+                    <div class="text-center font-semibold">Jeu</div>
+                    <div class="text-center font-semibold">Ven</div>
+                    <div class="text-center font-semibold">Sam</div>
+                    <div class="text-center font-semibold">Dim</div>
 
                 @php
                     $currentDate = $debutPeriode->copy();
@@ -138,23 +137,109 @@ use App\Models\Lieu;
                     @endphp
                 @endwhile
             </div>
+            </div>
 
-            <!-- Bouton de création -->
+            <!-- Calendrier du mois précédent (référence) -->
+            <div class="max-w-5xl mx-auto reference-calendar mt-6 mb-8">
+                <div class="flex items-center mb-4">
+                    <h3 class="text-lg font-semibold">Mois précédent : {{ Carbon\Carbon::create($anneePrecedente, $moisPrecedent, 1)->locale('fr')->monthName }} {{ $anneePrecedente }}</h3>
+                    <span class="text-sm text-gray-500 ml-2 px-2 py-1 border border-gray-300 rounded-md">(Référence)</span>
+                    <div class="ml-auto text-sm text-gray-600">Consultez ce planning pour vous aider à créer celui du mois actuel</div>
+                </div>
+                <div class="grid grid-cols-7 gap-1 mb-6">
+                    <div class="text-center font-semibold">Lun</div>
+                    <div class="text-center font-semibold">Mar</div>
+                    <div class="text-center font-semibold">Mer</div>
+                    <div class="text-center font-semibold">Jeu</div>
+                    <div class="text-center font-semibold">Ven</div>
+                    <div class="text-center font-semibold">Sam</div>
+                    <div class="text-center font-semibold">Dim</div>
+
+                    @php
+                        $currentDate = $debutPeriodePrecedent->copy();
+                    @endphp
+
+                    @while($currentDate <= $finPeriodePrecedent)
+                        @php
+                            $isCurrentMonth = $currentDate->month == $moisPrecedent;
+                            $currentDateStr = $currentDate->format('Y-m-d');
+                            $dayPlannings = $planningsByDatePrecedent[$currentDateStr] ?? null;
+                            
+                            $bgClass = '';
+                            if ($dayPlannings) {
+                                $bgClass = 'bg-blue-50';
+                            }
+                            if (!$isCurrentMonth) {
+                                $bgClass = 'bg-gray-50';
+                            }
+                        @endphp
+
+                        <div class="calendar-cell-prev border p-2 {{ $bgClass }}" data-date="{{ $currentDateStr }}">
+                            <div class="text-right mb-2">{{ $currentDate->format('d') }}</div>
+                            
+                            @if($dayPlannings)
+                                @if($dayPlannings['journee'])
+                                    <div class="planning-details text-xs">
+                                        <div class="font-semibold">{{ $dayPlannings['journee']->lieu->nom ?? 'Non défini' }}</div>
+                                        @if($dayPlannings['journee']->lieu && !in_array($dayPlannings['journee']->lieu->nom, ['RH', 'CP']))
+                                            <div>
+                                                {{ \Carbon\Carbon::parse($dayPlannings['journee']->heure_debut)->format('H:i') }} - 
+                                                {{ \Carbon\Carbon::parse($dayPlannings['journee']->heure_fin)->format('H:i') }}
+                                            </div>
+                                        @endif
+                                    </div>
+                                @else
+                                    @if($dayPlannings['matin'])
+                                        <div class="planning-details text-xs">
+                                            <div class="font-semibold">{{ $dayPlannings['matin']->lieu->nom ?? 'Non défini' }}</div>
+                                            @if($dayPlannings['matin']->lieu && !in_array($dayPlannings['matin']->lieu->nom, ['RH', 'CP']))
+                                                <div>
+                                                    {{ \Carbon\Carbon::parse($dayPlannings['matin']->heure_debut)->format('H:i') }} - 
+                                                    {{ \Carbon\Carbon::parse($dayPlannings['matin']->heure_fin)->format('H:i') }}
+                                                </div>
+                                            @endif
+                                        </div>
+                                    @endif
+
+                                    @if($dayPlannings['apres-midi'])
+                                        @if($dayPlannings['matin'])
+                                            <div class="mt-1 border-t border-gray-200 pt-1"></div>
+                                        @endif
+                                        <div class="planning-details text-xs">
+                                            <div class="font-semibold">{{ $dayPlannings['apres-midi']->lieu->nom ?? 'Non défini' }}</div>
+                                            @if($dayPlannings['apres-midi']->lieu && !in_array($dayPlannings['apres-midi']->lieu->nom, ['RH', 'CP']))
+                                                <div>
+                                                    {{ \Carbon\Carbon::parse($dayPlannings['apres-midi']->heure_debut)->format('H:i') }} - 
+                                                    {{ \Carbon\Carbon::parse($dayPlannings['apres-midi']->heure_fin)->format('H:i') }}
+                                                </div>
+                                            @endif
+                                        </div>
+                                    @endif
+                                @endif
+                            @endif
+                        </div>
+                        @php
+                            $currentDate->addDay();
+                        @endphp
+                    @endwhile
+                </div>
+            </div>
+
             <div class="mt-4 flex justify-end">
                 <button type="button" onclick="creerPlanning()" 
                     class="inline-flex items-center px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
                     id="btnCreerPlanning"
                 >
-                    <i class="fas fa-save mr-2"></i> 
                     @if(request()->has('from_modification'))
-                        Modifier le planning
+                        <span>Modifier le planning</span>
                     @else
-                        Créer le planning
+                        <span>Créer le planning</span>
                     @endif
                 </button>
             </div>
         </div>
     </div>
+
 </div>
 
 <!-- Formulaire de planning -->
@@ -427,6 +512,43 @@ use App\Models\Lieu;
             });
         };
 
+        window.ajouterReposSelection = function() {
+            if (selectedDates.length === 0) {
+                alert('Veuillez sélectionner au moins un jour');
+                return;
+            }
+            
+            const rhId = {{ Lieu::where('nom', 'RH')->where('is_special', true)->first()->id ?? 'null' }};
+            
+            selectedDates.forEach(date => {
+                const cell = document.querySelector(`.calendar-cell[data-date="${date}"]`);
+                if (cell) {
+                    temporaryPlannings[date] = {
+                        lieu_id: rhId,
+                        lieu_nom: 'RH',
+                        type_horaire: 'simple',
+                        horaires: {
+                            debut: '00:00',
+                            fin: '00:00'
+                        }
+                    };
+
+                    cell.innerHTML = `
+                        <div class="text-right mb-2">${date.split('-')[2]}</div>
+                        <div class="planning-details text-xs">
+                            <div class="font-semibold">RH</div>
+                            <div>00:00-00:00</div>
+                        </div>
+                    `;
+                    cell.classList.add('bg-gray-50');
+                    cell.classList.remove('selected');
+                }
+            });
+            
+            // Réinitialiser la sélection
+            selectedDates = [];
+        };
+        
         window.remplirJoursRepos = function() {
             const rhId = {{ Lieu::where('nom', 'RH')->where('is_special', true)->first()->id ?? 'null' }};
 
@@ -499,9 +621,33 @@ use App\Models\Lieu;
 
 @push('styles')
 <style>
-    .calendar-cell {
-        min-height: 100px;
+    /* Styles pour les calendriers */
+    .calendar-cell, .calendar-cell-prev {
+        min-height: 60px;
         transition: all 0.3s ease;
+        position: relative;
+        border-radius: 0.25rem;
+        border: 1px solid rgba(160, 174, 192, 0.3);
+        background-color: rgba(30, 41, 59, 0.02);
+    }
+    
+    .calendar-cell:hover, .calendar-cell-prev:hover {
+        background-color: rgba(30, 41, 59, 0.05);
+    }
+    
+    .reference-calendar {
+        border-radius: 0.375rem;
+        padding: 0.5rem;
+        margin-top: 0.5rem;
+        border: 1px solid rgba(160, 174, 192, 0.2);
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+    }
+    
+    .current-calendar {
+        border-radius: 0.375rem;
+        padding: 0.5rem;
+        border: 1px solid rgba(66, 153, 225, 0.2);
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
     }
     
     .calendar-cell:hover {

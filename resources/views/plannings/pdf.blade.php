@@ -58,9 +58,10 @@
             color: #dc2626 !important; /* rouge */
             font-weight: bold;
         }
-        tr.modified-row td {
-            background-color: #fee2e2 !important; /* rouge clair */
-        }
+        /* Suppression du style de fond rouge pour toute la ligne */
+        /* tr.modified-row td {
+            background-color: #fee2e2 !important; 
+        } */
         .month-title {
             font-size: 16px;
             margin-bottom: 10px;
@@ -240,34 +241,44 @@
                 <tbody>
                     @foreach($week['days'] as $day)
                         @php
+                            $dateStr = $day['date']->format('Y-m-d');
                             $isModified = isset($modifiedPlannings) && $day['planning'] && in_array($day['planning']->id, $modifiedPlannings);
+                            $isTemporary = isset($temporaryPlannings) && isset($temporaryPlannings[$dateStr]);
                         @endphp
-                        <tr class="{{ $day['isWeekend'] ? 'weekend' : '' }} {{ $day['isRepos'] ? 'repos' : '' }} {{ $isModified ? 'modified-row' : '' }}">
-                            <td>{{ ucfirst($day['date']->locale('fr')->isoFormat('dddd')) }}</td>
-                            <td class="date-cell">{{ $day['date']->format('d/m/Y') }}</td>
-                            <td class="info-cell {{ $isModified ? 'modified' : '' }}">
-                                @if($day['planning'] && $day['planning']->lieu)
+                        <tr class="{{ $day['isWeekend'] ? 'weekend' : '' }} {{ $day['isRepos'] ? 'repos' : '' }}">
+                            <td class="{{ ($isModified || $isTemporary) ? 'modified' : '' }}">{{ ucfirst($day['date']->locale('fr')->isoFormat('dddd')) }}</td>
+                            <td class="date-cell {{ ($isModified || $isTemporary) ? 'modified' : '' }}">{{ $day['date']->format('d/m/Y') }}</td>
+                            <td class="info-cell {{ ($isModified || $isTemporary) ? 'modified' : '' }}">
+                                @if($isTemporary)
+                                    <span class="modified">{{ isset($temporaryPlannings[$dateStr]['lieu_nom']) ? $temporaryPlannings[$dateStr]['lieu_nom'] : 'RH' }}</span>
+                                @elseif($day['planning'] && $day['planning']->lieu)
                                     {{ $day['planning']->lieu->nom }}
                                 @else
                                     <span class="no-planning">-</span>
                                 @endif
                             </td>
-                            <td class="time-cell {{ $isModified ? 'modified' : '' }}">
-                                @if($day['planning'] && !$day['isRepos'])
+                            <td class="time-cell {{ ($isModified || $isTemporary) ? 'modified' : '' }}">
+                                @if($isTemporary)
+                                    <span class="modified">{{ isset($temporaryPlannings[$dateStr]['horaires']) && isset($temporaryPlannings[$dateStr]['horaires']['debut']) ? $temporaryPlannings[$dateStr]['horaires']['debut'] : '00:00' }}</span>
+                                @elseif($day['planning'] && !$day['isRepos'])
                                     {{ $day['planning']->heure_debut ? \Carbon\Carbon::parse($day['planning']->heure_debut)->format('H:i') : '-' }}
                                 @else
                                     <span class="no-planning">-</span>
                                 @endif
                             </td>
-                            <td class="time-cell {{ $isModified ? 'modified' : '' }}">
-                                @if($day['planning'] && !$day['isRepos'])
+                            <td class="time-cell {{ ($isModified || $isTemporary) ? 'modified' : '' }}">
+                                @if($isTemporary)
+                                    <span class="modified">{{ isset($temporaryPlannings[$dateStr]['horaires']) && isset($temporaryPlannings[$dateStr]['horaires']['fin']) ? $temporaryPlannings[$dateStr]['horaires']['fin'] : '00:00' }}</span>
+                                @elseif($day['planning'] && !$day['isRepos'])
                                     {{ $day['planning']->heure_fin ? \Carbon\Carbon::parse($day['planning']->heure_fin)->format('H:i') : '-' }}
                                 @else
                                     <span class="no-planning">-</span>
                                 @endif
                             </td>
-                            <td class="hours-cell {{ $isModified ? 'modified' : '' }}">
-                                @if($day['planning'] && !$day['isRepos'] && $day['planning']->heures_travaillees)
+                            <td class="hours-cell {{ ($isModified || $isTemporary) ? 'modified' : '' }}">
+                                @if($isTemporary)
+                                    <span class="modified">-</span>
+                                @elseif($day['planning'] && !$day['isRepos'] && $day['planning']->heures_travaillees)
                                     {{ App\Http\Controllers\PlanningController::convertToHHMM($day['planning']->heures_travaillees) }}
                                 @else
                                     <span class="no-planning">-</span>

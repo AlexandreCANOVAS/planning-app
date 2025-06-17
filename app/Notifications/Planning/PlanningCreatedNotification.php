@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Notifications;
+namespace App\Notifications\Planning;
 
 use App\Models\Planning;
 use Illuminate\Bus\Queueable;

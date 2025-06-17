@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Notifications;
+namespace App\Notifications\Planning;
 
 use App\Models\Planning;
 use Illuminate\Bus\Queueable;
@@ -43,4 +43,4 @@ class PlanningModifie extends Notification implements ShouldQueue
             'message' => 'Votre planning du ' . \Carbon\Carbon::parse($this->planning->date)->format('d/m/Y') . ' a été modifié'
         ];
     }
-} 
+}

@@ -8,9 +8,11 @@ use App\Models\Employe;
 use App\Models\ModificationPlanning;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Notifications\PlanningModifie;
-use App\Notifications\PlanningCreatedNotification;
-use App\Notifications\PlanningUpdatedNotification;
+use App\Notifications\Planning\PlanningModifie;
+use App\Notifications\Planning\PlanningCreatedNotification;
+use App\Notifications\Planning\PlanningUpdatedNotification;
+use App\Notifications\Echange\ExchangeStatusChangedNotification;
+use App\Notifications\Echange\ExchangeRequestNotification;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -152,9 +154,15 @@ class PlanningController extends Controller
         
         $echange->save();
         
-        // Notifier le receveur (si implémenté)
+        // Notifier le receveur
         if ($receveur->user) {
-            // $receveur->user->notify(new \App\Notifications\DemandeEchange($echange));
+            $receveur->user->notify(new \App\Notifications\Echange\ExchangeRequestNotification(
+                $demandeur,
+                $receveur,
+                Carbon::parse($request->your_day),
+                Carbon::parse($request->collegue_day),
+                $echange->id
+            ));
         }
         
         return redirect()->route('employe.plannings.liste-echanges')
@@ -254,9 +262,9 @@ class PlanningController extends Controller
             return redirect()->back()->with('error', 'Une erreur est survenue lors de l\'échange des plannings: ' . $e->getMessage());
         }
         
-        // Notifier le demandeur (si implémenté)
+        // Notifier le demandeur
         if ($echange->demandeur->user) {
-            // $echange->demandeur->user->notify(new \App\Notifications\EchangeAccepte($echange));
+            $echange->demandeur->user->notify(new ExchangeStatusChangedNotification($echange));
         }
         
         return redirect()->route('employe.plannings.liste-echanges')
@@ -289,9 +297,9 @@ class PlanningController extends Controller
         $echange->commentaire_reponse = $request->commentaire ?? null;
         $echange->save();
         
-        // Notifier le demandeur (si implémenté)
+        // Notifier le demandeur
         if ($echange->demandeur->user) {
-            // $echange->demandeur->user->notify(new \App\Notifications\EchangeRefuse($echange));
+            $echange->demandeur->user->notify(new ExchangeStatusChangedNotification($echange));
         }
         
         return redirect()->route('employe.plannings.liste-echanges')
@@ -1181,7 +1189,8 @@ class PlanningController extends Controller
             'employe_id' => 'required|exists:employes,id',
             'mois' => 'required|integer|between:1,12',
             'annee' => 'required|integer|min:2000',
-            'modified_plannings' => 'required|string' // IDs des plannings modifiés en JSON
+            'modified_plannings' => 'required|string', // IDs des plannings modifiés en JSON
+            'temporary_plannings' => 'nullable|string' // Plannings temporaires en JSON (jours de repos RH)
         ]);
 
         // Récupérer l'employé
@@ -1215,6 +1224,12 @@ class PlanningController extends Controller
         // Récupérer les IDs des plannings modifiés
         $modifiedPlannings = json_decode($request->modified_plannings, true);
         
+        // Récupérer les plannings temporaires (jours de repos RH)
+        $temporaryPlannings = [];
+        if ($request->has('temporary_plannings')) {
+            $temporaryPlannings = json_decode($request->temporary_plannings, true);
+        }
+        
         // Calculer les dates de début et de fin du mois
         $startDate = $date->copy()->startOfMonth();
         $endDate = $date->copy()->endOfMonth();
@@ -1227,6 +1242,7 @@ class PlanningController extends Controller
             'annee' => $request->annee,
             'totalHeures' => $totalHeures,
             'modifiedPlannings' => $modifiedPlannings,
+            'temporaryPlannings' => $temporaryPlannings,
             'startDate' => $startDate,
             'endDate' => $endDate
         ]);
@@ -1485,7 +1501,7 @@ class PlanningController extends Controller
             ->orderBy('nom')
             ->get();
 
-        // Créer les dates pour le mois
+        // Créer les dates pour le mois actuel
         $dateDebut = Carbon::create($annee, $mois, 1);
         $debutPeriode = $dateDebut->copy()->startOfWeek(Carbon::MONDAY);
         $finPeriode = $dateDebut->copy()->endOfMonth()->endOfWeek(Carbon::SUNDAY);
@@ -1511,6 +1527,38 @@ class PlanningController extends Controller
             }
             $planningsByDate[$date][$planning->periode] = $planning;
         }
+        
+        // Calculer le mois précédent
+        $dateMoisPrecedent = $dateDebut->copy()->subMonth();
+        $moisPrecedent = $dateMoisPrecedent->month;
+        $anneePrecedente = $dateMoisPrecedent->year;
+        
+        // Créer les dates pour le mois précédent
+        $dateDebutPrecedent = Carbon::create($anneePrecedente, $moisPrecedent, 1);
+        $debutPeriodePrecedent = $dateDebutPrecedent->copy()->startOfWeek(Carbon::MONDAY);
+        $finPeriodePrecedent = $dateDebutPrecedent->copy()->endOfMonth()->endOfWeek(Carbon::SUNDAY);
+        
+        // Récupérer les plannings du mois précédent
+        $planningsPrecedents = Planning::where('employe_id', $employe_id)
+            ->where('societe_id', $user->societe_id)
+            ->whereYear('date', $anneePrecedente)
+            ->whereMonth('date', $moisPrecedent)
+            ->with('lieu')
+            ->get();
+            
+        // Organiser les plannings du mois précédent par date et période
+        $planningsByDatePrecedent = [];
+        foreach ($planningsPrecedents as $planning) {
+            $date = $planning->date->format('Y-m-d');
+            if (!isset($planningsByDatePrecedent[$date])) {
+                $planningsByDatePrecedent[$date] = [
+                    'matin' => null,
+                    'apres-midi' => null,
+                    'journee' => null
+                ];
+            }
+            $planningsByDatePrecedent[$date][$planning->periode] = $planning;
+        }
 
         return view('plannings.create_monthly_calendar', compact(
             'employe',
@@ -1519,7 +1567,12 @@ class PlanningController extends Controller
             'annee',
             'planningsByDate',
             'debutPeriode',
-            'finPeriode'
+            'finPeriode',
+            'moisPrecedent',
+            'anneePrecedente',
+            'planningsByDatePrecedent',
+            'debutPeriodePrecedent',
+            'finPeriodePrecedent'
         ));
     }
     
@@ -1975,3 +2028,4 @@ class PlanningController extends Controller
         ]);
     }
 }
+

@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Notifications;
+namespace App\Notifications\Echange;
 
-use App\Models\Echange;
+use App\Models\EchangeJour;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -17,7 +17,7 @@ class ExchangeStatusChangedNotification extends Notification
     /**
      * Create a new notification instance.
      */
-    public function __construct(Echange $echange)
+    public function __construct(EchangeJour $echange)
     {
         $this->echange = $echange;
     }
@@ -37,16 +37,16 @@ class ExchangeStatusChangedNotification extends Notification
      */
     public function toMail(object $notifiable): MailMessage
     {
-        $statusText = $this->echange->status === 'accepted' ? 'acceptée' : 'refusée';
-        $color = $this->echange->status === 'accepted' ? 'success' : 'danger';
+        $statusText = $this->echange->statut === 'accepte' ? 'acceptée' : 'refusée';
+        $color = $this->echange->statut === 'accepte' ? 'success' : 'danger';
         
         return (new MailMessage)
                     ->subject('Réponse à votre demande d\'échange')
-                    ->greeting('Bonjour ' . $this->echange->employe->prenom . ',')
+                    ->greeting('Bonjour ' . $this->echange->demandeur->prenom . ',')
                     ->line('Votre demande d\'échange de planning a été ' . $statusText . '.')
-                    ->line('Jour proposé: ' . \Carbon\Carbon::parse($this->echange->date)->format('d/m/Y'))
-                    ->line('En échange du jour: ' . \Carbon\Carbon::parse($this->echange->target_date)->format('d/m/Y'))
-                    ->action('Voir les détails', url('/employe/echanges'))
+                    ->line('Jour proposé: ' . $this->echange->jour_demandeur->format('d/m/Y'))
+                    ->line('En échange du jour: ' . $this->echange->jour_receveur->format('d/m/Y'))
+                    ->action('Voir les détails', url('/employe/plannings/liste-echanges'))
                     ->line('Merci d\'utiliser notre application!');
     }
 
@@ -57,15 +57,15 @@ class ExchangeStatusChangedNotification extends Notification
      */
     public function toArray(object $notifiable): array
     {
-        $statusText = $this->echange->status === 'accepted' ? 'acceptée' : 'refusée';
-        $color = $this->echange->status === 'accepted' ? 'green' : 'red';
-        $icon = $this->echange->status === 'accepted' ? 'fa-check-circle' : 'fa-times-circle';
+        $statusText = $this->echange->statut === 'accepte' ? 'acceptée' : 'refusée';
+        $color = $this->echange->statut === 'accepte' ? 'green' : 'red';
+        $icon = $this->echange->statut === 'accepte' ? 'fa-check-circle' : 'fa-times-circle';
         
         return [
             'id' => $this->echange->id,
             'type' => 'exchange_status_changed',
             'title' => 'Réponse à votre demande d\'échange',
-            'message' => 'Votre demande d\'échange de planning pour le ' . \Carbon\Carbon::parse($this->echange->date)->format('d/m/Y') . ' a été ' . $statusText . '.',
+            'message' => 'Votre demande d\'échange de planning pour le ' . $this->echange->jour_demandeur->format('d/m/Y') . ' a été ' . $statusText . '.',
             'icon' => $icon,
             'color' => $color
         ];

@@ -8,7 +8,9 @@ use App\Models\CongeHistory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
-use App\Notifications\CongeStatusModifie;
+use App\Notifications\Conge\CongeStatusModifie;
+use App\Notifications\Conge\CongeCreatedNotification;
+use App\Notifications\Conge\CongeStatusChangedNotification;
 use Carbon\Carbon;
 use App\Events\CongeRequested;
 use App\Events\CongeStatusUpdated;
@@ -239,7 +241,7 @@ class CongeController extends Controller
         
         // Envoyer une notification à l'employé concerné
         $employe = $conge->employe;
-        $employe->user->notify(new \App\Notifications\CongeStatusChangedNotification($conge, $ancienStatut, $nouveauStatut));
+        $employe->user->notify(new CongeStatusChangedNotification($conge, $ancienStatut, $nouveauStatut));
 
         try {
             broadcast(new CongeStatusUpdated($conge))->toOthers();
@@ -332,7 +334,7 @@ class CongeController extends Controller
             ->get();
             
         foreach ($admins as $admin) {
-            $admin->notify(new \App\Notifications\CongeCreatedNotification($conge));
+            $admin->notify(new CongeCreatedNotification($conge));
         }
 
         try {
