@@ -42,9 +42,22 @@ L'Application de Gestion des Plannings est une solution complète pour la gestio
 
 ## Captures d'écran
 
+### Page d'accueil
 <p align="center">
-  <img src="public/img/screenshots/dashboard.png" alt="Dashboard" width="400">
-  <img src="public/img/screenshots/planning.png" alt="Planning" width="400">
+  <img src="https://i.imgur.com/QZdQxLB.png" alt="Page d'accueil" width="800">
+  <em>Page d'accueil présentant les fonctionnalités principales de l'application</em>
+</p>
+
+### Tableau de bord
+<p align="center">
+  <img src="https://i.imgur.com/YXGcZUt.png" alt="Tableau de bord" width="800">
+  <em>Tableau de bord avec les statistiques, actions rapides et documents disponibles</em>
+</p>
+
+### Création de planning
+<p align="center">
+  <img src="https://i.imgur.com/0Uw8Wnk.png" alt="Création de planning" width="800">
+  <em>Interface de création et gestion des plannings mensuels avec jours de repos</em>
 </p>
 
 ## Technologies utilisées

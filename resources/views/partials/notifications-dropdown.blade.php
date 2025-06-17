@@ -1,9 +1,9 @@
 <div x-data="notificationsDropdown()" x-init="init()" class="relative ml-3">
     <div>
-        <button @click="toggle()" type="button" class="relative p-1 rounded-full {{ request()->cookie('theme', 'light') === 'dark' ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-800' }} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+        <button @click="toggle()" type="button" class="relative p-1 my-2 rounded-full text-white bg-[rgb(131,44,207)] hover:bg-[rgb(141,54,217)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[rgb(131,44,207)]">
             <span class="sr-only">Voir les notifications</span>
             <i class="fas fa-bell text-xl"></i>
-            <span x-show="unreadCount > 0" x-text="unreadCount" class="absolute -top-1 -right-1 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full"></span>
+            <span x-show="unreadCount > 0" x-text="unreadCount" class="absolute -top-1 -right-1 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-[rgb(131,44,207)] transform translate-x-1/2 -translate-y-1/2 bg-white rounded-full"></span>
         </button>
     </div>
 
@@ -14,7 +14,7 @@
                 <template x-if="unreadCount > 0">
                     <form action="{{ route('notifications.mark-all-as-read') }}" method="POST">
                         @csrf
-                        <button type="submit" class="text-xs text-indigo-600 hover:text-indigo-800">Tout marquer comme lu</button>
+                        <button type="submit" class="text-xs text-[rgb(131,44,207)] hover:text-[rgb(151,64,227)]">Tout marquer comme lu</button>
                     </form>
                 </template>
             </div>
@@ -41,38 +41,38 @@
                                     <div class="mt-2 flex space-x-2">
                                         <form :action="`/notifications/${notification.id}/mark-as-read`" method="POST" x-show="!notification.read_at">
                                             @csrf
-                                            <button type="submit" class="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200 {{ request()->cookie('theme', 'light') === 'dark' ? 'bg-opacity-20 hover:bg-opacity-30' : '' }}">
+                                            <button type="submit" class="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-white bg-[rgb(131,44,207)] hover:bg-[rgb(141,54,217)]">
                                                 <i class="fas fa-check mr-1"></i>Lu
                                             </button>
                                         </form>
                                         
                                         <template x-if="notification.data.type === 'conge_created'">
-                                            <a :href="`/employeur/conges/${notification.data.id}`" class="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-blue-700 bg-blue-100 hover:bg-blue-200 {{ request()->cookie('theme', 'light') === 'dark' ? 'bg-opacity-20 hover:bg-opacity-30' : '' }}">
+                                            <a :href="`/employeur/conges/${notification.data.id}`" class="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-white bg-[rgb(131,44,207)] hover:bg-[rgb(141,54,217)]">
                                                 <i class="fas fa-eye mr-1"></i>Voir
                                             </a>
                                         </template>
                                         <template x-if="notification.data.type === 'conge_status_changed'">
-                                            <a :href="`/employe/conges/${notification.data.id}`" class="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-blue-700 bg-blue-100 hover:bg-blue-200 {{ request()->cookie('theme', 'light') === 'dark' ? 'bg-opacity-20 hover:bg-opacity-30' : '' }}">
+                                            <a :href="`/employe/conges/${notification.data.id}`" class="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-white bg-[rgb(131,44,207)] hover:bg-[rgb(141,54,217)]">
                                                 <i class="fas fa-eye mr-1"></i>Voir
                                             </a>
                                         </template>
                                         <template x-if="notification.data.type === 'planning_created' || notification.data.type === 'planning_updated'">
-                                            <a :href="`/employe/plannings/calendar?mois=${notification.data.mois || new Date().getMonth() + 1}&annee=${notification.data.annee || new Date().getFullYear()}`" class="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-blue-700 bg-blue-100 hover:bg-blue-200 {{ request()->cookie('theme', 'light') === 'dark' ? 'bg-opacity-20 hover:bg-opacity-30' : '' }}">
+                                            <a :href="`/employe/plannings/calendar?mois=${notification.data.mois || new Date().getMonth() + 1}&annee=${notification.data.annee || new Date().getFullYear()}`" class="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-white bg-[rgb(131,44,207)] hover:bg-[rgb(141,54,217)]">
                                                 <i class="fas fa-calendar-alt mr-1"></i>Planning
                                             </a>
                                         </template>
                                         <template x-if="notification.data.type === 'exchange_request'">
-                                            <a :href="`/employe/echanges/${notification.data.id}`" class="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-blue-700 bg-blue-100 hover:bg-blue-200 {{ request()->cookie('theme', 'light') === 'dark' ? 'bg-opacity-20 hover:bg-opacity-30' : '' }}">
+                                            <a :href="`/employe/echanges/${notification.data.id}`" class="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-white bg-[rgb(131,44,207)] hover:bg-[rgb(141,54,217)]">
                                                 <i class="fas fa-exchange-alt mr-1"></i>Voir
                                             </a>
                                         </template>
                                         <template x-if="notification.data.type === 'exchange_accepted' || notification.data.type === 'exchange_status_changed'">
-                                            <a :href="`/employe/echanges/${notification.data.id}`" class="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-blue-700 bg-blue-100 hover:bg-blue-200 {{ request()->cookie('theme', 'light') === 'dark' ? 'bg-opacity-20 hover:bg-opacity-30' : '' }}">
+                                            <a :href="`/employe/echanges/${notification.data.id}`" class="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-white bg-[rgb(131,44,207)] hover:bg-[rgb(141,54,217)]">
                                                 <i class="fas fa-exchange-alt mr-1"></i>Voir
                                             </a>
                                         </template>
                                         <template x-if="notification.data.type === 'exchange_requested' || notification.data.type === 'exchange_status_changed'">
-                                            <a href="/employe/echanges" class="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-blue-700 bg-blue-100 hover:bg-blue-200 {{ request()->cookie('theme', 'light') === 'dark' ? 'bg-opacity-20 hover:bg-opacity-30' : '' }}">
+                                            <a href="/employe/echanges" class="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-white bg-[rgb(131,44,207)] hover:bg-[rgb(141,54,217)]">
                                                 <i class="fas fa-exchange-alt mr-1"></i>Échanges
                                             </a>
                                         </template>
@@ -86,8 +86,8 @@
             
             <template x-if="notifications.length === 0">
                 <div class="px-4 py-6 text-center">
-                    <div class="inline-flex items-center justify-center h-12 w-12 rounded-full bg-gray-100 {{ request()->cookie('theme', 'light') === 'dark' ? 'bg-opacity-20' : '' }} mb-3">
-                        <i class="fas fa-bell-slash text-xl text-gray-500"></i>
+                    <div class="inline-flex items-center justify-center h-12 w-12 rounded-full bg-[rgb(131,44,207)] bg-opacity-20 mb-3">
+                        <i class="fas fa-bell-slash text-xl text-[rgb(131,44,207)]"></i>
                     </div>
                     <p class="text-sm font-medium {{ request()->cookie('theme', 'light') === 'dark' ? 'text-gray-300' : 'text-gray-600' }}">Aucune notification</p>
                     <p class="text-xs {{ request()->cookie('theme', 'light') === 'dark' ? 'text-gray-400' : 'text-gray-500' }}">Vous n'avez pas encore reçu de notifications.</p>
@@ -96,7 +96,7 @@
         </div>
         
         <div class="py-1 border-t {{ request()->cookie('theme', 'light') === 'dark' ? 'border-gray-700' : 'border-gray-200' }}">
-            <a href="{{ route('notifications.index') }}" class="block px-4 py-2 text-sm {{ request()->cookie('theme', 'light') === 'dark' ? 'text-gray-300 hover:bg-gray-700/50' : 'text-gray-700 hover:bg-gray-100/80' }}" role="menuitem">
+            <a href="{{ route('notifications.index') }}" class="block px-4 py-2 text-sm text-[rgb(131,44,207)] hover:bg-[rgb(131,44,207)]/10" role="menuitem">
                 Voir toutes les notifications
             </a>
         </div>

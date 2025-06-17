@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="relative overflow-hidden bg-gradient-to-r from-blue-600 to-blue-800 rounded-xl shadow-lg p-6">
+        <div class="relative overflow-hidden bg-gradient-to-r from-[rgb(75,20,140)] to-[rgb(55,10,110)] rounded-xl shadow-lg p-6">
             <div class="absolute top-0 right-0 transform translate-x-1/3 -translate-y-1/3">
                 <div class="w-48 h-48 rounded-full bg-white opacity-10"></div>
             </div>
@@ -13,19 +13,19 @@
                     <h2 class="text-2xl font-bold text-white mb-1">
                         {{ __('Tableau de bord') }}
                     </h2>
-                    <p class="text-blue-100 text-sm">
+                    <p class="text-purple-100 text-sm">
                         Bienvenue sur votre espace de gestion
                     </p>
                 </div>
                 <div class="flex items-center space-x-6">
                     <div class="bg-white bg-opacity-10 rounded-lg px-4 py-2 backdrop-blur-sm">
-                        <div class="text-sm text-blue-100">
+                        <div class="text-sm text-purple-100">
                             <i class="fas fa-calendar-alt mr-2"></i>
                             <span id="currentDate">{{ now()->format('d/m/Y') }}</span>
                         </div>
                     </div>
                     <div class="bg-white bg-opacity-10 rounded-lg px-4 py-2 backdrop-blur-sm">
-                        <div class="text-sm text-blue-100">
+                        <div class="text-sm text-purple-100">
                             <i class="fas fa-clock mr-2"></i>
                             <span id="currentTime"></span>
                         </div>
@@ -39,7 +39,7 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             @if(auth()->user()->societe)
                 <!-- En-tête société -->
-                <div class="bg-gradient-to-r from-blue-600 to-blue-800 rounded-xl shadow-lg mb-6 overflow-hidden">
+                <div class="bg-gradient-to-r from-[rgb(75,20,140)] to-[rgb(55,10,110)] rounded-xl shadow-lg mb-6 overflow-hidden">
                     <div class="relative px-8 py-10">
                         <!-- Cercles décoratifs -->
                         <div class="absolute top-0 right-0 transform translate-x-1/3 -translate-y-1/3">
@@ -76,13 +76,13 @@
                                 <div>
                                     <h1 class="text-3xl font-bold text-white mb-2">{{ auth()->user()->societe->nom }}</h1>
                                     <div class="space-y-2">
-                                        <div class="flex items-center text-blue-100 text-sm bg-black bg-opacity-20 rounded-full px-4 py-1.5">
+                                        <div class="flex items-center text-purple-100 text-sm bg-black bg-opacity-20 rounded-full px-4 py-1.5">
                                             <i class="fas fa-envelope mr-2"></i>
                                             <span>{{ auth()->user()->email }}</span>
                                         </div>
                                         
                                         <div class="flex space-x-4">
-                                            <div class="flex items-center text-blue-100 text-sm bg-black bg-opacity-20 rounded-full px-4 py-1.5">
+                                            <div class="flex items-center text-purple-100 text-sm bg-black bg-opacity-20 rounded-full px-4 py-1.5">
                                                 <i class="fas fa-building mr-2"></i>
                                                 <span>{{ auth()->user()->societe->forme_juridique }}</span>
                                                 <span class="mx-2">•</span>
@@ -92,7 +92,7 @@
                                         </div>
 
                                         <div class="flex space-x-4">
-                                            <div class="flex items-center text-blue-100 text-sm bg-black bg-opacity-20 rounded-full px-4 py-1.5">
+                                            <div class="flex items-center text-purple-100 text-sm bg-black bg-opacity-20 rounded-full px-4 py-1.5">
                                                 <i class="fas fa-map-marker-alt mr-2"></i>
                                                 <span>{{ auth()->user()->societe->adresse }}</span>
                                             </div>
@@ -100,7 +100,7 @@
 
                                         @if(auth()->user()->societe->telephone)
                                         <div class="flex space-x-4">
-                                            <div class="flex items-center text-blue-100 text-sm bg-black bg-opacity-20 rounded-full px-4 py-1.5">
+                                            <div class="flex items-center text-purple-100 text-sm bg-black bg-opacity-20 rounded-full px-4 py-1.5">
                                                 <i class="fas fa-phone mr-2"></i>
                                                 <span>{{ auth()->user()->societe->telephone }}</span>
                                             </div>

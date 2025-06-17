@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="relative overflow-hidden bg-gradient-to-r from-blue-600 to-blue-800 rounded-xl shadow-lg p-8">
+        <div class="relative overflow-hidden bg-gradient-to-r from-[rgb(75,20,140)] to-[rgb(55,10,110)] rounded-xl shadow-lg p-8">
             <div class="absolute top-0 right-0 transform translate-x-1/3 -translate-y-1/3">
                 <div class="w-48 h-48 rounded-full bg-white opacity-10"></div>
             </div>
@@ -12,7 +12,7 @@
                     <h2 class="text-3xl font-bold text-white mb-2">
                         {{ $societe->nom }}
                     </h2>
-                    <p class="text-blue-100 text-lg">
+                    <p class="text-purple-100 text-lg">
                         Modifier les informations de votre entreprise
                     </p>
                 </div>
@@ -38,7 +38,7 @@
                         <div class="space-y-8">
                             <div>
                                 <h3 class="text-lg font-semibold text-gray-900 mb-6 flex items-center">
-                                    <i class="fas fa-building mr-3 text-blue-600"></i>
+                                    <i class="fas fa-building mr-3 text-[rgb(75,20,140)]"></i>
                                     Informations principales
                                 </h3>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -77,7 +77,7 @@
                             <!-- Section Structure -->
                             <div>
                                 <h3 class="text-lg font-semibold text-gray-900 mb-6 flex items-center">
-                                    <i class="fas fa-sitemap mr-3 text-blue-600"></i>
+                                    <i class="fas fa-sitemap mr-3 text-[rgb(75,20,140)]"></i>
                                     Structure juridique
                                 </h3>
                                 <div class="grid grid-cols-1 gap-6">
@@ -111,7 +111,7 @@
                             <!-- Section Contact -->
                             <div>
                                 <h3 class="text-lg font-semibold text-gray-900 mb-6 flex items-center">
-                                    <i class="fas fa-address-card mr-3 text-blue-600"></i>
+                                    <i class="fas fa-address-card mr-3 text-[rgb(75,20,140)]"></i>
                                     Informations de contact
                                 </h3>
                                 <div class="grid grid-cols-1 gap-6">
@@ -149,7 +149,7 @@
 
                         <!-- Boutons d'action -->
                         <div class="pt-6 flex flex-col sm:flex-row gap-4">
-                            <button type="submit" class="flex-1 inline-flex justify-center items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-800 text-white font-medium rounded-lg shadow-lg hover:from-blue-700 hover:to-blue-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200">
+                            <button type="submit" class="flex-1 inline-flex justify-center items-center px-6 py-3 bg-gradient-to-r from-[rgb(75,20,140)] to-[rgb(55,10,110)] text-white font-medium rounded-lg shadow-lg hover:from-[rgb(85,30,150)] hover:to-[rgb(65,20,120)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-all duration-200">
                                 <i class="fas fa-save mr-2"></i>
                                 Enregistrer les modifications
                             </button>
