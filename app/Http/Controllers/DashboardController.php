@@ -94,13 +94,34 @@ class DashboardController extends Controller
 
             $demandesConges = $societe->conges()->count();
 
-            // Récupérer les employés qui travaillent aujourd'hui
+            // Récupérer tous les employés de la société
             $today = now()->format('Y-m-d');
-            $employesAujourdhui = Planning::where('date', $today)
+            $allEmployes = \App\Models\Employe::query()
+                ->join('users', 'employes.user_id', '=', 'users.id')
+                ->where('users.societe_id', $societe->id)
+                ->where('users.role', 'employe')
+                ->select('employes.*')
+                ->get();
+                
+            // Récupérer les plannings du jour
+            $planningsDuJour = Planning::where('date', $today)
                 ->where('societe_id', $societe->id)
                 ->with(['employe', 'lieu'])
                 ->orderBy('heure_debut')
-                ->get()
+                ->get();
+                
+            // Récupérer les congés du jour
+            $congesDuJour = \App\Models\Conge::whereDate('date_debut', '<=', $today)
+                ->whereDate('date_fin', '>=', $today)
+                ->whereHas('employe.user', function ($query) use ($societe) {
+                    $query->where('societe_id', $societe->id);
+                })
+                ->where('statut', 'approuve')
+                ->with('employe')
+                ->get();
+                
+            // Identifier les employés en service aujourd'hui
+            $employesEnService = $planningsDuJour
                 ->groupBy('employe_id')
                 ->map(function ($plannings) {
                     return [
@@ -114,6 +135,17 @@ class DashboardController extends Controller
                         })
                     ];
                 });
+                
+            // Identifier les employés en congé aujourd'hui
+            $employesEnConge = $congesDuJour->pluck('employe');
+            
+            // Identifier les employés en repos (ni en service, ni en congé)
+            $employesEnRepos = $allEmployes
+                ->filter(function ($employe) use ($employesEnService, $employesEnConge) {
+                    return !$employesEnService->has($employe->id) && 
+                           !$employesEnConge->contains('id', $employe->id);
+                })
+                ->values();
 
             // Récupérer tous les employés de la société pour les sélecteurs d'export
             $employes = \App\Models\Employe::query()
@@ -130,7 +162,9 @@ class DashboardController extends Controller
                 'plannings',
                 'conges',
                 'demandesConges',
-                'employesAujourdhui',
+                'employesEnService',
+                'employesEnConge',
+                'employesEnRepos',
                 'employes'
             ));
         }

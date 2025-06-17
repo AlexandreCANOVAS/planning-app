@@ -241,57 +241,163 @@
                         </div>
                     </div>
 
-                    <!-- Activité récente -->
-                    <div class="bg-white rounded-lg shadow-sm p-6">
-                        <h4 class="text-lg font-semibold mb-4">Activité récente</h4>
-                        <div class="text-gray-500 text-center py-4">
-                            Aucune activité récente
+                    <!-- Vision Sécurité Privée - Statut des employés -->
+                    <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                            <i class="fas fa-users text-blue-500 mr-2"></i>
+                            Statut de mes employés
+                        </h3>
+                        
+                        <!-- Navigation par onglets -->
+                        <div class="border-b border-gray-200 mb-4">
+                            <ul class="flex flex-wrap -mb-px" id="statusTabs" role="tablist">
+                                <li class="mr-2" role="presentation">
+                                    <button class="inline-block p-3 border-b-2 border-blue-500 rounded-t-lg text-blue-600 active" 
+                                            id="en-service-tab" 
+                                            data-tabs-target="#en-service" 
+                                            type="button" 
+                                            role="tab" 
+                                            aria-controls="en-service" 
+                                            aria-selected="true">
+                                        <i class="fas fa-user-clock mr-2"></i>
+                                        En service <span class="ml-1 text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">{{ $employesEnService->count() }}</span>
+                                    </button>
+                                </li>
+                                <li class="mr-2" role="presentation">
+                                    <button class="inline-block p-3 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300" 
+                                            id="en-repos-tab" 
+                                            data-tabs-target="#en-repos" 
+                                            type="button" 
+                                            role="tab" 
+                                            aria-controls="en-repos" 
+                                            aria-selected="false">
+                                        <i class="fas fa-coffee mr-2"></i>
+                                        En repos <span class="ml-1 text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">{{ $employesEnRepos->count() }}</span>
+                                    </button>
+                                </li>
+                                <li class="mr-2" role="presentation">
+                                    <button class="inline-block p-3 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300" 
+                                            id="en-conge-tab" 
+                                            data-tabs-target="#en-conge" 
+                                            type="button" 
+                                            role="tab" 
+                                            aria-controls="en-conge" 
+                                            aria-selected="false">
+                                        <i class="fas fa-umbrella-beach mr-2"></i>
+                                        En congé <span class="ml-1 text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full">{{ $employesEnConge->count() }}</span>
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <!-- Contenu des onglets -->
+                        <div id="statusTabContent">
+                            <!-- Employés en service -->
+                            <div class="block" id="en-service" role="tabpanel" aria-labelledby="en-service-tab">
+                                @if($employesEnService->count() > 0)
+                                    <div class="space-y-2">
+                                        @foreach($employesEnService as $data)
+                                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border border-gray-100">
+                                                <div class="flex items-center space-x-3">
+                                                    <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                                                        <i class="fas fa-user text-blue-500"></i>
+                                                    </div>
+                                                    <div>
+                                                        <div class="font-medium text-gray-900">{{ $data['employe']->nom }} {{ $data['employe']->prenom }}</div>
+                                                        @if($data['lieu'])
+                                                            <div class="text-xs text-gray-500">
+                                                                <i class="fas fa-map-marker-alt mr-1"></i>
+                                                                {{ $data['lieu']->nom }}
+                                                            </div>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                                <div class="text-xs text-gray-600">
+                                                    @foreach($data['heures'] as $horaire)
+                                                        <div>{{ \Carbon\Carbon::parse($horaire['debut'])->format('H:i') }} - {{ \Carbon\Carbon::parse($horaire['fin'])->format('H:i') }}</div>
+                                                    @endforeach
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @else
+                                    <div class="text-center py-4 text-gray-500 bg-gray-50 rounded-lg border border-gray-100">
+                                        <i class="fas fa-coffee text-gray-400 text-xl mb-2"></i>
+                                        <p class="text-sm">Aucun employé en service aujourd'hui</p>
+                                    </div>
+                                @endif
+                            </div>
+                            
+                            <!-- Employés en repos -->
+                            <div class="hidden" id="en-repos" role="tabpanel" aria-labelledby="en-repos-tab">
+                                @if($employesEnRepos->count() > 0)
+                                    <div class="space-y-2">
+                                        @foreach($employesEnRepos as $employe)
+                                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border border-gray-100">
+                                                <div class="flex items-center space-x-3">
+                                                    <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                                                        <i class="fas fa-user text-green-500"></i>
+                                                    </div>
+                                                    <div>
+                                                        <div class="font-medium text-gray-900">{{ $employe->nom }} {{ $employe->prenom }}</div>
+                                                        <div class="text-xs text-gray-500">
+                                                            <i class="fas fa-phone mr-1"></i>
+                                                            {{ $employe->telephone ?? 'Non renseigné' }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">En repos</span>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @else
+                                    <div class="text-center py-4 text-gray-500 bg-gray-50 rounded-lg border border-gray-100">
+                                        <i class="fas fa-user-clock text-gray-400 text-xl mb-2"></i>
+                                        <p class="text-sm">Tous les employés sont en service ou en congé aujourd'hui</p>
+                                    </div>
+                                @endif
+                            </div>
+                            
+                            <!-- Employés en congé -->
+                            <div class="hidden" id="en-conge" role="tabpanel" aria-labelledby="en-conge-tab">
+                                @if($employesEnConge->count() > 0)
+                                    <div class="space-y-2">
+                                        @foreach($employesEnConge as $employe)
+                                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border border-gray-100">
+                                                <div class="flex items-center space-x-3">
+                                                    <div class="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center">
+                                                        <i class="fas fa-user text-yellow-500"></i>
+                                                    </div>
+                                                    <div>
+                                                        <div class="font-medium text-gray-900">{{ $employe->nom }} {{ $employe->prenom }}</div>
+                                                        <div class="text-xs text-gray-500">
+                                                            <i class="fas fa-envelope mr-1"></i>
+                                                            {{ $employe->email ?? 'Non renseigné' }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <span class="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">En congé</span>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @else
+                                    <div class="text-center py-4 text-gray-500 bg-gray-50 rounded-lg border border-gray-100">
+                                        <i class="fas fa-umbrella-beach text-gray-400 text-xl mb-2"></i>
+                                        <p class="text-sm">Aucun employé en congé aujourd'hui</p>
+                                    </div>
+                                @endif
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 @include('dashboard.partials.documents-exports')
 
-                <!-- Employés en service aujourd'hui -->
-                <div class="bg-white rounded-lg shadow-sm p-6 mt-6">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">
-                        <i class="fas fa-user-clock text-blue-500 mr-2"></i>
-                        Employés en service aujourd'hui
-                    </h3>
-                    
-                    @if($employesAujourdhui->count() > 0)
-                        <div class="space-y-4">
-                            @foreach($employesAujourdhui as $data)
-                                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                                    <div class="flex items-center space-x-4">
-                                        <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                                            <i class="fas fa-user text-blue-500"></i>
-                                        </div>
-                                        <div>
-                                            <div class="font-medium text-gray-900">{{ $data['employe']->nom }} {{ $data['employe']->prenom }}</div>
-                                            @if($data['lieu'])
-                                                <div class="text-sm text-gray-500">
-                                                    <i class="fas fa-map-marker-alt mr-1"></i>
-                                                    {{ $data['lieu']->nom }}
-                                                </div>
-                                            @endif
-                                        </div>
-                                    </div>
-                                    <div class="text-sm text-gray-600">
-                                        @foreach($data['heures'] as $horaire)
-                                            <div>{{ \Carbon\Carbon::parse($horaire['debut'])->format('H:i') }} - {{ \Carbon\Carbon::parse($horaire['fin'])->format('H:i') }}</div>
-                                        @endforeach
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                    @else
-                        <div class="text-center py-4 text-gray-500">
-                            <i class="fas fa-coffee text-gray-400 text-2xl mb-2"></i>
-                            <p>Aucun employé en service aujourd'hui</p>
-                        </div>
-                    @endif
-                </div>
+
 
             @else
                 <div class="bg-white rounded-lg shadow-sm p-8 text-center">
@@ -345,6 +451,42 @@
                 .error((error) => {
                     console.error('Echo error:', error);
                 });
+                
+            // Gestion des onglets pour la section "Vision Sécurité Privée"
+            const tabsElement = document.getElementById('statusTabs');
+            if (tabsElement) {
+                const tabs = tabsElement.querySelectorAll('button[role="tab"]');
+                const tabPanels = document.querySelectorAll('#statusTabContent > div[role="tabpanel"]');
+                
+                tabs.forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        // Désactiver tous les onglets
+                        tabs.forEach(t => {
+                            t.classList.remove('border-blue-500', 'text-blue-600', 'active');
+                            t.classList.add('border-transparent');
+                            t.setAttribute('aria-selected', 'false');
+                        });
+                        
+                        // Cacher tous les panneaux
+                        tabPanels.forEach(panel => {
+                            panel.classList.add('hidden');
+                            panel.classList.remove('block');
+                        });
+                        
+                        // Activer l'onglet cliqué
+                        tab.classList.remove('border-transparent');
+                        tab.classList.add('border-blue-500', 'text-blue-600', 'active');
+                        tab.setAttribute('aria-selected', 'true');
+                        
+                        // Afficher le panneau correspondant
+                        const target = document.querySelector(tab.getAttribute('data-tabs-target'));
+                        if (target) {
+                            target.classList.remove('hidden');
+                            target.classList.add('block');
+                        }
+                    });
+                });
+            }
         });
     </script>
     <script>

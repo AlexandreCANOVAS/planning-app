@@ -21,7 +21,7 @@
             @endif
             
             <!-- Tableau de bord statistique -->
-            <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+            <div class="bg-white rounded-xl shadow-sm p-6 mb-6 border border-gray-100">
                 <h3 class="text-lg font-semibold text-gray-800 mb-4">Tableau de bord des employés</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <!-- Nombre total d'employés -->
@@ -87,7 +87,7 @@
             </div>
             
             <!-- Barre de recherche et options d'affichage -->
-            <div class="bg-white rounded-xl shadow-sm p-4 mb-6">
+            <div class="bg-white rounded-xl shadow-sm p-4 mb-6 border border-gray-100">
                 <form action="{{ route('employes.index') }}" method="GET" class="flex flex-col md:flex-row gap-4">
                     <div class="flex-grow">
                         <div class="relative">
@@ -120,7 +120,7 @@
                 <!-- Options d'affichage -->
                 <div class="mt-4 flex justify-between items-center border-t border-gray-200 pt-4">
                     <div class="text-sm text-gray-500">
-                        {{ isset($employes) && method_exists($employes, 'total') ? $employes->total() : '0' }} employé(s) trouvé(s)
+                        {{ isset($employes) && count($employes) > 0 ? (method_exists($employes, 'total') ? $employes->total() : count($employes)) : '0' }} employé(s) trouvé(s)
                     </div>
                     <div class="flex space-x-2">
                         <a href="{{ route('employes.index', ['view_mode' => 'grid', 'search' => $search]) }}" class="px-3 py-1.5 rounded-md {{ $viewMode === 'grid' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700' }} hover:bg-blue-50 transition-colors duration-150">
@@ -219,7 +219,7 @@
                                                 ][$employe->statut_actuel] ?? 'bg-gray-100 text-gray-800';
                                                 
                                                 $statutLabel = [
-                                                    'disponible' => 'Disponible',
+                                                    'disponible' => 'En repos',
                                                     'en_conge' => 'En congé',
                                                     'en_service' => 'En service'
                                                 ][$employe->statut_actuel] ?? 'Indéterminé';
@@ -301,7 +301,7 @@
                 
             @elseif($viewMode === 'list')
                 <!-- Vue en liste -->
-                <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
@@ -334,7 +334,7 @@
                                             ][$employe->statut_actuel] ?? 'bg-gray-100 text-gray-800';
                                             
                                             $statutLabel = [
-                                                'disponible' => 'Disponible',
+                                                'disponible' => 'En repos',
                                                 'en_conge' => 'En congé',
                                                 'en_service' => 'En service'
                                             ][$employe->statut_actuel] ?? 'Indéterminé';
