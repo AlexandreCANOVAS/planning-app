@@ -19,6 +19,16 @@ class PlanningPolicy
 
     public function view(User $user, Planning $planning): bool
     {
-        return $user->societe->id === $planning->employe->societe_id;
+        // Employeur can view any planning in their company
+        if ($user->isEmployeur()) {
+            return $user->societe->id === $planning->employe->societe_id;
+        }
+        
+        // Employee can only view their own plannings
+        if ($user->employe) {
+            return $user->employe->id === $planning->employe_id;
+        }
+        
+        return false;
     }
 } 

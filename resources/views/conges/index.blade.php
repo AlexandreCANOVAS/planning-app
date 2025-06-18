@@ -8,6 +8,14 @@
                 <a href="{{ route('conges.calendar') }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700">
                     Voir le calendrier
                 </a>
+                @if(auth()->user()->isEmployeur())
+                <a href="{{ route('solde.index') }}" class="inline-flex items-center px-4 py-2 bg-purple-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-purple-700">
+                    <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                    </svg>
+                    Modifier solde de congé
+                </a>
+                @endif
                 <a href="{{ auth()->user()->isEmploye() ? route('employe.mes-conges') : '#' }}" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700">
                     Ajouter un congé
                 </a>
@@ -321,6 +329,15 @@
                                                         </svg>
                                                         Historique
                                                     </button>
+                                                    
+                                                    @if(auth()->user()->isEmployeur() && $conge->employe)
+                                                        <a href="{{ route('solde.edit', $conge->employe->id) }}" class="px-3 py-1 bg-purple-100 text-purple-700 rounded-md hover:bg-purple-200 transition-colors duration-200 flex items-center text-xs">
+                                                            <svg class="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                                                            </svg>
+                                                            Modifier soldes
+                                                        </a>
+                                                    @endif
                                                 </div>
                                                 
                                                 <!-- Historique des modifications -->
@@ -366,6 +383,7 @@
     </div>
     <!-- Scripts pour les graphiques -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    {{-- Références aux scripts JavaScript supprimées pour éviter les erreurs 404 --}}
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Préparation des données pour le graphique mensuel

@@ -8,7 +8,8 @@ export default defineConfig({
                 'resources/css/app.css',
                 'resources/js/app.js',
                 'resources/js/employee-stats.js',
-                'resources/js/dark-theme.js'
+                'resources/js/dark-theme.js',
+                'resources/js/toast.js'
             ],
             refresh: true,
         }),

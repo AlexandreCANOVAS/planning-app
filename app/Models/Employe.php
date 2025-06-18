@@ -33,11 +33,30 @@ class Employe extends Model
         'date_fin_contrat',
         'temps_travail',
         'pourcentage_travail',
+        'solde_conges',
+        'solde_rtt',
+        'solde_conges_exceptionnels',
         'societe_id',
         'user_id'
     ];
 
-    protected $casts = [];
+    protected $casts = [
+        'solde_conges' => 'decimal:1',
+        'solde_rtt' => 'decimal:1',
+        'solde_conges_exceptionnels' => 'decimal:1',
+        'date_embauche' => 'date',
+        'date_naissance' => 'date',
+        'date_debut_contrat' => 'date',
+        'date_fin_contrat' => 'date',
+    ];
+    
+    /**
+     * Get the user's display name (always returns prenom instead of nom)
+     */
+    public function getNameAttribute()
+    {
+        return $this->prenom;
+    }
 
     /**
      * Relation avec l'utilisateur
@@ -90,6 +109,14 @@ class Employe extends Model
     }
     
     /**
+     * Relation avec l'historique des modifications de solde de congés
+     */
+    public function historiqueConges()
+    {
+        return $this->hasMany(HistoriqueConge::class);
+    }
+    
+    /**
      * Relation avec les matériels attribués
      */
     public function materiels()
@@ -122,9 +149,9 @@ class Employe extends Model
     }
     
     /**
-     * Calcule le solde de congés payés restants
+     * Calcule le solde de congés payés restants (méthode renommée pour éviter les conflits avec l'attribut)
      */
-    public function getSoldeCongesAttribute()
+    public function calculerSoldeConges()
     {
         // Par défaut, on attribue 25 jours de congés payés par an
         $soldeInitial = 25.0;

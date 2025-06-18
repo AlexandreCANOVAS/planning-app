@@ -84,6 +84,20 @@ class User extends Authenticatable
     {
         return $this->role === 'employeur';
     }
+    
+    /**
+     * Accesseur pour afficher le prénom au lieu du nom
+     */
+    public function getNameAttribute($value)
+    {
+        // Si c'est un employé et qu'il a un employe associé avec un prénom
+        if ($this->isEmploye() && $this->employe && $this->employe->prenom) {
+            return $this->employe->prenom;
+        }
+        
+        // Sinon retourner le nom par défaut
+        return $value;
+    }
 
     /**
      * Accès aux congés via la relation employe

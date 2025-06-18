@@ -21,6 +21,16 @@
                     <p>{{ session('success') }}</p>
                 </div>
             @endif
+            
+            @if(session('password'))
+                <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-4 rounded" role="alert">
+                    <p class="font-bold">Informations de connexion</p>
+                    <p>Un compte utilisateur a été créé pour cet employé.</p>
+                    <p class="mt-2"><strong>Email :</strong> {{ $employe->email }}</p>
+                    <p><strong>Mot de passe temporaire :</strong> <span class="font-mono bg-gray-100 px-2 py-1 rounded">{{ session('password') }}</span></p>
+                    <p class="mt-2 text-sm">Veuillez communiquer ces informations à l'employé. Il devra changer son mot de passe lors de sa première connexion.</p>
+                </div>
+            @endif
 
             <!-- Informations principales -->
             <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
@@ -373,6 +383,45 @@
                             @endif
                         @else
                             <p class="text-sm text-gray-500">Aucune formation enregistrée</p>
+                        @endif
+                    </div>
+                    
+                    <!-- Soldes de congés -->
+                    <div class="mb-6">
+                        <div class="flex justify-between items-center mb-2">
+                            <p class="text-sm font-medium text-gray-500">Soldes de congés</p>
+                            @if(auth()->user()->isEmployeur())
+                                <a href="{{ route('solde-conge.edit', $employe->id) }}" class="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded hover:bg-purple-200 flex items-center">
+                                    <svg class="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    </svg>
+                                    Modifier
+                                </a>
+                            @endif
+                        </div>
+                        <div class="grid grid-cols-3 gap-2">
+                            <div class="p-3 bg-blue-50 rounded-lg">
+                                <p class="text-xs text-blue-600 font-medium">Congés payés</p>
+                                <p class="text-lg font-bold text-blue-800" data-employe-id="{{ $employe->id }}" data-solde-type="conges">{{ number_format($employe->solde_conges, 1) }} jours</p>
+                            </div>
+                            <div class="p-3 bg-green-50 rounded-lg">
+                                <p class="text-xs text-green-600 font-medium">RTT</p>
+                                <p class="text-lg font-bold text-green-800" data-employe-id="{{ $employe->id }}" data-solde-type="rtt">{{ number_format($employe->solde_rtt, 1) }} jours</p>
+                            </div>
+                            <div class="p-3 bg-amber-50 rounded-lg">
+                                <p class="text-xs text-amber-600 font-medium">Congés exceptionnels</p>
+                                <p class="text-lg font-bold text-amber-800" data-employe-id="{{ $employe->id }}" data-solde-type="exceptionnels">{{ number_format($employe->solde_conges_exceptionnels, 1) }} jours</p>
+                            </div>
+                        </div>
+                        @if(auth()->user()->isEmployeur())
+                            <div class="mt-2 text-center">
+                                <a href="{{ route('solde-conge.historique', $employe->id) }}" class="text-xs text-gray-600 hover:text-gray-800 flex items-center justify-center">
+                                    <svg class="h-3 w-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    Voir l'historique des modifications
+                                </a>
+                            </div>
                         @endif
                     </div>
                     

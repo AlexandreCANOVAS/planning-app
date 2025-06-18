@@ -13,12 +13,6 @@
 
     <div class="py-6">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            @if(session('success'))
-                <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4 rounded" role="alert">
-                    <p class="font-bold">Succès!</p>
-                    <p>{{ session('success') }}</p>
-                </div>
-            @endif
             
             <!-- Tableau de bord statistique -->
             <div class="bg-white rounded-xl shadow-sm p-6 mb-6 border border-gray-100">

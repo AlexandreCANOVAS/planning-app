@@ -1,9 +1,9 @@
-<div x-data="notificationsDropdown()" x-init="init()" class="relative ml-3">
+<div x-data="notificationsDropdownInline()" x-init="init()" class="relative ml-3">
     <div>
         <button @click="toggle()" type="button" class="relative p-1 my-2 rounded-full text-white bg-[rgb(131,44,207)] hover:bg-[rgb(141,54,217)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[rgb(131,44,207)]">
             <span class="sr-only">Voir les notifications</span>
             <i class="fas fa-bell text-xl"></i>
-            <span x-show="unreadCount > 0" x-text="unreadCount" class="absolute -top-1 -right-1 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-[rgb(131,44,207)] transform translate-x-1/2 -translate-y-1/2 bg-white rounded-full"></span>
+            <span x-show="unreadCount > 0" x-text="unreadCount" class="absolute -top-3 -right-3 inline-flex items-center justify-center min-w-[22px] h-[22px] px-1.5 text-xs font-bold leading-none text-white bg-red-600 border-2 border-white dark:border-gray-900 rounded-full shadow-md animate-pulse"></span>
         </button>
     </div>
 
@@ -24,11 +24,29 @@
             <template x-if="notifications.length > 0">
                 <div class="py-1">
                     <template x-for="notification in notifications" :key="notification.id">
-                        <div class="px-4 py-3 hover:{{ request()->cookie('theme', 'light') === 'dark' ? 'bg-gray-700/50' : 'bg-gray-50/80' }} border-b {{ request()->cookie('theme', 'light') === 'dark' ? 'border-gray-700' : 'border-gray-200' }} last:border-0">
+                        <div class="px-4 py-3 hover:{{ request()->cookie('theme', 'light') === 'dark' ? 'bg-gray-700/50' : 'bg-gray-50/80' }} border-b {{ request()->cookie('theme', 'light') === 'dark' ? 'border-gray-700' : 'border-gray-200' }} last:border-0 border-l-4" :class="{
+                            'border-l-purple-500': !notification.read_at && notification.data.title && notification.data.title.includes('Modification de votre solde de congés'),
+                            'border-l-blue-500': !notification.read_at && notification.data.type === 'conge_status_changed',
+                            'border-l-amber-500': !notification.read_at && (notification.data.type === 'planning_created' || notification.data.type === 'planning_updated'),
+                            'border-l-green-500': !notification.read_at && !notification.data.title?.includes('Modification de votre solde de congés') && notification.data.type !== 'conge_status_changed' && notification.data.type !== 'planning_created' && notification.data.type !== 'planning_updated',
+                            'border-l-transparent': notification.read_at
+                        }">
                             <div class="flex items-start">
                                 <div class="flex-shrink-0">
-                                    <div class="h-8 w-8 rounded-full flex items-center justify-center" :class="`bg-${notification.data.color || 'indigo'}-100 {{ request()->cookie('theme', 'light') === 'dark' ? 'bg-opacity-20' : '' }}`">
-                                        <i class="fas" :class="`${notification.data.icon || 'fa-bell'} text-${notification.data.color || 'indigo'}-600`"></i>
+                                    <div class="h-8 w-8 rounded-full flex items-center justify-center border" 
+                                        :class="{
+                                            'bg-purple-50 border-purple-200 dark:bg-purple-900/20 dark:border-purple-700': notification.data.title && notification.data.title.includes('Modification de votre solde de congés'),
+                                            'bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-700': notification.data.type === 'conge_status_changed',
+                                            'bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-700': notification.data.type === 'planning_created' || notification.data.type === 'planning_updated',
+                                            [`bg-${notification.data.color || 'indigo'}-50 border-${notification.data.color || 'indigo'}-200 dark:bg-${notification.data.color || 'indigo'}-900/20 dark:border-${notification.data.color || 'indigo'}-700`]: !notification.data.title?.includes('Modification de votre solde de congés') && notification.data.type !== 'conge_status_changed' && notification.data.type !== 'planning_created' && notification.data.type !== 'planning_updated'
+                                        }">
+                                        <i class="fas" 
+                                        :class="{
+                                            'fa-wallet text-purple-600 dark:text-purple-400': notification.data.title && notification.data.title.includes('Modification de votre solde de congés'),
+                                            'fa-calendar-check text-blue-600 dark:text-blue-400': notification.data.type === 'conge_status_changed',
+                                            'fa-calendar-alt text-amber-600 dark:text-amber-400': notification.data.type === 'planning_created' || notification.data.type === 'planning_updated',
+                                            [`${notification.data.icon || 'fa-bell'} text-${notification.data.color || 'indigo'}-600 dark:text-${notification.data.color || 'indigo'}-400`]: !notification.data.title?.includes('Modification de votre solde de congés') && notification.data.type !== 'conge_status_changed' && notification.data.type !== 'planning_created' && notification.data.type !== 'planning_updated'
+                                        }"></i>
                                     </div>
                                 </div>
                                 <div class="ml-3 flex-1">
@@ -59,6 +77,13 @@
                                         <template x-if="notification.data.type === 'planning_created' || notification.data.type === 'planning_updated'">
                                             <a :href="`/employe/plannings/calendar?mois=${notification.data.mois || new Date().getMonth() + 1}&annee=${notification.data.annee || new Date().getFullYear()}`" class="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-white bg-[rgb(131,44,207)] hover:bg-[rgb(141,54,217)]">
                                                 <i class="fas fa-calendar-alt mr-1"></i>Planning
+                                            </a>
+                                        </template>
+                                        
+                                        <!-- Notification de modification de solde de congés -->
+                                        <template x-if="notification.data.title && notification.data.title.includes('Modification de votre solde de congés')">
+                                            <a href="/dashboard" class="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-white bg-[rgb(131,44,207)] hover:bg-[rgb(141,54,217)]">
+                                                <i class="fas fa-info-circle mr-1"></i>Détails
                                             </a>
                                         </template>
                                         <template x-if="notification.data.type === 'exchange_request'">
@@ -102,38 +127,3 @@
         </div>
     </div>
 </div>
-
-<script>
-    function notificationsDropdown() {
-        return {
-            open: false,
-            unreadCount: 0,
-            notifications: [],
-            init() {
-                this.fetchNotifications();
-                
-                // Rafraîchir les notifications toutes les 30 secondes
-                setInterval(() => {
-                    this.fetchNotifications();
-                }, 30000);
-            },
-            toggle() {
-                this.open = !this.open;
-                if (this.open) {
-                    this.fetchNotifications();
-                }
-            },
-            fetchNotifications() {
-                fetch('{{ route("notifications.unread") }}')
-                    .then(response => response.json())
-                    .then(data => {
-                        this.unreadCount = data.count;
-                        this.notifications = data.notifications;
-                    })
-                    .catch(error => {
-                        console.error('Erreur lors de la récupération des notifications:', error);
-                    });
-            }
-        };
-    }
-</script>

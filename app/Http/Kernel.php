@@ -64,5 +64,7 @@ class Kernel extends HttpKernel
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'employeur' => \App\Http\Middleware\CheckEmployeur::class,
         'employe' => \App\Http\Middleware\CheckEmploye::class,
+        'refresh.soldes' => \App\Http\Middleware\RefreshSoldeCongeData::class,
+        'ensure.soldes.persistence' => \App\Http\Middleware\EnsureSoldeCongesPersistence::class,
     ];
 }

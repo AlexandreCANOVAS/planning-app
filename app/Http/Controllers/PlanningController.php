@@ -21,6 +21,62 @@ use Barryvdh\DomPDF\Facade\Pdf;
 class PlanningController extends Controller
 {
     /**
+     * Affiche le planning mensuel de l'employé connecté sous forme de calendrier
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function employeCalendar(Request $request)
+    {
+        $employe = Auth::user()->employe;
+        
+        if (!$employe) {
+            return redirect()->route('dashboard')
+                ->with('error', 'Votre profil employé n\'est pas encore configuré.');
+        }
+        
+        // Récupérer le mois et l'année sélectionnés ou utiliser le mois et l'année actuels
+        $selectedMonth = $request->input('mois', now()->month);
+        $selectedYear = $request->input('annee', now()->year);
+        
+        // Récupérer les plannings de l'employé pour le mois et l'année sélectionnés
+        $startDate = Carbon::create($selectedYear, $selectedMonth, 1)->startOfDay();
+        $endDate = $startDate->copy()->endOfMonth()->endOfDay();
+        
+        // Récupérer les plannings de l'employé connecté
+        $plannings = $employe->plannings()
+            ->with('lieu')
+            ->whereBetween('date', [$startDate, $endDate])
+            ->get()
+            ->groupBy(function($planning) {
+                return Carbon::parse($planning->date)->format('Y-m-d');
+            });
+        
+        // Préparer les données pour le calendrier
+        $planningsData = collect();
+        
+        foreach ($plannings as $date => $planningsJour) {
+            $planningsData[$date] = $planningsJour->map(function($planning) {
+                return [
+                    'id' => $planning->id,
+                    'lieu' => $planning->lieu ? $planning->lieu->nom : 'Non défini',
+                    'heure_debut' => $planning->heure_debut,
+                    'heure_fin' => $planning->heure_fin,
+                    'type' => 'planning'
+                ];
+            });
+        }
+        
+        return view('plannings.employe-calendar', [
+            'plannings' => $planningsData,
+            'selectedMonth' => $selectedMonth,
+            'selectedYear' => $selectedYear,
+            'firstDay' => $startDate,
+            'lastDay' => $endDate,
+        ]);
+    }
+    
+    /**
      * Comparer les plannings de l'employé connecté et d'un collègue côte à côte
      * 
      * @param  \App\Models\Employe  $employe
@@ -305,6 +361,7 @@ class PlanningController extends Controller
         return redirect()->route('employe.plannings.liste-echanges')
             ->with('success', 'Vous avez refusé la demande d\'\u00e9change de ' . $echange->demandeur->prenom . ' ' . $echange->demandeur->nom);
     }
+    
     public function index(Request $request)
     {
         $user = auth()->user();
@@ -1381,54 +1438,7 @@ class PlanningController extends Controller
         ]);
     }
 
-    /**
-     * Affiche le calendrier pour un employé.
-     */
-    public function employeCalendar(Request $request)
-    {
-        $user = auth()->user();
-        $employe = $user->employe;
 
-        if (!$employe) {
-            return redirect()->route('dashboard')->with('error', 'Profil employé non trouvé');
-        }
-
-        $selectedYear = $request->get('annee', now()->year);
-        $selectedMonth = $request->get('mois', now()->month);
-
-        // Créer les dates pour le mois
-        $dateDebut = Carbon::create($selectedYear, $selectedMonth, 1);
-        $debutPeriode = $dateDebut->copy()->startOfWeek(Carbon::MONDAY);
-        $finPeriode = $dateDebut->copy()->endOfMonth()->endOfWeek(Carbon::SUNDAY);
-
-        // Récupérer les plannings du mois
-        $plannings = Planning::where('employe_id', $employe->id)
-            ->where('societe_id', $user->societe_id)
-            ->whereYear('date', $selectedYear)
-            ->whereMonth('date', $selectedMonth)
-            ->with(['lieu'])
-            ->get()
-            ->groupBy(function($planning) {
-                return $planning->date->format('Y-m-d');
-            })
-            ->map(function($dayPlannings) {
-                return $dayPlannings->map(function($planning) {
-                    return [
-                        'lieu' => $planning->lieu->nom,
-                        'heure_debut' => $planning->getHeureDebutFormatteeAttribute(),
-                        'heure_fin' => $planning->getHeureFinFormatteeAttribute()
-                    ];
-                });
-            });
-
-        return view('plannings.employe-calendar', [
-            'selectedYear' => $selectedYear,
-            'selectedMonth' => $selectedMonth,
-            'plannings' => $plannings,
-            'debutPeriode' => $debutPeriode,
-            'finPeriode' => $finPeriode
-        ]);
-    }
 
     public function calendarIndex(Request $request)
     {

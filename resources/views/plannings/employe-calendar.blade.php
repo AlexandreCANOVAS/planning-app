@@ -76,18 +76,18 @@
                                 $isWeekend = in_array($currentDate->dayOfWeek, [0, 6]);
                             @endphp
                             
-                            <div class="h-32 rounded-lg {{ $isWeekend ? 'bg-gray-50' : 'bg-white' }} border {{ !$planning->isEmpty() ? 'border-blue-200' : 'border-gray-200' }} p-2 overflow-hidden">
+                            <div class="h-32 rounded-lg border {{ !$planning->isEmpty() ? 'border-blue-200' : 'border-gray-200' }} p-2 overflow-hidden">
                                 <div class="font-medium text-sm {{ $isWeekend ? 'text-gray-400' : 'text-gray-700' }}">
                                     {{ $day }}
                                 </div>
                                 @if(!$planning->isEmpty())
-                                    <div class="mt-1">
-                                        <div class="bg-blue-50 rounded p-1 text-xs">
-                                            <div class="font-semibold text-gray-800">{{ $planning->first()['lieu'] }}</div>
-                                            @foreach($planning as $p)
-                                                <div class="text-gray-700">{{ $p['heure_debut'] }} - {{ $p['heure_fin'] }}</div>
-                                            @endforeach
-                                        </div>
+                                    <div class="mt-1 space-y-1">
+                                        @foreach($planning as $p)
+                                            <div class="rounded border border-blue-300 bg-blue-50 p-1 text-xs">
+                                                <div class="font-semibold text-blue-700 truncate">{{ $p['lieu'] }}</div>
+                                                <div class="text-gray-600">{{ $p['heure_debut'] }} - {{ $p['heure_fin'] }}</div>
+                                            </div>
+                                        @endforeach
                                     </div>
                                 @endif
                             </div>

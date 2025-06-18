@@ -173,11 +173,21 @@ class DashboardController extends Controller
         return $this->employeDashboard();
     }
 
-    private function employeDashboard()
+    public function employeDashboard()
     {
-        $user = Auth::user();
+        $user = auth()->user();
         $employe = $user->employe;
+        
+        if (!$employe) {
+            return redirect()->route('dashboard')
+                ->with('error', 'Profil employé non trouvé.');
+        }
+        
         $societe = $user->societe;
+        
+        // Dates pour aujourd'hui et demain
+        $today = now()->format('Y-m-d');
+        $tomorrow = now()->addDay()->format('Y-m-d');
 
         // Calculer les statistiques pour l'employé
         $stats = [
@@ -187,7 +197,7 @@ class DashboardController extends Controller
                     Carbon::now()->endOfWeek()
                 ])
                 ->sum('heures_travaillees'),
-            'conges_restants' => $employe->conges_restants ?? 0,
+            'conges_restants' => $employe->solde_conges ?? 0,
             'prochain_planning' => Planning::where('employe_id', $employe->id)
                 ->where('date', '>=', Carbon::today())
                 ->orderBy('date')
@@ -211,7 +221,67 @@ class DashboardController extends Controller
             ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get();
+            
+        // Récupérer l'historique des modifications de solde de congés
+        $employe->load(['historiqueConges' => function($query) {
+            $query->orderBy('created_at', 'desc');
+        }, 'historiqueConges.user']);
+            
+        // Récupérer les plannings du jour pour tous les employés de la même société
+        $planningsDuJour = Planning::where('date', $today)
+            ->where('societe_id', $societe->id)
+            ->with(['employe', 'lieu'])
+            ->orderBy('heure_debut')
+            ->get();
+            
+        // Récupérer les plannings de demain pour tous les employés de la même société
+        $planningsDeDemain = Planning::where('date', $tomorrow)
+            ->where('societe_id', $societe->id)
+            ->with(['employe', 'lieu'])
+            ->orderBy('heure_debut')
+            ->get();
+            
+        // Regrouper les plannings par employé
+        $employesAujourdhui = $planningsDuJour
+            ->groupBy('employe_id')
+            ->map(function ($plannings) {
+                return [
+                    'employe' => $plannings->first()->employe,
+                    'lieu' => $plannings->first()->lieu,
+                    'heures' => $plannings->map(function ($planning) {
+                        return [
+                            'debut' => $planning->heure_debut,
+                            'fin' => $planning->heure_fin
+                        ];
+                    })
+                ];
+            });
+            
+        $employesDemain = $planningsDeDemain
+            ->groupBy('employe_id')
+            ->map(function ($plannings) {
+                return [
+                    'employe' => $plannings->first()->employe,
+                    'lieu' => $plannings->first()->lieu,
+                    'heures' => $plannings->map(function ($planning) {
+                        return [
+                            'debut' => $planning->heure_debut,
+                            'fin' => $planning->heure_fin
+                        ];
+                    })
+                ];
+            });
 
-        return view('dashboard.employe', compact('employe', 'societe', 'stats', 'plannings', 'conges'));
+        return view('dashboard.employe', compact(
+            'employe', 
+            'societe', 
+            'stats', 
+            'plannings', 
+            'conges',
+            'employesAujourdhui',
+            'employesDemain',
+            'today',
+            'tomorrow'
+        ));
     }
 }

@@ -14,8 +14,16 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/user', function (Request $request) {
+        return $request->user();
+    });
+    
+    // Routes pour les notifications
+    Route::get('/notifications', 'App\Http\Controllers\Api\NotificationController@index');
+    
+    // Routes pour les employés
+    Route::get('/employe/soldes-conges', [App\Http\Controllers\Api\EmployeController::class, 'getSoldesConges']);
 });
 
 Route::get('/comptabilite/calcul', [App\Http\Controllers\Api\ComptabiliteController::class, 'calcul']);

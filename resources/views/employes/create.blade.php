@@ -36,7 +36,7 @@
                         </div>
                     @endif
 
-                    <form method="POST" action="{{ route('employes.store') }}" class="space-y-8" id="employeForm">
+                    <form method="POST" action="{{ route('employes.store') }}" class="space-y-8" id="employeForm" enctype="multipart/form-data">
                         @csrf
                         <input type="hidden" name="role" value="employe">
 
@@ -47,6 +47,18 @@
                                 Identité
                             </h3>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <!-- Photo de profil -->
+                                <div class="col-span-2">
+                                    <label for="photo" class="block text-sm font-medium text-gray-700 mb-2">Photo de profil</label>
+                                    <div class="mt-1 flex items-center">
+                                        <div class="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
+                                            <i class="fas fa-user text-gray-400 text-3xl"></i>
+                                        </div>
+                                        <input type="file" id="photo" name="photo" accept="image/*" class="ml-5 py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                    </div>
+                                    <x-input-error class="mt-2" :messages="$errors->get('photo')" />
+                                </div>
+
                                 <!-- Nom -->
                                 <div>
                                     <label for="nom" class="block text-sm font-medium text-gray-700 mb-2">Nom</label>
@@ -54,9 +66,9 @@
                                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                             <i class="fas fa-user text-gray-400"></i>
                                         </div>
-                                        <input type="text" id="nom" name="nom"
+                                        <input type="text" id="nom" name="nom" required
                                             class="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
-                                            value="{{ old('nom') }}" required>
+                                            value="{{ old('nom') }}">
                                     </div>
                                     <x-input-error class="mt-2" :messages="$errors->get('nom')" />
                                 </div>
@@ -68,62 +80,23 @@
                                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                             <i class="fas fa-user text-gray-400"></i>
                                         </div>
-                                        <input type="text" id="prenom" name="prenom"
+                                        <input type="text" id="prenom" name="prenom" required
                                             class="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
-                                            value="{{ old('prenom') }}" required>
+                                            value="{{ old('prenom') }}">
                                     </div>
                                     <x-input-error class="mt-2" :messages="$errors->get('prenom')" />
                                 </div>
 
-                                <!-- Date de naissance -->
-                                <div>
-                                    <label for="date_naissance" class="block text-sm font-medium text-gray-700 mb-2">Date de naissance</label>
-                                    <div class="relative rounded-md shadow-sm">
-                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                            <i class="fas fa-calendar-alt text-gray-400"></i>
-                                        </div>
-                                        <input type="date" id="date_naissance" name="date_naissance"
-                                            class="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
-                                            value="{{ old('date_naissance') }}">
-                                    </div>
-                                    <x-input-error class="mt-2" :messages="$errors->get('date_naissance')" />
-                                </div>
-
-                                <!-- Numéro de sécurité sociale -->
-                                <div>
-                                    <label for="numero_securite_sociale" class="block text-sm font-medium text-gray-700 mb-2">Numéro de sécurité sociale</label>
-                                    <div class="relative rounded-md shadow-sm">
-                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                            <i class="fas fa-id-card text-gray-400"></i>
-                                        </div>
-                                        <input type="text" id="numero_securite_sociale" name="numero_securite_sociale"
-                                            class="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
-                                            value="{{ old('numero_securite_sociale') }}"
-                                            maxlength="15"
-                                            placeholder="1 23 45 67 890 123 45">
-                                    </div>
-                                    <x-input-error class="mt-2" :messages="$errors->get('numero_securite_sociale')" />
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Section Contact -->
-                        <div>
-                            <h3 class="text-lg font-semibold text-gray-900 mb-6 flex items-center">
-                                <i class="fas fa-address-card mr-3 text-blue-600"></i>
-                                Coordonnées
-                            </h3>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <!-- Email -->
                                 <div>
-                                    <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Email professionnel</label>
+                                    <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Email</label>
                                     <div class="relative rounded-md shadow-sm">
                                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                             <i class="fas fa-envelope text-gray-400"></i>
                                         </div>
-                                        <input type="email" id="email" name="email"
+                                        <input type="email" id="email" name="email" required
                                             class="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
-                                            value="{{ old('email') }}" required>
+                                            value="{{ old('email') }}">
                                     </div>
                                     <x-input-error class="mt-2" :messages="$errors->get('email')" />
                                 </div>
@@ -135,43 +108,63 @@
                                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                             <i class="fas fa-phone text-gray-400"></i>
                                         </div>
-                                        <input type="tel" id="telephone" name="telephone"
+                                        <input type="text" id="telephone" name="telephone"
                                             class="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
-                                            value="{{ old('telephone') }}"
-                                            placeholder="01 23 45 67 89">
+                                            value="{{ old('telephone') }}">
                                     </div>
                                     <x-input-error class="mt-2" :messages="$errors->get('telephone')" />
                                 </div>
-
+                                
+                                <!-- Date de naissance -->
+                                <div>
+                                    <label for="date_naissance" class="block text-sm font-medium text-gray-700 mb-2">Date de naissance</label>
+                                    <div class="relative rounded-md shadow-sm">
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <i class="fas fa-birthday-cake text-gray-400"></i>
+                                        </div>
+                                        <input type="date" id="date_naissance" name="date_naissance"
+                                            class="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                                            value="{{ old('date_naissance') }}">
+                                    </div>
+                                    <x-input-error class="mt-2" :messages="$errors->get('date_naissance')" />
+                                </div>
+                                
+                                <!-- Numéro de sécurité sociale -->
+                                <div>
+                                    <label for="numero_securite_sociale" class="block text-sm font-medium text-gray-700 mb-2">Numéro de sécurité sociale</label>
+                                    <div class="relative rounded-md shadow-sm">
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <i class="fas fa-id-card text-gray-400"></i>
+                                        </div>
+                                        <input type="text" id="numero_securite_sociale" name="numero_securite_sociale"
+                                            class="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                                            value="{{ old('numero_securite_sociale') }}"
+                                            maxlength="21"
+                                            placeholder="1 23 45 67 890 123 45">
+                                    </div>
+                                    <x-input-error class="mt-2" :messages="$errors->get('numero_securite_sociale')" />
+                                </div>
+                                
                                 <!-- Adresse -->
-                                <div class="md:col-span-2">
+                                <div class="col-span-2">
                                     <label for="adresse" class="block text-sm font-medium text-gray-700 mb-2">Adresse</label>
                                     <div class="relative rounded-md shadow-sm">
-                                        <div class="absolute top-3 left-3 flex items-start pointer-events-none">
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                             <i class="fas fa-map-marker-alt text-gray-400"></i>
                                         </div>
-                                        <textarea id="adresse" name="adresse" rows="3"
+                                        <input type="text" id="adresse" name="adresse"
                                             class="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
-                                            placeholder="Numéro, rue, code postal, ville">{{ old('adresse') }}</textarea>
+                                            value="{{ old('adresse') }}">
                                     </div>
                                     <x-input-error class="mt-2" :messages="$errors->get('adresse')" />
                                 </div>
-                            </div>
-                        </div>
-
-                        <!-- Section Emploi -->
-                        <div>
-                            <h3 class="text-lg font-semibold text-gray-900 mb-6 flex items-center">
-                                <i class="fas fa-briefcase mr-3 text-blue-600"></i>
-                                Informations professionnelles
-                            </h3>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                
                                 <!-- Date d'embauche -->
                                 <div>
                                     <label for="date_embauche" class="block text-sm font-medium text-gray-700 mb-2">Date d'embauche</label>
                                     <div class="relative rounded-md shadow-sm">
                                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                            <i class="fas fa-calendar-check text-gray-400"></i>
+                                            <i class="fas fa-calendar-alt text-gray-400"></i>
                                         </div>
                                         <input type="date" id="date_embauche" name="date_embauche"
                                             class="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
@@ -179,7 +172,374 @@
                                     </div>
                                     <x-input-error class="mt-2" :messages="$errors->get('date_embauche')" />
                                 </div>
+
                             </div>
+                        </div>
+
+                        <!-- Section Informations professionnelles -->
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 mb-6 flex items-center">
+                                <i class="fas fa-briefcase mr-3 text-blue-600"></i>
+                                Informations professionnelles
+                            </h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <!-- Poste / Fonction -->
+                                <div>
+                                    <label for="poste" class="block text-sm font-medium text-gray-700 mb-2">Poste / Fonction</label>
+                                    <div class="relative rounded-md shadow-sm">
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <i class="fas fa-id-badge text-gray-400"></i>
+                                        </div>
+                                        <input type="text" id="poste" name="poste" required
+                                            class="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                                            value="{{ old('poste') }}">
+                                    </div>
+                                    <x-input-error class="mt-2" :messages="$errors->get('poste')" />
+                                </div>
+
+                                <!-- Type de contrat -->
+                                <div>
+                                    <label for="type_contrat" class="block text-sm font-medium text-gray-700 mb-2">Type de contrat</label>
+                                    <div class="relative rounded-md shadow-sm">
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <i class="fas fa-file-contract text-gray-400"></i>
+                                        </div>
+                                        <select id="type_contrat" name="type_contrat" required
+                                            class="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent">
+                                            <option value="" disabled {{ old('type_contrat') ? '' : 'selected' }}>Sélectionner un type de contrat</option>
+                                            <option value="CDI" {{ old('type_contrat') == 'CDI' ? 'selected' : '' }}>CDI</option>
+                                            <option value="CDD" {{ old('type_contrat') == 'CDD' ? 'selected' : '' }}>CDD</option>
+                                            <option value="Intérim" {{ old('type_contrat') == 'Intérim' ? 'selected' : '' }}>Intérim</option>
+                                            <option value="Stage" {{ old('type_contrat') == 'Stage' ? 'selected' : '' }}>Stage</option>
+                                            <option value="Alternance" {{ old('type_contrat') == 'Alternance' ? 'selected' : '' }}>Alternance</option>
+                                        </select>
+                                    </div>
+                                    <x-input-error class="mt-2" :messages="$errors->get('type_contrat')" />
+                                </div>
+
+                                <!-- Durée du contrat (conditionnelle) -->
+                                <div id="duree_contrat_container" class="hidden">
+                                    <label for="duree_contrat" class="block text-sm font-medium text-gray-700 mb-2">Durée du contrat</label>
+                                    <div class="relative rounded-md shadow-sm">
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <i class="fas fa-calendar-week text-gray-400"></i>
+                                        </div>
+                                        <input type="text" id="duree_contrat" name="duree_contrat"
+                                            class="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                                            value="{{ old('duree_contrat') }}">
+                                    </div>
+                                    <x-input-error class="mt-2" :messages="$errors->get('duree_contrat')" />
+                                </div>
+
+                                <!-- Temps de travail -->
+                                <div>
+                                    <label for="temps_travail" class="block text-sm font-medium text-gray-700 mb-2">Temps de travail</label>
+                                    <div class="flex items-center space-x-4">
+                                        <div class="flex items-center">
+                                            <input type="radio" id="temps_plein" name="temps_travail" value="plein" class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300"
+                                                {{ old('temps_travail', 'plein') == 'plein' ? 'checked' : '' }}>
+                                            <label for="temps_plein" class="ml-2 block text-sm text-gray-700">Temps plein</label>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <input type="radio" id="temps_partiel" name="temps_travail" value="partiel" class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300"
+                                                {{ old('temps_travail') == 'partiel' ? 'checked' : '' }}>
+                                            <label for="temps_partiel" class="ml-2 block text-sm text-gray-700">Temps partiel</label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Pourcentage temps partiel (conditionnel) -->
+                                <div id="pourcentage_container" class="hidden">
+                                    <label for="pourcentage_travail" class="block text-sm font-medium text-gray-700 mb-2">Pourcentage du temps de travail</label>
+                                    <div class="relative rounded-md shadow-sm">
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <i class="fas fa-percentage text-gray-400"></i>
+                                        </div>
+                                        <input type="number" id="pourcentage_travail" name="pourcentage_travail" min="1" max="99"
+                                            class="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                                            value="{{ old('pourcentage_travail', 80) }}">
+                                    </div>
+                                    <x-input-error class="mt-2" :messages="$errors->get('pourcentage_travail')" />
+                                </div>
+
+
+                            </div>
+                        </div>
+
+                        <!-- Section Informations personnelles -->
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 mb-6 flex items-center">
+                                <i class="fas fa-user-circle mr-3 text-blue-600"></i>
+                                Informations personnelles
+                            </h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                                <!-- Situation familiale -->
+                                <div>
+                                    <label for="situation_familiale" class="block text-sm font-medium text-gray-700 mb-2">Situation familiale</label>
+                                    <div class="relative rounded-md shadow-sm">
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <i class="fas fa-heart text-gray-400"></i>
+                                        </div>
+                                        <select id="situation_familiale" name="situation_familiale"
+                                            class="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent">
+                                            <option value="" disabled {{ old('situation_familiale') ? '' : 'selected' }}>Sélectionner</option>
+                                            <option value="Célibataire" {{ old('situation_familiale') == 'Célibataire' ? 'selected' : '' }}>Célibataire</option>
+                                            <option value="Marié(e)" {{ old('situation_familiale') == 'Marié(e)' ? 'selected' : '' }}>Marié(e)</option>
+                                            <option value="Pacsé(e)" {{ old('situation_familiale') == 'Pacsé(e)' ? 'selected' : '' }}>Pacsé(e)</option>
+                                            <option value="Divorcé(e)" {{ old('situation_familiale') == 'Divorcé(e)' ? 'selected' : '' }}>Divorcé(e)</option>
+                                            <option value="Veuf/Veuve" {{ old('situation_familiale') == 'Veuf/Veuve' ? 'selected' : '' }}>Veuf/Veuve</option>
+                                        </select>
+                                    </div>
+                                    <x-input-error class="mt-2" :messages="$errors->get('situation_familiale')" />
+                                </div>
+
+                                <!-- Nombre d'enfants -->
+                                <div>
+                                    <label for="nombre_enfants" class="block text-sm font-medium text-gray-700 mb-2">Nombre d'enfants</label>
+                                    <div class="relative rounded-md shadow-sm">
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <i class="fas fa-child text-gray-400"></i>
+                                        </div>
+                                        <input type="number" id="nombre_enfants" name="nombre_enfants" min="0"
+                                            class="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                                            value="{{ old('nombre_enfants', 0) }}">
+                                    </div>
+                                    <x-input-error class="mt-2" :messages="$errors->get('nombre_enfants')" />
+                                </div>
+
+                                <!-- Contact d'urgence -->
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Contact d'urgence</label>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label for="contact_urgence_nom" class="block text-xs text-gray-500 mb-1">Nom et prénom</label>
+                                            <div class="relative rounded-md shadow-sm">
+                                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                    <i class="fas fa-user-shield text-gray-400"></i>
+                                                </div>
+                                                <input type="text" id="contact_urgence_nom" name="contact_urgence_nom"
+                                                    class="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                                                    value="{{ old('contact_urgence_nom') }}">
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label for="contact_urgence_telephone" class="block text-xs text-gray-500 mb-1">Téléphone</label>
+                                            <div class="relative rounded-md shadow-sm">
+                                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                    <i class="fas fa-phone text-gray-400"></i>
+                                                </div>
+                                                <input type="tel" id="contact_urgence_telephone" name="contact_urgence_telephone"
+                                                    class="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                                                    value="{{ old('contact_urgence_telephone') }}">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <x-input-error class="mt-2" :messages="$errors->get('contact_urgence_nom')" />
+                                    <x-input-error class="mt-2" :messages="$errors->get('contact_urgence_telephone')" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section Formations -->
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 mb-6 flex items-center">
+                                <i class="fas fa-graduation-cap mr-3 text-blue-600"></i>
+                                Formations
+                            </h3>
+                            <div id="formations-container">
+                                <!-- Le template pour les formations sera ajouté dynamiquement par JS -->
+                            </div>
+                            <div class="mt-4">
+                                <button type="button" id="add-formation" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                    <i class="fas fa-plus mr-2"></i> Ajouter une formation
+                                </button>
+                            </div>
+
+                            <template id="formation-template">
+                                <div class="formation-item bg-gray-50 p-4 rounded-lg mb-4 relative">
+                                    <button type="button" class="remove-formation absolute top-2 right-2 text-red-600 hover:text-red-800">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Formation</label>
+                                            <select name="formations[]" class="block w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent">
+                                                <option value="" disabled selected>Sélectionner une formation</option>
+                                                @foreach($formations as $formation)
+                                                    <option value="{{ $formation->id }}">{{ $formation->nom }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Date d'obtention</label>
+                                            <input type="date" name="date_obtentions[]" class="block w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent">
+                                        </div>
+                                        <div class="md:col-span-2">
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Commentaire</label>
+                                            <textarea name="formation_commentaires[]" rows="2" class="block w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+
+                        <!-- Section Documents administratifs -->
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 mb-6 flex items-center">
+                                <i class="fas fa-file-alt mr-3 text-blue-600"></i>
+                                Documents administratifs
+                            </h3>
+                            <div id="documents-container">
+                                <!-- Le template pour les documents sera ajouté dynamiquement par JS -->
+                            </div>
+                            <div class="mt-4">
+                                <button type="button" id="add-document" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                    <i class="fas fa-plus mr-2"></i> Ajouter un document
+                                </button>
+                            </div>
+
+                            <template id="document-template">
+                                <div class="document-item bg-gray-50 p-4 rounded-lg mb-4 relative">
+                                    <button type="button" class="remove-document absolute top-2 right-2 text-red-600 hover:text-red-800">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Type de document</label>
+                                            <input type="text" name="document_types[]" class="block w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent" placeholder="Ex: Contrat, Carte d'identité, etc.">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Fichier</label>
+                                            <input type="file" name="document_files[]" class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent">
+                                        </div>
+                                        <div class="md:col-span-2">
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Commentaire</label>
+                                            <textarea name="document_commentaires[]" rows="2" class="block w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+
+                        <!-- Section Matériel -->
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 mb-6 flex items-center">
+                                <i class="fas fa-laptop mr-3 text-blue-600"></i>
+                                Matériel attribué
+                            </h3>
+                            <div id="materiels-container">
+                                <!-- Le template pour les matériels sera ajouté dynamiquement par JS -->
+                            </div>
+                            <div class="mt-4">
+                                <button type="button" id="add-materiel" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                    <i class="fas fa-plus mr-2"></i> Ajouter un matériel
+                                </button>
+                            </div>
+
+                            <template id="materiel-template">
+                                <div class="materiel-item bg-gray-50 p-4 rounded-lg mb-4 relative">
+                                    <button type="button" class="remove-materiel absolute top-2 right-2 text-red-600 hover:text-red-800">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Type de matériel</label>
+                                            <input type="text" name="materiel_types[]" class="block w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent" placeholder="Ex: Ordinateur portable, Téléphone, etc.">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Numéro de série</label>
+                                            <input type="text" name="materiel_numeros[]" class="block w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent">
+                                        </div>
+                                        <div class="md:col-span-2">
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Commentaire</label>
+                                            <textarea name="materiel_commentaires[]" rows="2" class="block w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+
+                        <!-- Section Badges d'accès -->
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 mb-6 flex items-center">
+                                <i class="fas fa-id-badge mr-3 text-blue-600"></i>
+                                Badges d'accès
+                            </h3>
+                            <div id="badges-container">
+                                <!-- Le template pour les badges sera ajouté dynamiquement par JS -->
+                            </div>
+                            <div class="mt-4">
+                                <button type="button" id="add-badge" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                    <i class="fas fa-plus mr-2"></i> Ajouter un badge
+                                </button>
+                            </div>
+
+                            <template id="badge-template">
+                                <div class="badge-item bg-gray-50 p-4 rounded-lg mb-4 relative">
+                                    <button type="button" class="remove-badge absolute top-2 right-2 text-red-600 hover:text-red-800">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Type de badge</label>
+                                            <input type="text" name="badge_types[]" class="block w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent" placeholder="Ex: Badge principal, Badge parking, etc.">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Numéro de badge</label>
+                                            <input type="text" name="badge_numeros[]" class="block w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent">
+                                        </div>
+                                        <div class="md:col-span-2">
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Zones d'accès</label>
+                                            <textarea name="badge_zones[]" rows="2" class="block w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent" placeholder="Ex: Entrée principale, Parking, Étage 2, etc."></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+
+                        <!-- Section Accès informatiques -->
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 mb-6 flex items-center">
+                                <i class="fas fa-key mr-3 text-blue-600"></i>
+                                Accès informatiques
+                            </h3>
+                            <div id="acces-container">
+                                <!-- Le template pour les accès sera ajouté dynamiquement par JS -->
+                            </div>
+                            <div class="mt-4">
+                                <button type="button" id="add-acces" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                    <i class="fas fa-plus mr-2"></i> Ajouter un accès
+                                </button>
+                            </div>
+
+                            <template id="acces-template">
+                                <div class="acces-item bg-gray-50 p-4 rounded-lg mb-4 relative">
+                                    <button type="button" class="remove-acces absolute top-2 right-2 text-red-600 hover:text-red-800">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Système/Application</label>
+                                            <input type="text" name="acces_systemes[]" class="block w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent" placeholder="Ex: ERP, CRM, Email, etc.">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Identifiant</label>
+                                            <input type="text" name="acces_identifiants[]" class="block w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent">
+                                        </div>
+                                        <div class="md:col-span-2">
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Niveau d'accès</label>
+                                            <select name="acces_niveaux[]" class="block w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent">
+                                                <option value="" disabled selected>Sélectionner un niveau</option>
+                                                <option value="Administrateur">Administrateur</option>
+                                                <option value="Utilisateur avancé">Utilisateur avancé</option>
+                                                <option value="Utilisateur standard">Utilisateur standard</option>
+                                                <option value="Lecture seule">Lecture seule</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
                         </div>
 
                         <!-- Boutons d'action -->
@@ -250,12 +610,147 @@
                 return;
             }
 
+            // Validation des champs conditionnels
+            const typeContrat = document.getElementById('type_contrat').value;
+            if (typeContrat === 'CDD' || typeContrat === 'Intérim') {
+                const dureeContrat = document.getElementById('duree_contrat').value;
+                if (!dureeContrat) {
+                    e.preventDefault();
+                    alert('Veuillez spécifier la durée du contrat pour un CDD ou Intérim.');
+                    return;
+                }
+            }
+
+            const tempsTravail = document.querySelector('input[name="temps_travail"]:checked')?.value;
+            if (tempsTravail === 'partiel') {
+                const pourcentage = document.getElementById('pourcentage_temps_partiel').value;
+                if (!pourcentage || pourcentage <= 0 || pourcentage >= 100) {
+                    e.preventDefault();
+                    alert('Veuillez spécifier un pourcentage valide pour le temps partiel (entre 1 et 99%).');
+                    return;
+                }
+            }
+
             const telValue = telInput.value.replace(/\s/g, '');
             if (telValue && telValue.length !== 10) {
                 e.preventDefault();
                 alert('Le numéro de téléphone doit contenir 10 chiffres.');
                 return;
             }
+        });
+
+        // Gestion des champs conditionnels
+        document.getElementById('type_contrat').addEventListener('change', function(e) {
+            const dureeContratContainer = document.getElementById('duree_contrat_container');
+            if (e.target.value === 'CDD' || e.target.value === 'Intérim') {
+                dureeContratContainer.classList.remove('hidden');
+            } else {
+                dureeContratContainer.classList.add('hidden');
+            }
+        });
+
+        // Déclencher l'événement change pour initialiser l'état
+        const typeContratEvent = new Event('change');
+        document.getElementById('type_contrat').dispatchEvent(typeContratEvent);
+
+        // Gestion du temps partiel
+        const tempsPlein = document.getElementById('temps_plein');
+        const tempsPartiel = document.getElementById('temps_partiel');
+        const pourcentageContainer = document.getElementById('pourcentage_container');
+
+        tempsPlein.addEventListener('change', function() {
+            pourcentageContainer.classList.add('hidden');
+        });
+
+        tempsPartiel.addEventListener('change', function() {
+            pourcentageContainer.classList.remove('hidden');
+        });
+
+        // Déclencher l'événement change pour initialiser l'état
+        if (tempsPartiel.checked) {
+            tempsPartiel.dispatchEvent(new Event('change'));
+        } else {
+            tempsPlein.dispatchEvent(new Event('change'));
+        }
+
+        // Gestion des formations
+        const addFormation = document.getElementById('add-formation');
+        const formationsContainer = document.getElementById('formations-container');
+        const formationTemplate = document.getElementById('formation-template');
+
+        addFormation.addEventListener('click', function() {
+            const clone = document.importNode(formationTemplate.content, true);
+            formationsContainer.appendChild(clone);
+            
+            // Ajouter l'événement de suppression
+            const removeButtons = formationsContainer.querySelectorAll('.remove-formation');
+            removeButtons[removeButtons.length - 1].addEventListener('click', function(e) {
+                e.target.closest('.formation-item').remove();
+            });
+        });
+
+        // Gestion des documents
+        const addDocument = document.getElementById('add-document');
+        const documentsContainer = document.getElementById('documents-container');
+        const documentTemplate = document.getElementById('document-template');
+
+        addDocument.addEventListener('click', function() {
+            const clone = document.importNode(documentTemplate.content, true);
+            documentsContainer.appendChild(clone);
+            
+            // Ajouter l'événement de suppression
+            const removeButtons = documentsContainer.querySelectorAll('.remove-document');
+            removeButtons[removeButtons.length - 1].addEventListener('click', function(e) {
+                e.target.closest('.document-item').remove();
+            });
+        });
+
+        // Gestion du matériel
+        const addMateriel = document.getElementById('add-materiel');
+        const materielsContainer = document.getElementById('materiels-container');
+        const materielTemplate = document.getElementById('materiel-template');
+
+        addMateriel.addEventListener('click', function() {
+            const clone = document.importNode(materielTemplate.content, true);
+            materielsContainer.appendChild(clone);
+            
+            // Ajouter l'événement de suppression
+            const removeButtons = materielsContainer.querySelectorAll('.remove-materiel');
+            removeButtons[removeButtons.length - 1].addEventListener('click', function(e) {
+                e.target.closest('.materiel-item').remove();
+            });
+        });
+
+        // Gestion des badges
+        const addBadge = document.getElementById('add-badge');
+        const badgesContainer = document.getElementById('badges-container');
+        const badgeTemplate = document.getElementById('badge-template');
+
+        addBadge.addEventListener('click', function() {
+            const clone = document.importNode(badgeTemplate.content, true);
+            badgesContainer.appendChild(clone);
+            
+            // Ajouter l'événement de suppression
+            const removeButtons = badgesContainer.querySelectorAll('.remove-badge');
+            removeButtons[removeButtons.length - 1].addEventListener('click', function(e) {
+                e.target.closest('.badge-item').remove();
+            });
+        });
+
+        // Gestion des accès informatiques
+        const addAcces = document.getElementById('add-acces');
+        const accesContainer = document.getElementById('acces-container');
+        const accesTemplate = document.getElementById('acces-template');
+
+        addAcces.addEventListener('click', function() {
+            const clone = document.importNode(accesTemplate.content, true);
+            accesContainer.appendChild(clone);
+            
+            // Ajouter l'événement de suppression
+            const removeButtons = accesContainer.querySelectorAll('.remove-acces');
+            removeButtons[removeButtons.length - 1].addEventListener('click', function(e) {
+                e.target.closest('.acces-item').remove();
+            });
         });
     </script>
     @endpush

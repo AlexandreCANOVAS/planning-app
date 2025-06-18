@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="{{ request()->cookie('theme', 'light') }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -27,6 +27,11 @@
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         <script src="https://cdnjs.cloudflare.com/ajax/libs/luxon/2.3.1/luxon.min.js"></script>
+        
+        <!-- Variables globales pour JavaScript -->
+        <script>
+            window.userId = {{ auth()->id() ?? 'null' }};
+        </script>
         
         <!-- Leaflet JS -->
         <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
@@ -325,32 +330,30 @@
         </style>
         @endif
     </head>
-    <body class="font-sans antialiased {{ request()->cookie('theme', 'light') === 'dark' ? 'dark' : '' }}">
-        <div class="min-h-screen {{ request()->cookie('theme', 'light') === 'dark' ? 'bg-gray-950' : 'bg-gray-50' }}">
+    <body class="font-sans antialiased {{ request()->cookie('theme', 'light') === 'dark' ? 'dark' : '' }} flex flex-col min-h-screen">
+        <div class="flex-grow {{ request()->cookie('theme', 'light') === 'dark' ? 'bg-gray-950' : 'bg-gray-50' }}">
             @include('layouts.navigation')
 
             <!-- Page Heading -->
             @if (isset($header))
-                <header class="{{ request()->cookie('theme', 'light') === 'dark' ? 'bg-gray-900' : 'bg-white' }} shadow-sm">
-                    <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
+                <header class="{{ request()->cookie('theme', 'light') === 'dark' ? 'bg-gray-900' : 'bg-white shadow' }}">
+                    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
                         {{ $header }}
                     </div>
                 </header>
             @endif
 
             <!-- Messages -->
-            @if (session('error'))
-                <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 mt-4">
-                    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-                        <span class="block sm:inline">{{ session('error') }}</span>
-                    </div>
-                </div>
-            @endif
-
             @if (session('success'))
                 <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 mt-4">
                     <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
                         <span class="block sm:inline">{{ session('success') }}</span>
+                    </div>
+                </div>
+            @elseif (session('error'))
+                <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 mt-4">
+                    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                        <span class="block sm:inline">{{ session('error') }}</span>
                     </div>
                 </div>
             @endif
@@ -363,13 +366,61 @@
                 @endif
             </main>
         </div>
+            
+        <!-- Footer -->
+        <footer class="{{ request()->cookie('theme', 'light') === 'dark' ? 'bg-gray-900 border-t border-gray-800' : 'bg-purple-600 border-t border-purple-500' }} py-6 w-full mt-auto">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="flex flex-col md:flex-row justify-between items-center">
+                        <div class="mb-4 md:mb-0">
+                            <div class="flex items-center">
+                                <img src="{{ asset('images/company/logo.png') }}" alt="Logo" class="h-8 w-auto mr-3" onerror="this.onerror=null; this.src='{{ asset("images/default-logo.png") }}'">
+                                <span class="text-lg font-semibold {{ request()->cookie('theme', 'light') === 'dark' ? 'text-white' : 'text-white' }}">{{ config('app.name', 'Planning App') }}</span>
+                            </div>
+                            <p class="mt-2 text-sm {{ request()->cookie('theme', 'light') === 'dark' ? 'text-gray-400' : 'text-white text-opacity-80' }}">
+                                &copy; {{ date('Y') }} {{ auth()->user()->societe->nom ?? config('app.name', 'Planning App') }}. Tous droits réservés.
+                            </p>
+                        </div>
+                        
+                        <div class="flex flex-col items-center md:items-end">
+                            <div class="flex space-x-4 mb-2">
+                                <a href="#" class="{{ request()->cookie('theme', 'light') === 'dark' ? 'text-gray-400 hover:text-white' : 'text-white hover:text-white hover:opacity-80' }} transition-colors">
+                                    <i class="fab fa-facebook-f"></i>
+                                </a>
+                                <a href="#" class="{{ request()->cookie('theme', 'light') === 'dark' ? 'text-gray-400 hover:text-white' : 'text-white hover:text-white hover:opacity-80' }} transition-colors">
+                                    <i class="fab fa-twitter"></i>
+                                </a>
+                                <a href="#" class="{{ request()->cookie('theme', 'light') === 'dark' ? 'text-gray-400 hover:text-white' : 'text-white hover:text-white hover:opacity-80' }} transition-colors">
+                                    <i class="fab fa-linkedin-in"></i>
+                                </a>
+                                <a href="#" class="{{ request()->cookie('theme', 'light') === 'dark' ? 'text-gray-400 hover:text-white' : 'text-white hover:text-white hover:opacity-80' }} transition-colors">
+                                    <i class="fab fa-instagram"></i>
+                                </a>
+                            </div>
+                            <div class="text-sm {{ request()->cookie('theme', 'light') === 'dark' ? 'text-gray-400' : 'text-white text-opacity-90' }}">
+                                <a href="{{ route('contact') }}" class="hover:underline mx-2">Contact</a>
+                                <a href="{{ route('mentions-legales') }}" class="hover:underline mx-2">Mentions légales</a>
+                                <a href="{{ route('politique-confidentialite') }}" class="hover:underline mx-2">Politique de confidentialité</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </footer>
 
         <script>
             window.Laravel = {!! json_encode([
                 'csrfToken' => csrf_token(),
                 'user' => auth()->check() ? ['id' => auth()->id()] : null,
             ]) !!};
+            
+            // Routes disponibles pour le JavaScript
+            window.appRoutes = {
+                contact: "{{ route('contact') }}"
+            };
         </script>
+        
+        {{-- Inclusion des scripts de notifications --}}
+        @include('partials.notification-scripts')
+        
         @stack('scripts')
         @hasSection('scripts')
             @yield('scripts')

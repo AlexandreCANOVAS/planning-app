@@ -18,7 +18,8 @@ use App\Http\Controllers\{
     ComptabiliteController,
     TauxHeuresSupController,
     TarifController,
-    EchangeController
+    EchangeController,
+    SoldeCongeController
 };
 
 use App\Http\Controllers\Auth\{
@@ -56,9 +57,16 @@ Route::get('/pricing', function () {
     return view('pricing');
 })->name('pricing');
 
-Route::get('/contact', function () {
-    return view('contact');
-})->name('contact');
+Route::get('/contact', [\App\Http\Controllers\ContactController::class, 'show'])->name('contact');
+Route::post('/contact', [\App\Http\Controllers\ContactController::class, 'send'])->name('contact.send');
+
+Route::get('/mentions-legales', function () {
+    return view('mentions-legales');
+})->name('mentions-legales');
+
+Route::get('/politique-confidentialite', function () {
+    return view('politique-confidentialite');
+})->name('politique-confidentialite');
 
 // Routes d'authentification
 Route::middleware('guest')->group(function () {
@@ -186,12 +194,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('/', [CongeController::class, 'store'])->name('conges.store');
             Route::get('/calendar', [CongeController::class, 'adminCalendar'])->name('conges.calendar');
             Route::get('/calendar/events', [CongeController::class, 'getAdminEvents'])->name('conges.calendar.events');
+            Route::get('/validation', [CongeController::class, 'validation'])->name('conges.validation');
+            
+            // Routes pour la gestion des soldes de congés
+            Route::get('/solde', [SoldeCongeController::class, 'index'])->name('solde.index');
+            Route::get('/solde/{employe}/edit', [SoldeCongeController::class, 'edit'])->name('solde.edit');
+            Route::put('/solde/{employe}', [SoldeCongeController::class, 'update'])->name('solde.update');
+            Route::get('/solde/{employe}/historique', [SoldeCongeController::class, 'historique'])->name('solde.historique');
+            
+            // Routes avec paramètres dynamiques (doivent être après les routes statiques)
             Route::get('/{conge}', [CongeController::class, 'show'])->name('conges.show');
             Route::get('/{conge}/edit', [CongeController::class, 'edit'])->name('conges.edit');
             Route::put('/{conge}', [CongeController::class, 'update'])->name('conges.update');
             Route::delete('/{conge}', [CongeController::class, 'destroy'])->name('conges.destroy');
             Route::patch('/{conge}/status', [CongeController::class, 'updateStatus'])->name('conges.update-status');
-            Route::get('/validation', [CongeController::class, 'validation'])->name('conges.validation');
             Route::post('/{conge}/valider', [CongeController::class, 'valider'])->name('conges.valider');
             Route::post('/{conge}/refuser', [CongeController::class, 'refuser'])->name('conges.refuser');
         });
@@ -233,6 +249,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/plannings', [PlanningController::class, 'index'])->name('plannings.index');
         Route::get('/plannings/calendar', [PlanningController::class, 'employeCalendar'])->name('plannings.calendar');
         Route::get('/plannings/download-pdf', [PlanningController::class, 'exportPdfEmploye'])->name('plannings.download-pdf');
+        Route::get('/plannings/{planning}', [PlanningController::class, 'show'])->name('plannings.show');
         Route::get('/plannings/collegue/{employe}/calendar', [PlanningController::class, 'voirPlanningCollegueCalendar'])->name('plannings.collegue');
         Route::get('/plannings/collegue/{employe}/compare', [PlanningController::class, 'comparerPlannings'])->name('plannings.comparer');
         Route::post('/plannings/export-pdf-employe', [PlanningController::class, 'exportPdfEmploye'])->name('plannings.export-pdf-employe');
@@ -267,6 +284,39 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::delete('/{conge}/annuler', [CongeController::class, 'annulerConge'])->name('annuler');
         });
     });
+});
+
+// Routes de test pour les événements WebSocket
+Route::prefix('tests')->middleware(['auth'])->group(function () {
+    // Page de test WebSocket
+    Route::get('/websocket/{id}', function ($id) {
+        $employe = \App\Models\Employe::findOrFail($id);
+        return view('tests.websocket', compact('employe'));
+    })->name('tests.websocket');
+    
+    // Déclenchement d'un événement de test
+    Route::get('/test-event/{id}', function ($id) {
+        $employe = \App\Models\Employe::findOrFail($id);
+        $historique = $employe->historiqueConges()->latest()->first();
+        
+        if (!$historique) {
+            $historique = $employe->historiqueConges()->create([
+                'user_id' => auth()->id(),
+                'type_modification' => 'test',
+                'ancien_solde_conges' => $employe->solde_conges,
+                'nouveau_solde_conges' => $employe->solde_conges,
+                'ancien_solde_rtt' => $employe->solde_rtt,
+                'nouveau_solde_rtt' => $employe->solde_rtt,
+                'ancien_solde_conges_exceptionnels' => $employe->solde_conges_exceptionnels,
+                'nouveau_solde_conges_exceptionnels' => $employe->solde_conges_exceptionnels,
+                'commentaire' => 'Test de notification en temps réel',
+            ]);
+        }
+        
+        event(new \App\Events\SoldeCongeModified($employe, $historique));
+        
+        return 'Evénement envoyé pour l\'employé ' . $employe->prenom . ' ' . $employe->nom;
+    })->name('tests.event');
 });
 
 require __DIR__.'/auth.php';

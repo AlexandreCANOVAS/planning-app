@@ -1,4 +1,12 @@
 <x-app-layout>
+@push('scripts')
+<script>
+    window.societeId = {{ auth()->user()->societe_id }};
+</script>
+<script src="{{ asset('js/toast.js') }}"></script>
+<script src="{{ asset('js/soldes-realtime-update.js') }}"></script>
+{{-- Références aux scripts JavaScript supprimées pour éviter les erreurs 404 --}}
+@endpush
     <x-slot name="header">
         <div class="relative overflow-hidden bg-gradient-to-r from-[rgb(75,20,140)] to-[rgb(55,10,110)] rounded-xl shadow-lg p-6">
             <div class="absolute top-0 right-0 transform translate-x-1/3 -translate-y-1/3">
@@ -438,6 +446,30 @@
                 }
             }
             
+            // Fonction pour mettre à jour les soldes de congés d'un employé
+            function updateEmployeSoldes(employeId, soldeConges, soldeRtt, soldeExceptionnels) {
+                console.log(`Mise à jour des soldes pour l'employé ${employeId}:`, {
+                    soldeConges, soldeRtt, soldeExceptionnels
+                });
+                
+                // Trouver tous les éléments qui affichent les soldes de cet employé
+                document.querySelectorAll(`[data-employe-id="${employeId}"]`).forEach(el => {
+                    const type = el.getAttribute('data-solde-type');
+                    if (type === 'conges') {
+                        el.textContent = parseFloat(soldeConges).toFixed(1);
+                    } else if (type === 'rtt') {
+                        el.textContent = parseFloat(soldeRtt).toFixed(1);
+                    } else if (type === 'exceptionnels') {
+                        el.textContent = parseFloat(soldeExceptionnels).toFixed(1);
+                    }
+                });
+                
+                // Afficher une notification toast si disponible
+                if (window.showToast) {
+                    window.showToast(`Les soldes de congés ont été mis à jour`, 'purple');
+                }
+            }
+            
             // Initialize bubble on page load
             updateNotificationBubble(initialCount);
             
@@ -447,6 +479,15 @@
                 })
                 .listen('.CongeStatusUpdated', (e) => {
                     updateNotificationBubble(e.congesEnAttente);
+                })
+                .listen('.soldes.updated', (e) => {
+                    console.log('Evénement soldes.updated reçu:', e);
+                    updateEmployeSoldes(
+                        e.employe_id,
+                        e.solde_conges,
+                        e.solde_rtt,
+                        e.solde_conges_exceptionnels
+                    );
                 })
                 .error((error) => {
                     console.error('Echo error:', error);

@@ -1,4 +1,11 @@
 <x-app-layout>
+@push('scripts')
+<script>
+    window.employeId = {{ auth()->user()->employe->id ?? 'null' }};
+</script>
+<script src="{{ asset('js/toast.js') }}"></script>
+<script src="{{ asset('js/force-reload-cp.js') }}"></script>
+@endpush
     <div class="min-h-screen bg-gray-50">
         <!-- En-tête avec informations principales -->
         <header class="bg-white shadow-sm">
@@ -63,32 +70,38 @@
                         </div>
                     </div>
 
-                    <!-- Congés restants -->
+                    <!-- Soldes de congés -->
                     <div class="bg-white overflow-hidden shadow rounded-lg">
                         <div class="p-5">
-                            <div class="flex items-center">
+                            <div class="flex items-center mb-3">
                                 <div class="flex-shrink-0">
-                                    <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="h-6 w-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                                     </svg>
                                 </div>
-                                <div class="ml-5 w-0 flex-1">
-                                    <dl>
-                                        <dt class="text-sm font-medium text-gray-500 truncate">
-                                            Congés restants
-                                        </dt>
-                                        <dd class="flex items-baseline">
-                                            <div class="text-2xl font-semibold text-gray-900">
-                                                0 jours
-                                            </div>
-                                        </dd>
-                                    </dl>
+                                <div class="ml-3">
+                                    <h3 class="text-sm font-medium text-gray-700">Soldes de congés</h3>
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-3 gap-2 mt-2">
+                                <div class="text-center py-2 bg-blue-50 rounded-lg">
+                                    <span class="block text-xs text-gray-500 mb-1">Congés payés</span>
+                                    <span class="block text-lg font-bold text-blue-600 solde-conges-value" data-employe-id="{{ auth()->user()->employe->id ?? 0 }}" data-solde-type="conges">{{ number_format(auth()->user()->employe->solde_conges ?? 0, 1) }}</span>
+                                </div>
+                                <div class="text-center py-2 bg-indigo-50 rounded-lg">
+                                    <span class="block text-xs text-gray-500 mb-1">RTT</span>
+                                    <span class="block text-lg font-bold text-indigo-600 solde-rtt-value" data-employe-id="{{ auth()->user()->employe->id ?? 0 }}" data-solde-type="rtt">{{ number_format(auth()->user()->employe->solde_rtt ?? 0, 1) }}</span>
+                                </div>
+                                <div class="text-center py-2 bg-purple-50 rounded-lg">
+                                    <span class="block text-xs text-gray-500 mb-1">CE</span>
+                                    <span class="block text-lg font-bold text-purple-600 solde-exceptionnels-value" data-employe-id="{{ auth()->user()->employe->id ?? 0 }}" data-solde-type="exceptionnels">{{ number_format(auth()->user()->employe->solde_conges_exceptionnels ?? 0, 1) }}</span>
                                 </div>
                             </div>
                         </div>
                         <div class="bg-gray-50 px-5 py-3">
                             <div class="text-sm">
-                                <a href="{{ route('conges.index') }}" class="font-medium text-green-700 hover:text-green-900">
+                                <a href="{{ route('conges.index') }}" class="font-medium text-purple-700 hover:text-purple-900">
                                     Gérer mes congés →
                                 </a>
                             </div>
