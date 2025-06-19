@@ -114,10 +114,11 @@
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                                             </svg>
                                                         </a>
-                                                        <button onclick="supprimerPlanning('{{ $stat['employe']->id }}', '{{ str_pad($moisActuel, 2, '0', STR_PAD_LEFT) }}', '{{ $anneeActuelle }}')" 
-                                                            class="text-red-600 hover:text-red-900">
+                                                        <a href="#" 
+                                                           class="text-red-600 hover:text-red-900"
+                                                           onclick="openConfirmModal('{{ $stat['employe']->id }}', '{{ $mois }}', '{{ $stat['employe']->nom }} {{ $stat['employe']->prenom }}', '{{ \Carbon\Carbon::create(null, $mois, 1)->locale('fr')->monthName }}', '{{ $anneeActuelle }}')">
                                                             <i class="fas fa-trash"></i> Supprimer
-                                                        </button>
+                                                        </a>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -132,8 +133,102 @@
         </div>
     </div>
 
+    <!-- Boîte de dialogue modale de confirmation -->
+    <div id="confirmModal" class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto px-4 py-6 sm:px-0" style="display: none;">
+        <div class="fixed inset-0 transform transition-all">
+            <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+        </div>
+
+        <div class="transform transition-all sm:w-full sm:max-w-md">
+            <div class="bg-white rounded-lg overflow-hidden shadow-xl transform transition-all sm:w-full sm:mx-auto">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                            <svg class="h-6 w-6 text-red-600" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                            </svg>
+                        </div>
+                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900">Confirmation de suppression</h3>
+                            <div class="mt-2">
+                                <p class="text-sm text-gray-500" id="confirmModalText">
+                                    Êtes-vous sûr de vouloir supprimer tous les plannings de cet employé pour ce mois ?
+                                    Cette action est irréversible.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <a href="#" id="confirmDeleteBtn"
+                       class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm">
+                        Supprimer
+                    </a>
+                    <button type="button" 
+                            onclick="closeConfirmModal()" 
+                            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                        Annuler
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     @push('scripts')
     <script>
+        function openConfirmModal(employeId, mois, employeName, monthName, annee) {
+            // Mettre à jour le texte de la modale
+            document.getElementById('confirmModalText').innerHTML = `
+                Êtes-vous sûr de vouloir supprimer tous les plannings de <strong>${employeName}</strong> pour le mois de <strong>${monthName}</strong> ?<br>
+                Cette action est irréversible.
+            `;
+            
+            // Mettre à jour le lien de suppression
+            const monthStr = mois.toString().padStart(2, '0');
+            const yearMonth = annee + '-' + monthStr;
+            const deleteUrl = '{{ route("plannings.destroy_monthly_confirm", [":employeId", ":yearMonth"]) }}';
+            const finalUrl = deleteUrl
+                .replace(':employeId', employeId)
+                .replace(':yearMonth', yearMonth);
+                
+            document.getElementById('confirmDeleteBtn').href = finalUrl;
+            
+            // Afficher la modale
+            document.getElementById('confirmModal').style.display = 'flex';
+            
+            // Empêcher le défilement de la page
+            document.body.style.overflow = 'hidden';
+            
+            return false;
+        }
+        
+        function closeConfirmModal() {
+            // Cacher la modale
+            document.getElementById('confirmModal').style.display = 'none';
+            
+            // Réactiver le défilement de la page
+            document.body.style.overflow = 'auto';
+            
+            return false;
+        }
+        
+        // Fermer la modale en cliquant sur le fond
+        document.addEventListener('DOMContentLoaded', function() {
+            const modal = document.getElementById('confirmModal');
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    closeConfirmModal();
+                }
+            });
+            
+            // Fermer la modale avec la touche Echap
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && modal.style.display === 'flex') {
+                    closeConfirmModal();
+                }
+            });
+        });
+        
         function modifierPlanning(employeId, mois, annee) {
             @if(auth()->user() && auth()->user()->isEmployeur())
                 window.location.href = "{{ url('/plannings/edit-monthly-calendar') }}" + `?employe_id=${employeId}&mois=${mois}&annee=${annee}`;
@@ -160,26 +255,64 @@
         }
 
         function supprimerPlanning(employeId, mois, annee) {
-            if (confirm('Êtes-vous sûr de vouloir supprimer tous les plannings de cet employé pour ce mois ?')) {
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = `/plannings/destroy-monthly/${employeId}/${annee}-${mois.padStart(2, '0')}`;
-                form.style.display = 'none';
+            console.log('Fonction supprimerPlanning appelée avec:', { employeId, mois, annee });
+            
+            try {
+                if (confirm('Êtes-vous sûr de vouloir supprimer tous les plannings de cet employé pour ce mois ?')) {
+                    console.log('Confirmation acceptée, création du formulaire');
+                    
+                    // Créer un formulaire avec la méthode POST
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    
+                    // Utiliser la route nommée correcte définie dans web.php
+                    const routeTemplate = '{{ route("plannings.destroy_monthly", [":employe_id", ":year_month"]) }}';
+                    const yearMonth = annee + '-' + mois.padStart(2, '0');
+                    const url = routeTemplate
+                        .replace(':employe_id', employeId)
+                        .replace(':year_month', yearMonth);
+                    
+                    form.action = url;
+                    form.style.display = 'none';
+                    
+                    console.log('URL du formulaire:', url);
 
-                const csrfToken = document.createElement('input');
-                csrfToken.type = 'hidden';
-                csrfToken.name = '_token';
-                csrfToken.value = '{{ csrf_token() }}';
-                form.appendChild(csrfToken);
+                    // Ajouter le token CSRF
+                    const csrfToken = document.createElement('input');
+                    csrfToken.type = 'hidden';
+                    csrfToken.name = '_token';
+                    csrfToken.value = '{{ csrf_token() }}';
+                    form.appendChild(csrfToken);
+                    console.log('Token CSRF ajouté:', csrfToken.value);
 
-                const methodField = document.createElement('input');
-                methodField.type = 'hidden';
-                methodField.name = '_method';
-                methodField.value = 'DELETE';
-                form.appendChild(methodField);
+                    // Ajouter le champ de méthode pour simuler DELETE
+                    const methodField = document.createElement('input');
+                    methodField.type = 'hidden';
+                    methodField.name = '_method';
+                    methodField.value = 'DELETE';
+                    form.appendChild(methodField);
+                    console.log('Champ méthode DELETE ajouté');
 
-                document.body.appendChild(form);
-                form.submit();
+                    // Ajouter le formulaire au document et le soumettre
+                    document.body.appendChild(form);
+                    console.log('Formulaire ajouté au document, tentative de soumission...');
+                    
+                    // Petit délai pour s'assurer que tout est bien attaché au DOM
+                    setTimeout(() => {
+                        try {
+                            form.submit();
+                            console.log('Formulaire soumis avec succès');
+                        } catch (submitError) {
+                            console.error('Erreur lors de la soumission du formulaire:', submitError);
+                            alert('Erreur lors de la suppression: ' + submitError.message);
+                        }
+                    }, 100);
+                } else {
+                    console.log('Suppression annulée par l\'utilisateur');
+                }
+            } catch (error) {
+                console.error('Erreur dans la fonction supprimerPlanning:', error);
+                alert('Une erreur est survenue: ' + error.message);
             }
         }
     </script>

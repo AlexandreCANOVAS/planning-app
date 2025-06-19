@@ -10,6 +10,7 @@ use App\Models\Materiel;
 use App\Models\BadgeAcces;
 use App\Models\AccesInformatique;
 use App\Models\User;
+use App\Models\Planning;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;

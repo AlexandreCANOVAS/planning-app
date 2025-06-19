@@ -11,7 +11,7 @@
 
                 <!-- Navigation Links -->
                 <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
-                    @if(Auth::user()->role === 'employe')
+                    @if(Auth::check() && Auth::user()->role === 'employe')
                         <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" 
                             class="inline-flex items-center px-1 pt-1 text-sm font-medium leading-5 transition duration-150 ease-in-out text-white hover:text-purple-100">
                             <i class="fas fa-chart-line mr-2"></i>
@@ -95,8 +95,13 @@
                                         <i class="fas fa-user text-[rgb(131,44,207)]"></i>
                                     </div>
                                     <div>
-                                        <div class="font-medium text-white">{{ Auth::user()->name }}</div>
-                                        <div class="text-xs text-purple-100">{{ Auth::user()->email }}</div>
+                                        @if(Auth::check())
+                                            <div class="font-medium text-white">{{ Auth::user()->name }}</div>
+                                            <div class="text-xs text-purple-100">{{ Auth::user()->email }}</div>
+                                        @else
+                                            <div class="font-medium text-white">Invité</div>
+                                            <div class="text-xs text-purple-100">Non connecté</div>
+                                        @endif
                                     </div>
                                 </div>
                                 <div class="ml-1">
@@ -157,7 +162,7 @@
     <!-- Responsive Navigation Menu -->
     <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
         <div class="pt-2 pb-3 space-y-1">
-            @if(Auth::user()->role === 'employe')
+            @if(Auth::check() && Auth::user()->role === 'employe')
                 <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" class="flex items-center">
                     <i class="fas fa-chart-line mr-2"></i>
                     {{ __('Tableau de bord') }}
@@ -213,8 +218,13 @@
         <!-- Responsive Settings Options -->
         <div class="pt-4 pb-1 border-t border-gray-200">
             <div class="px-4">
-                <div class="font-medium text-base text-gray-800">{{ Auth::user()->name }}</div>
-                <div class="font-medium text-sm text-gray-500">{{ Auth::user()->email }}</div>
+                @if(Auth::check())
+                    <div class="font-medium text-base text-gray-800">{{ Auth::user()->name }}</div>
+                    <div class="font-medium text-sm text-gray-500">{{ Auth::user()->email }}</div>
+                @else
+                    <div class="font-medium text-base text-gray-800">Invité</div>
+                    <div class="font-medium text-sm text-gray-500">Non connecté</div>
+                @endif
             </div>
 
             <div class="mt-3 space-y-1">

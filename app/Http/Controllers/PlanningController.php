@@ -1147,9 +1147,20 @@ class PlanningController extends Controller
             ->with('success', 'Planning supprimé avec succès.');
     }
 
-    public function destroyMonthly($employeId, $yearMonth)
+    /**
+     * Méthode pour confirmer la suppression des plannings mensuels via GET (plus fiable)
+     */
+    public function destroyMonthlyConfirm($employeId, $yearMonth)
     {
         try {
+            // Log pour débogage
+            \Log::info('Tentative de suppression de planning mensuel via GET', [
+                'employe_id' => $employeId,
+                'year_month' => $yearMonth,
+                'user_id' => auth()->id(),
+                'user_role' => auth()->user()->role ?? 'non authentifié'
+            ]);
+
             // Vérifier que l'employé appartient à la société de l'employeur
             $employe = Employe::where('id', $employeId)
                 ->where('societe_id', auth()->user()->societe_id)
@@ -1157,16 +1168,142 @@ class PlanningController extends Controller
 
             // Extraire l'année et le mois
             list($year, $month) = explode('-', $yearMonth);
+            
+            // Format pour la recherche SQL
+            $monthStr = str_pad($month, 2, '0', STR_PAD_LEFT);
+            $yearMonthStr = $year . '-' . $monthStr . '-%';
+            
+            // Compter les plannings avant suppression
+            $countBefore = \DB::select(
+                "SELECT COUNT(*) as count FROM plannings WHERE employe_id = ? AND date LIKE ?", 
+                [$employeId, $yearMonthStr]
+            );
+            $countBeforeValue = $countBefore[0]->count;
+            
+            \Log::info('Nombre de plannings trouvés avant suppression (GET)', ['count' => $countBeforeValue]);
 
             // Supprimer tous les plannings de l'employé pour le mois spécifié
-            Planning::where('employe_id', $employeId)
-                ->whereYear('date', $year)
-                ->whereMonth('date', $month)
-                ->delete();
+            $deleted = \DB::delete(
+                "DELETE FROM plannings WHERE employe_id = ? AND date LIKE ?", 
+                [$employeId, $yearMonthStr]
+            );
 
-            return redirect()->back()->with('success', 'Les plannings ont été supprimés avec succès.');
+            // Log pour débogage
+            \Log::info('Résultat de la suppression (GET)', ['deleted_count' => $deleted]);
+
+            // Message de succès avec le nombre de plannings supprimés
+            if ($deleted > 0) {
+                return redirect()->route('plannings.calendar')->with('success', 'Les plannings ont été supprimés avec succès. ' . $deleted . ' plannings supprimés.');
+            } else {
+                // Si aucun planning n'a été trouvé
+                return redirect()->route('plannings.calendar')->with('info', 'Aucun planning à supprimer pour ce mois.');
+            }
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Une erreur est survenue lors de la suppression des plannings.');
+            \Log::error('Erreur lors de la suppression des plannings (GET)', [
+                'employe_id' => $employeId,
+                'year_month' => $yearMonth,
+                'error' => $e->getMessage()
+            ]);
+            
+            return redirect()->route('plannings.calendar')->with('error', 'Une erreur est survenue lors de la suppression des plannings: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Méthode pour supprimer les plannings mensuels via DELETE
+     */
+    public function destroyMonthly($employeId, $yearMonth)
+    {
+        try {
+            // Log pour débogage
+            \Log::info('Tentative de suppression de planning mensuel', [
+                'employe_id' => $employeId,
+                'year_month' => $yearMonth,
+                'user_id' => auth()->id(),
+                'user_role' => auth()->user()->role ?? 'non authentifié'
+            ]);
+
+            // Vérifier que l'employé appartient à la société de l'employeur
+            $employe = Employe::where('id', $employeId)
+                ->where('societe_id', auth()->user()->societe_id)
+                ->firstOrFail();
+
+            // Extraire l'année et le mois
+            list($year, $month) = explode('-', $yearMonth);
+            
+            // Log pour débogage
+            \Log::info('Paramètres de recherche pour suppression', [
+                'employe_id' => $employeId,
+                'year' => $year,
+                'month' => $month
+            ]);
+            
+            // Récupérer tous les plannings pour cet employé pour débogage
+            $allPlannings = Planning::where('employe_id', $employeId)->get();
+            \Log::info('Tous les plannings de l\'employé', [
+                'count' => $allPlannings->count(),
+                'dates' => $allPlannings->pluck('date')->toArray()
+            ]);
+            
+            // Solution 1: Utiliser une requête SQL brute pour contourner les problèmes de format de date
+            $monthStr = str_pad($month, 2, '0', STR_PAD_LEFT);
+            $yearMonthStr = $year . '-' . $monthStr . '-%';
+            
+            // Compter les plannings avant suppression avec SQL brut
+            $countBefore = \DB::select(
+                "SELECT COUNT(*) as count FROM plannings WHERE employe_id = ? AND date LIKE ?", 
+                [$employeId, $yearMonthStr]
+            );
+            $countBeforeValue = $countBefore[0]->count;
+            
+            \Log::info('Nombre de plannings trouvés avant suppression (SQL brut)', [
+                'count' => $countBeforeValue,
+                'pattern' => $yearMonthStr
+            ]);
+
+            // Récupérer les IDs des plannings pour vérification
+            $planningIds = \DB::select(
+                "SELECT id FROM plannings WHERE employe_id = ? AND date LIKE ?", 
+                [$employeId, $yearMonthStr]
+            );
+            
+            $ids = array_map(function($item) { return $item->id; }, $planningIds);
+            \Log::info('IDs des plannings à supprimer (SQL brut)', ['ids' => $ids]);
+
+            // Supprimer tous les plannings de l'employé pour le mois spécifié
+            $deleted = \DB::delete(
+                "DELETE FROM plannings WHERE employe_id = ? AND date LIKE ?", 
+                [$employeId, $yearMonthStr]
+            );
+
+            // Log pour débogage
+            \Log::info('Résultat de la suppression (SQL brut)', ['deleted_count' => $deleted]);
+
+            // Vérifier si les plannings ont bien été supprimés
+            $countAfter = \DB::select(
+                "SELECT COUNT(*) as count FROM plannings WHERE employe_id = ? AND date LIKE ?", 
+                [$employeId, $yearMonthStr]
+            );
+            $countAfterValue = $countAfter[0]->count;
+            
+            \Log::info('Nombre de plannings restants après suppression (SQL brut)', ['count' => $countAfterValue]);
+
+            // Message de succès avec le nombre de plannings supprimés
+            if ($deleted > 0) {
+                return redirect()->back()->with('success', 'Les plannings ont été supprimés avec succès. ' . $deleted . ' plannings supprimés.');
+            } else {
+                // Si aucun planning n'a été trouvé
+                return redirect()->back()->with('info', 'Aucun planning à supprimer pour ce mois.');
+            }
+        } catch (\Exception $e) {
+            \Log::error('Erreur lors de la suppression des plannings', [
+                'employe_id' => $employeId,
+                'year_month' => $yearMonth,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return redirect()->back()->with('error', 'Une erreur est survenue lors de la suppression des plannings: ' . $e->getMessage());
         }
     }
 

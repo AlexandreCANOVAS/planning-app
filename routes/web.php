@@ -177,6 +177,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 ->withoutMiddleware([CheckEmployeur::class]);
             Route::delete('/destroy-monthly/{employe_id}/{year_month}', [PlanningController::class, 'destroyMonthly'])
                 ->name('plannings.destroy_monthly');
+            Route::get('/destroy-monthly-confirm/{employe_id}/{year_month}', [PlanningController::class, 'destroyMonthlyConfirm'])
+                ->name('plannings.destroy_monthly_confirm');
             Route::post('/remplir-jours-non-travailles/{employe_id}/{annee}/{mois}', [PlanningController::class, 'remplirJoursNonTravailles'])
                 ->name('plannings.remplir-jours-non-travailles');
             Route::post('/ajouter-conge/{employe_id}/{annee}/{mois}', [PlanningController::class, 'ajouterConge'])
