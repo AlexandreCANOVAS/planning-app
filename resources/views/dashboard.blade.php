@@ -84,25 +84,43 @@
                                 </div>
                             </div>
                             
-                            <div class="grid grid-cols-3 gap-2 mt-2">
-                                <div class="text-center py-2 bg-blue-50 rounded-lg">
-                                    <span class="block text-xs text-gray-500 mb-1">Congés payés</span>
-                                    <span class="block text-lg font-bold text-blue-600 solde-conges-value" data-employe-id="{{ auth()->user()->employe->id ?? 0 }}" data-solde-type="conges">{{ number_format(auth()->user()->employe->solde_conges ?? 0, 1) }}</span>
+                            <div class="grid grid-cols-3 gap-3 mt-3">
+                                <div class="relative overflow-hidden rounded-lg border border-blue-100 bg-gradient-to-r from-blue-50 to-blue-100 p-3">
+                                    <div class="flex flex-col items-center">
+                                        <span class="text-xs font-medium text-blue-800">Congés payés</span>
+                                        <span class="mt-1 text-xl font-bold text-blue-700 solde-conges-value" data-employe-id="{{ auth()->user()->employe->id ?? 0 }}" data-solde-type="conges">{{ number_format(auth()->user()->employe->solde_conges ?? 0, 1) }}</span>
+                                    </div>
+                                    <div class="absolute -right-3 -top-3 opacity-20">
+                                        <i class="fas fa-umbrella-beach text-blue-500 text-3xl"></i>
+                                    </div>
                                 </div>
-                                <div class="text-center py-2 bg-indigo-50 rounded-lg">
-                                    <span class="block text-xs text-gray-500 mb-1">RTT</span>
-                                    <span class="block text-lg font-bold text-indigo-600 solde-rtt-value" data-employe-id="{{ auth()->user()->employe->id ?? 0 }}" data-solde-type="rtt">{{ number_format(auth()->user()->employe->solde_rtt ?? 0, 1) }}</span>
+                                
+                                <div class="relative overflow-hidden rounded-lg border border-indigo-100 bg-gradient-to-r from-indigo-50 to-indigo-100 p-3">
+                                    <div class="flex flex-col items-center">
+                                        <span class="text-xs font-medium text-indigo-800">RTT</span>
+                                        <span class="mt-1 text-xl font-bold text-indigo-700 solde-rtt-value" data-employe-id="{{ auth()->user()->employe->id ?? 0 }}" data-solde-type="rtt">{{ number_format(auth()->user()->employe->solde_rtt ?? 0, 1) }}</span>
+                                    </div>
+                                    <div class="absolute -right-3 -top-3 opacity-20">
+                                        <i class="fas fa-clock text-indigo-500 text-3xl"></i>
+                                    </div>
                                 </div>
-                                <div class="text-center py-2 bg-purple-50 rounded-lg">
-                                    <span class="block text-xs text-gray-500 mb-1">CE</span>
-                                    <span class="block text-lg font-bold text-purple-600 solde-exceptionnels-value" data-employe-id="{{ auth()->user()->employe->id ?? 0 }}" data-solde-type="exceptionnels">{{ number_format(auth()->user()->employe->solde_conges_exceptionnels ?? 0, 1) }}</span>
+                                
+                                <div class="relative overflow-hidden rounded-lg border border-purple-100 bg-gradient-to-r from-purple-50 to-purple-100 p-3">
+                                    <div class="flex flex-col items-center">
+                                        <span class="text-xs font-medium text-purple-800">Congés except.</span>
+                                        <span class="mt-1 text-xl font-bold text-purple-700 solde-exceptionnels-value" data-employe-id="{{ auth()->user()->employe->id ?? 0 }}" data-solde-type="exceptionnels">{{ number_format(auth()->user()->employe->solde_conges_exceptionnels ?? 0, 1) }}</span>
+                                    </div>
+                                    <div class="absolute -right-3 -top-3 opacity-20">
+                                        <i class="fas fa-star text-purple-500 text-3xl"></i>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                         <div class="bg-gray-50 px-5 py-3">
                             <div class="text-sm">
-                                <a href="{{ route('conges.index') }}" class="font-medium text-purple-700 hover:text-purple-900">
-                                    Gérer mes congés →
+                                <a href="{{ route('conges.index') }}" class="font-medium text-purple-700 hover:text-purple-900 flex items-center">
+                                    <span>Gérer mes congés</span>
+                                    <i class="fas fa-chevron-right ml-1 text-xs"></i>
                                 </a>
                             </div>
                         </div>

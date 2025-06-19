@@ -13,6 +13,9 @@ use App\Notifications\Planning\PlanningCreatedNotification;
 use App\Notifications\Planning\PlanningUpdatedNotification;
 use App\Notifications\Echange\ExchangeStatusChangedNotification;
 use App\Notifications\Echange\ExchangeRequestNotification;
+use App\Mail\PlanningCreated;
+use App\Mail\PlanningUpdated;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -682,7 +685,7 @@ class PlanningController extends Controller
 
         // Notifier l'employé
         if (!empty($plannings)) {
-            $employe->user->notify(new PlanningModifie($plannings[0]));
+            $employe->user->notify(new PlanningUpdatedNotification($plannings[0], ['message' => 'Votre planning a été mis à jour']));
         }
 
         // Rediriger vers le calendrier mensuel avec le mois et l'année sélectionnés
@@ -873,12 +876,23 @@ class PlanningController extends Controller
             // Récupérer les plannings créés pour envoyer une notification
             $createdPlannings = Planning::where('employe_id', $employe->id)
                 ->whereIn('date', array_keys($data['plannings']))
+                ->with('lieu') // Charger la relation lieu pour l'email
                 ->orderBy('date')
                 ->get();
                 
             // Envoyer une notification à l'employé concerné
             if ($employe->user && !$createdPlannings->isEmpty()) {
+                // Notification dans l'application
                 $employe->user->notify(new PlanningCreatedNotification($createdPlannings->first()));
+                
+                // Envoi d'un email avec le nouveau design et pièce jointe
+                if ($employe->user->email) {
+                    // S'assurer que l'employé est bien chargé avec ses relations
+                    $planning = $createdPlannings->first();
+                    
+                    Mail::to($employe->user->email)
+                        ->queue(new PlanningCreated($planning, $employe->user));
+                }
             }
             
             return response()->json(['message' => 'Planning enregistré avec succès']);
@@ -1099,11 +1113,20 @@ class PlanningController extends Controller
             'heures_composees' => $validated['heures_composees'] ?? 0
         ]);
 
+        // Charger les relations nécessaires pour l'email
+        $planning->load('lieu');
+        
         // Notifier l'employé de la modification
         $planning->employe->user->notify(new PlanningUpdatedNotification($planning, [
             'message' => 'Votre planning a été modifié',
             'date' => $planning->date->format('Y-m-d')
         ]));
+        
+        // Envoyer un email à l'employé avec le nouveau design et pièce jointe
+        if ($planning->employe->user && $planning->employe->user->email) {
+            Mail::to($planning->employe->user->email)
+                ->queue(new PlanningUpdated($planning, $planning->employe->user));
+        }
 
         return redirect()->route('plannings.calendar')
             ->with('success', 'Planning modifié avec succès.');
@@ -1712,18 +1735,29 @@ class PlanningController extends Controller
             DB::commit();
             
             // Envoyer une notification à l'employé concerné
-            if ($employe->user) {
-                $employe->user->notify(new PlanningUpdatedNotification(
-                    Planning::where('employe_id', $employe->id)
-                        ->whereYear('date', $data['annee'])
-                        ->whereMonth('date', $data['mois'])
-                        ->first(),
-                    [
-                        'message' => 'Votre planning a été mis à jour',
-                        'dates' => implode(', ', array_keys($data['plannings']))
-                    ]
-                ));
-            }
+                        // Envoyer une notification à l'employé concerné
+                        if ($employe->user) {
+                            // Récupérer le premier planning mis à jour pour la notification et l'email
+                            $updatedPlanning = Planning::where('employe_id', $employe->id)
+                                ->whereYear('date', $data['annee'])
+                                ->whereMonth('date', $data['mois'])
+                                ->first();
+                            
+                            // Notification dans l'application
+                            $employe->user->notify(new PlanningUpdatedNotification(
+                                $updatedPlanning,
+                                [
+                                    'message' => 'Votre planning a été mis à jour',
+                                    'dates' => implode(', ', array_keys($data['plannings']))
+                                ]
+                            ));
+                            
+                            // Envoi d'un email
+                            if ($employe->user->email && $updatedPlanning) {
+                                Mail::to($employe->user->email)
+                                    ->queue(new PlanningUpdated($updatedPlanning, $employe->user));
+                            }
+                        }
             
             return response()->json(['message' => 'Planning modifié avec succès']);
         } catch (\Exception $e) {

@@ -7,6 +7,33 @@ use App\Models\Lieu;
 
 <div class="py-12">
     <div class="max-w-6xl mx-auto sm:px-8 lg:px-8">
+        <!-- Modal de notification centrée -->
+        <div id="notification-container" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+            <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity" onclick="hideNotification()"></div>
+            <div id="notification" class="relative bg-white rounded-lg shadow-xl max-w-md w-full mx-4 transform transition-all">
+                <div class="p-6">
+                    <div class="flex items-center mb-4">
+                        <div id="notification-icon" class="mr-4 flex-shrink-0"></div>
+                        <h3 id="notification-title" class="text-lg font-medium">Notification</h3>
+                    </div>
+                    <div class="mb-5">
+                        <p id="notification-message" class="text-base"></p>
+                    </div>
+                    <div class="mt-6 flex justify-end">
+                        <button onclick="hideNotification()" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400">
+                            Fermer
+                        </button>
+                    </div>
+                </div>
+                <button onclick="hideNotification()" class="absolute top-3 right-3 text-gray-400 hover:text-gray-500">
+                    <span class="sr-only">Fermer</span>
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+        
         <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-xl font-semibold">
@@ -340,6 +367,79 @@ use App\Models\Lieu;
 
 @push('scripts')
 <script>
+    // Fonctions pour gérer les notifications modales
+    window.showNotification = function(type, message) {
+        const container = document.getElementById('notification-container');
+        const notification = document.getElementById('notification');
+        const notificationIcon = document.getElementById('notification-icon');
+        const notificationMessage = document.getElementById('notification-message');
+        const notificationTitle = document.getElementById('notification-title');
+        
+        // Définir le message
+        notificationMessage.textContent = message;
+        
+        // Configurer le type de notification
+        if (type === 'success') {
+            notificationTitle.textContent = 'Succès';
+            notification.className = 'relative bg-white rounded-lg shadow-xl max-w-md w-full mx-4 transform transition-all border-t-4 border-green-500';
+            notificationIcon.innerHTML = `
+                <div class="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
+                    <svg class="h-8 w-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+            `;
+        } else if (type === 'error') {
+            notificationTitle.textContent = 'Erreur';
+            notification.className = 'relative bg-white rounded-lg shadow-xl max-w-md w-full mx-4 transform transition-all border-t-4 border-red-500';
+            notificationIcon.innerHTML = `
+                <div class="h-12 w-12 rounded-full bg-red-100 flex items-center justify-center">
+                    <svg class="h-8 w-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+            `;
+        } else if (type === 'info') {
+            notificationTitle.textContent = 'Information';
+            notification.className = 'relative bg-white rounded-lg shadow-xl max-w-md w-full mx-4 transform transition-all border-t-4 border-blue-500';
+            notificationIcon.innerHTML = `
+                <div class="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
+                    <svg class="h-8 w-8 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+            `;
+        }
+        
+        // Afficher la modal
+        document.body.classList.add('overflow-hidden'); // Empêcher le défilement
+        container.classList.remove('hidden');
+        
+        // Animation d'entrée
+        notification.classList.add('animate-fade-in-scale');
+        
+        // Masquer automatiquement après 8 secondes pour les succès
+        if (type === 'success') {
+            setTimeout(hideNotification, 8000);
+        }
+    };
+    
+    window.hideNotification = function() {
+        const container = document.getElementById('notification-container');
+        const notification = document.getElementById('notification');
+        
+        // Animation de sortie
+        notification.classList.remove('animate-fade-in-scale');
+        notification.classList.add('animate-fade-out-scale');
+        
+        // Masquer après l'animation
+        setTimeout(() => {
+            container.classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+            notification.classList.remove('animate-fade-out-scale');
+        }, 300);
+    };
+    
     document.addEventListener('DOMContentLoaded', function() {
         let selectedDates = [];
         let employeId = {{ $employe->id }};
@@ -480,9 +580,14 @@ use App\Models\Lieu;
 
         window.creerPlanning = function() {
             if (Object.keys(temporaryPlannings).length === 0) {
-                alert('Aucun planning à enregistrer');
+                showNotification('error', 'Aucun planning à enregistrer');
                 return;
             }
+
+            // Désactiver le bouton pendant le traitement
+            const btnCreerPlanning = document.getElementById('btnCreerPlanning');
+            btnCreerPlanning.disabled = true;
+            btnCreerPlanning.innerHTML = '<span class="spinner-border spinner-border-sm mr-2" role="status" aria-hidden="true"></span> Traitement en cours...';
 
             const data = {
                 employe_id: employeId,
@@ -500,15 +605,26 @@ use App\Models\Lieu;
             .then(response => response.json())
             .then(data => {
                 if (data.error) {
-                    alert(data.error);
+                    showNotification('error', data.error);
+                    btnCreerPlanning.disabled = false;
+                    btnCreerPlanning.innerHTML = '{{ request()->has("from_modification") ? "Modifier le planning" : "Créer le planning" }}';
                 } else {
-                    alert('Planning enregistré avec succès');
-                    window.location.href = '{{ route('plannings.calendar') }}';
+                    const employeNomPrenom = '{{ $employe->nom }} {{ $employe->prenom }}';
+                    const moisNom = '{{ Carbon\Carbon::create($annee, $mois, 1)->locale("fr")->monthName }}';
+                    
+                    showNotification('success', `Le planning de ${employeNomPrenom} pour le mois de ${moisNom} a été créé avec succès. Un e-mail a été envoyé à ${employeNomPrenom}.`);
+                    
+                    // Rediriger après un court délai pour permettre à l'utilisateur de voir le message
+                    setTimeout(() => {
+                        window.location.href = '{{ route('plannings.calendar') }}';
+                    }, 2500);
                 }
             })
             .catch(error => {
                 console.error('Erreur:', error);
-                alert('Une erreur est survenue lors de l\'enregistrement');
+                showNotification('error', 'Une erreur est survenue lors de l\'enregistrement');
+                btnCreerPlanning.disabled = false;
+                btnCreerPlanning.innerHTML = '{{ request()->has("from_modification") ? "Modifier le planning" : "Créer le planning" }}';
             });
         };
 
@@ -621,6 +737,42 @@ use App\Models\Lieu;
 
 @push('styles')
 <style>
+    /* Styles pour les notifications modales */
+    @keyframes fadeInScale {
+        from {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+    
+    @keyframes fadeOutScale {
+        from {
+            opacity: 1;
+            transform: scale(1);
+        }
+        to {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+    }
+    
+    .animate-fade-in-scale {
+        animation: fadeInScale 0.3s ease-out forwards;
+    }
+    
+    .animate-fade-out-scale {
+        animation: fadeOutScale 0.3s ease-in forwards;
+    }
+    
+    /* Style pour le fond semi-transparent */
+    #notification-container .bg-black {
+        backdrop-filter: blur(4px);
+    }
+    
     /* Styles pour les calendriers */
     .calendar-cell, .calendar-cell-prev {
         min-height: 60px;

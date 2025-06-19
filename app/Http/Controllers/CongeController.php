@@ -14,6 +14,9 @@ use App\Events\CongeStatusUpdated;
 use App\Events\CongeRequested;
 use App\Notifications\Conge\CongeCreatedNotification;
 use App\Notifications\Conge\CongeStatusChangedNotification as CongeStatusChangedNotif;
+use App\Mail\CongeRequested as CongeRequestedMail;
+use App\Mail\CongeStatusUpdated as CongeStatusUpdatedMail;
+use Illuminate\Support\Facades\Mail;
 use Carbon\Carbon;
 
 class CongeController extends Controller
@@ -165,8 +168,18 @@ class CongeController extends Controller
 
         try {
             broadcast(new CongeRequested($conge))->toOthers();
+            
+            // Envoyer un email aux gestionnaires
+            $managers = \App\Models\User::whereHas('roles', function($query) {
+                $query->where('name', 'employeur');
+            })->where('societe_id', $employe->societe_id)->get();
+            
+            foreach ($managers as $manager) {
+                Mail::to($manager->email)
+                    ->queue(new CongeRequestedMail($conge, $manager));
+            }
         } catch (\Exception $e) {
-            \Log::error('Erreur de broadcast: ' . $e->getMessage());
+            \Log::error('Erreur de broadcast ou d\'envoi d\'email: ' . $e->getMessage());
         }
 
         return redirect()->route('conges.index')
@@ -278,7 +291,13 @@ class CongeController extends Controller
         
         // Envoyer une notification à l'employé concerné
         $employe = $conge->employe;
-        $employe->user->notify(new CongeStatusChangedNotification($conge, $ancienStatut, $nouveauStatut));
+        $employe->user->notify(new CongeStatusChangedNotif($conge, $ancienStatut, $nouveauStatut));
+        
+        // Envoyer un email à l'employé
+        if ($employe->user && $employe->user->email) {
+            Mail::to($employe->user->email)
+                ->queue(new CongeStatusUpdatedMail($conge, $employe->user, $nouveauStatut));
+        }
 
         try {
             broadcast(new CongeStatusUpdated($conge))->toOthers();

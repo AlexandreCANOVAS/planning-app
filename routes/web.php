@@ -286,8 +286,85 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 });
 
-// Routes de test pour les événements WebSocket
+// Routes de test pour les événements WebSocket et emails
 Route::prefix('tests')->middleware(['auth'])->group(function () {
+    // Route de test pour l'envoi d'emails
+    Route::get('/email', function () {
+        try {
+            \Illuminate\Support\Facades\Mail::raw('Ceci est un email de test pour vérifier la configuration Mailtrap.', function ($message) {
+                $message->to(auth()->user()->email)
+                        ->subject('Test de configuration email');
+            });
+            return 'Email envoyé avec succès! Vérifiez votre boîte Mailtrap.';
+        } catch (\Exception $e) {
+            return 'Erreur lors de l\'envoi de l\'email : ' . $e->getMessage();
+        }
+    });
+    
+    // Route de test pour l'envoi d'email de planning créé
+    Route::get('/planning-email', function () {
+        // Récupérer un planning existant et son employé
+        $planning = App\Models\Planning::with('employe.user')->first();
+        
+        if (!$planning || !$planning->employe || !$planning->employe->user) {
+            return 'Impossible de trouver un planning avec un employé et un utilisateur associé';
+        }
+        
+        // Envoyer l'email directement (sans file d'attente)
+        Mail::to($planning->employe->user->email)
+            ->send(new App\Mail\PlanningCreated($planning, $planning->employe->user));
+        
+        return 'Email de planning envoyé directement à ' . $planning->employe->user->email . '. Vérifiez Mailtrap.';
+    });
+    
+    // Route de test pour l'envoi d'email via la file d'attente
+    Route::get('/planning-email-queue', function () {
+        // Récupérer un planning existant et son employé
+        $planning = App\Models\Planning::with('employe.user')->first();
+        
+        if (!$planning || !$planning->employe || !$planning->employe->user) {
+            return 'Impossible de trouver un planning avec un employé et un utilisateur associé';
+        }
+        
+        // Envoyer l'email via la file d'attente
+        Mail::to($planning->employe->user->email)
+            ->queue(new App\Mail\PlanningCreated($planning, $planning->employe->user));
+        
+        // Vérifier le nombre de jobs dans la file d'attente
+        $jobCount = DB::table('jobs')->count();
+        
+        return 'Email de planning mis en file d\'attente pour ' . $planning->employe->user->email . '. ' . 
+               $jobCount . ' job(s) dans la file d\'attente. Vérifiez Mailtrap après traitement par le worker.';
+    });
+    
+    // Route de test pour l'envoi d'email moderne avec pièce jointe
+    Route::get('/planning-email-modern', function () {
+        $planning = \App\Models\Planning::with(['employe.user', 'lieu'])->first();
+        
+        if (!$planning || !$planning->employe || !$planning->employe->user) {
+            return 'Impossible de trouver un planning avec un employé et un utilisateur associé';
+        }
+        
+        Mail::to($planning->employe->user->email)
+            ->send(new \App\Mail\PlanningCreated($planning, $planning->employe->user));
+        
+        return 'Email moderne de planning avec pièce jointe envoyé à ' . $planning->employe->user->email . '. Vérifiez Mailtrap.';
+    });
+    
+    // Route de test pour l'envoi d'email de mise à jour de planning avec pièce jointe
+    Route::get('/planning-email-updated', function () {
+        $planning = \App\Models\Planning::with(['employe.user', 'lieu'])->first();
+        
+        if (!$planning || !$planning->employe || !$planning->employe->user) {
+            return 'Impossible de trouver un planning avec un employé et un utilisateur associé';
+        }
+        
+        Mail::to($planning->employe->user->email)
+            ->send(new \App\Mail\PlanningUpdated($planning, $planning->employe->user));
+        
+        return 'Email de mise à jour de planning avec pièce jointe envoyé à ' . $planning->employe->user->email . '. Vérifiez Mailtrap.';
+    });
+    
     // Page de test WebSocket
     Route::get('/websocket/{id}', function ($id) {
         $employe = \App\Models\Employe::findOrFail($id);

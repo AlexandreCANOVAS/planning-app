@@ -26,6 +26,12 @@ class RouteServiceProvider extends ServiceProvider
 
             Route::middleware('web')
                 ->group(base_path('routes/web.php'));
+                
+            // Routes de test pour les pages d'erreur (à supprimer en production)
+            if (config('app.env') !== 'production') {
+                Route::middleware('web')
+                    ->group(base_path('routes/web-test-errors.php'));
+            }
         });
 
         // Redirection personnalisée après authentification

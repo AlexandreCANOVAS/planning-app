@@ -54,9 +54,49 @@
                 })
                 .then(data => {
                     console.log('Notifications reçues (Centre):', data);
-                    this.notifications = data.notifications || [];
+                    
+                    // Filtrer les notifications pour ne garder que la dernière modification de solde par type
+                    const notifications = data.notifications || [];
+                    const soldeModifications = {};
+                    
+                    // Notifications filtrées qui seront affichées
+                    const filteredNotifications = [];
+                    
+                    // Parcourir toutes les notifications
+                    notifications.forEach(notification => {
+                        // Si c'est une notification de modification de solde
+                        if (notification.data && notification.data.title && 
+                            notification.data.title.includes('Modification de votre solde de congés')) {
+                            
+                            // Déterminer le type de solde (congés, RTT, exceptionnels)
+                            let soldeType = 'congés';
+                            if (notification.data.message) {
+                                if (notification.data.message.includes('RTT')) {
+                                    soldeType = 'RTT';
+                                } else if (notification.data.message.includes('exceptionnels')) {
+                                    soldeType = 'exceptionnels';
+                                }
+                            }
+                            
+                            // Ne garder que la notification la plus récente pour chaque type de solde
+                            if (!soldeModifications[soldeType] || 
+                                new Date(notification.created_at) > new Date(soldeModifications[soldeType].created_at)) {
+                                soldeModifications[soldeType] = notification;
+                            }
+                        } else {
+                            // Pour les autres types de notifications, les conserver toutes
+                            filteredNotifications.push(notification);
+                        }
+                    });
+                    
+                    // Ajouter les dernières modifications de solde au début des notifications filtrées
+                    Object.values(soldeModifications).forEach(notification => {
+                        filteredNotifications.unshift(notification);
+                    });
+                    
+                    this.notifications = filteredNotifications;
                     this.unreadCount = data.count || 0;
-                    console.log('Centre de notifications - Notifications chargées:', this.notifications.length, 'Non lues:', this.unreadCount);
+                    console.log('Centre de notifications - Notifications filtrées:', this.notifications.length, 'Non lues:', this.unreadCount);
                     this.loading = false;
                 })
                 .catch(error => {
@@ -160,25 +200,59 @@
                 })
                 .then(response => {
                     if (!response.ok) {
-                        console.error(`Erreur réseau: ${response.status}`);
-                        throw new Error(`Erreur réseau: ${response.status}`);
+                        throw new Error('Erreur réseau: ' + response.status);
                     }
                     return response.json();
                 })
                 .then(data => {
-                    if (data && typeof data === 'object') {
-                        this.notifications = data.notifications || [];
-                        this.unreadCount = data.count || 0;
-                        console.log('Dropdown - Notifications chargées:', this.notifications.length, 'Non lues:', this.unreadCount);
-                    } else {
-                        console.warn('Format de données inattendu:', data);
-                        this.notifications = [];
-                        this.unreadCount = 0;
-                    }
+                    console.log('Notifications reçues (Dropdown):', data);
+                    
+                    // Filtrer les notifications pour ne garder que la dernière modification de solde par type
+                    const notifications = data.notifications || [];
+                    const soldeModifications = {};
+                    
+                    // Notifications filtrées qui seront affichées
+                    const filteredNotifications = [];
+                    
+                    // Parcourir toutes les notifications
+                    notifications.forEach(notification => {
+                        // Si c'est une notification de modification de solde
+                        if (notification.data && notification.data.title && 
+                            notification.data.title.includes('Modification de votre solde de congés')) {
+                            
+                            // Déterminer le type de solde (congés, RTT, exceptionnels)
+                            let soldeType = 'congés';
+                            if (notification.data.message) {
+                                if (notification.data.message.includes('RTT')) {
+                                    soldeType = 'RTT';
+                                } else if (notification.data.message.includes('exceptionnels')) {
+                                    soldeType = 'exceptionnels';
+                                }
+                            }
+                            
+                            // Ne garder que la notification la plus récente pour chaque type de solde
+                            if (!soldeModifications[soldeType] || 
+                                new Date(notification.created_at) > new Date(soldeModifications[soldeType].created_at)) {
+                                soldeModifications[soldeType] = notification;
+                            }
+                        } else {
+                            // Pour les autres types de notifications, les conserver toutes
+                            filteredNotifications.push(notification);
+                        }
+                    });
+                    
+                    // Ajouter les dernières modifications de solde au début des notifications filtrées
+                    Object.values(soldeModifications).forEach(notification => {
+                        filteredNotifications.unshift(notification);
+                    });
+                    
+                    this.notifications = filteredNotifications;
+                    this.unreadCount = data.count || 0;
+                    console.log('Dropdown de notifications - Notifications filtrées:', this.notifications.length, 'Non lues:', this.unreadCount);
                     this.loading = false;
                 })
                 .catch(error => {
-                    console.error('Erreur lors du chargement des notifications:', error);
+                    console.error('Erreur lors du chargement des notifications (Dropdown):', error);
                     this.notifications = [];
                     this.unreadCount = 0;
                     this.loading = false;

@@ -1,6 +1,45 @@
 @auth
     @php
-    $notifications = auth()->user()->unreadNotifications;
+    // Récupération des notifications non lues
+    $allNotifications = auth()->user()->unreadNotifications;
+    
+    // Filtrage des notifications pour ne garder que la dernière modification de solde par type
+    $soldeModifications = [];
+    $filteredNotifications = [];
+    
+    foreach ($allNotifications as $notification) {
+        // Si c'est une notification de modification de solde
+        if (isset($notification->data['title']) && 
+            strpos($notification->data['title'], 'Modification de votre solde de congés') !== false) {
+            
+            // Déterminer le type de solde (congés, RTT, exceptionnels)
+            $soldeType = 'congés';
+            if (isset($notification->data['message'])) {
+                if (strpos($notification->data['message'], 'RTT') !== false) {
+                    $soldeType = 'RTT';
+                } else if (strpos($notification->data['message'], 'exceptionnels') !== false) {
+                    $soldeType = 'exceptionnels';
+                }
+            }
+            
+            // Ne garder que la notification la plus récente pour chaque type de solde
+            if (!isset($soldeModifications[$soldeType]) || 
+                $notification->created_at > $soldeModifications[$soldeType]->created_at) {
+                $soldeModifications[$soldeType] = $notification;
+            }
+        } else {
+            // Pour les autres types de notifications, les conserver toutes
+            $filteredNotifications[] = $notification;
+        }
+    }
+    
+    // Ajouter les dernières modifications de solde au début des notifications filtrées
+    foreach ($soldeModifications as $notification) {
+        array_unshift($filteredNotifications, $notification);
+    }
+    
+    // Utiliser les notifications filtrées
+    $notifications = collect($filteredNotifications);
     @endphp
 
     <x-dropdown align="right" width="48">
