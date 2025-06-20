@@ -199,12 +199,7 @@
                             @endforeach
                         </div>
                     </div>
-                    
-                    <!-- Carte des lieux de travail (déplacée en bas) -->
-                    <div class="mt-10 pt-6 border-t border-gray-200">
-                        <h3 class="text-lg font-medium text-gray-900 mb-4">Carte des lieux de travail</h3>
-                        @include('lieux.partials.map')
-                    </div>
+
                 </div>
             </div>
         </div>

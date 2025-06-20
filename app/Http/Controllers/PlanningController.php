@@ -1823,11 +1823,14 @@ class PlanningController extends Controller
         DB::beginTransaction();
         try {
             // Supprimer tous les plannings existants pour ce mois et cet employé
+            // Utiliser une requête SQL brute avec LIKE au lieu de whereYear et whereMonth
+            $yearMonth = $data['annee'] . '-' . str_pad($data['mois'], 2, '0', STR_PAD_LEFT) . '-%';
             Planning::where('employe_id', $employe->id)
                 ->where('societe_id', $user->societe_id)
-                ->whereYear('date', $data['annee'])
-                ->whereMonth('date', $data['mois'])
+                ->where('date', 'LIKE', $yearMonth)
                 ->delete();
+                
+            \Log::info('Suppression des plannings pour le mois ' . $data['mois'] . ' et année ' . $data['annee'] . ' avec pattern: ' . $yearMonth);
 
             // Créer les nouveaux plannings
             foreach ($data['plannings'] as $date => $planning) {
@@ -1914,11 +1917,13 @@ class PlanningController extends Controller
                 ->where('societe_id', $user->societe_id)
                 ->firstOrFail();
 
-            // Récupérer tous les plannings du mois
+            // Récupérer tous les plannings du mois en utilisant LIKE au lieu de whereYear et whereMonth
+            $yearMonth = $annee . '-' . str_pad($mois, 2, '0', STR_PAD_LEFT) . '-%';
+            \Log::info('Récupération des plannings avec pattern: ' . $yearMonth);
+            
             $plannings = Planning::with('lieu')
                 ->where('employe_id', $employe_id)
-                ->whereYear('date', $annee)
-                ->whereMonth('date', $mois)
+                ->where('date', 'LIKE', $yearMonth)
                 ->get()
                 ->map(function ($planning) {
                     // Formater la date en Y-m-d

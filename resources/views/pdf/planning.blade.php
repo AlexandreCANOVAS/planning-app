@@ -96,7 +96,10 @@
             @foreach($plannings as $planning)
                 @php
                     $date = \Carbon\Carbon::parse($planning->date);
-                    $dayOfWeek = $daysOfWeek[$date->dayOfWeek - 1];
+                    // Correction de l'index pour éviter l'erreur "Undefined array key -1"
+                    // Carbon peut retourner 0 pour dimanche, ce qui donne -1 après soustraction
+                    $dayIndex = ($date->dayOfWeek == 0) ? 6 : $date->dayOfWeek - 1;
+                    $dayOfWeek = $daysOfWeek[$dayIndex];
                     $totalHours += $planning->heures_travaillees;
                 @endphp
                 <tr>

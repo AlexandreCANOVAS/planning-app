@@ -51,6 +51,9 @@
                                 <i class="fab fa-twitter"></i>
                             </a>
                             <a href="#" class="text-gray-400 hover:text-white transition-colors duration-300">
+                                <i class="fab fa-instagram"></i>
+                            </a>
+                            <a href="#" class="text-gray-400 hover:text-white transition-colors duration-300">
                                 <i class="fab fa-linkedin-in"></i>
                             </a>
                         </div>
@@ -69,32 +72,37 @@
                         <h3 class="text-white font-semibold text-lg mb-4">Entreprise</h3>
                         <ul class="space-y-2">
                             <li><a href="{{ route('about') }}" class="text-gray-400 hover:text-white transition-colors duration-300">À propos</a></li>
-                            <li><a href="{{ route('pricing') }}" class="text-gray-400 hover:text-white transition-colors duration-300">Tarifs</a></li>
                             <li><a href="{{ route('contact') }}" class="text-gray-400 hover:text-white transition-colors duration-300">Contact</a></li>
+                            <li><a href="{{ route('pricing') }}" class="text-gray-400 hover:text-white transition-colors duration-300">Tarifs</a></li>
                         </ul>
                     </div>
                     
                     <div>
-                        <h3 class="text-white font-semibold text-lg mb-4">Support</h3>
+                        <h3 class="text-white font-semibold text-lg mb-4">Légal</h3>
                         <ul class="space-y-2">
-                            <li><a href="#" class="text-gray-400 hover:text-white transition-colors duration-300">Centre d'aide</a></li>
-                            <li><a href="#" class="text-gray-400 hover:text-white transition-colors duration-300">Documentation</a></li>
-                            <li><a href="#" class="text-gray-400 hover:text-white transition-colors duration-300">Statut du système</a></li>
+                            <li><a href="#" class="text-gray-400 hover:text-white transition-colors duration-300">Conditions d'utilisation</a></li>
+                            <li><a href="#" class="text-gray-400 hover:text-white transition-colors duration-300">Politique de confidentialité</a></li>
+                            <li><a href="#" class="text-gray-400 hover:text-white transition-colors duration-300">Mentions légales</a></li>
                         </ul>
                     </div>
                 </div>
                 
                 <div class="border-t border-gray-800 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
-                    <p class="text-gray-400 text-sm mb-4 md:mb-0">
-                        © 2025 Planify. Tous droits réservés.
+                    <p class="text-gray-400 text-sm">
+                        &copy; {{ date('Y') }} Planify. Tous droits réservés.
                     </p>
-                    <div class="flex space-x-6">
-                        <a href="#" class="text-gray-400 hover:text-white transition-colors duration-300 text-sm">Politique de confidentialité</a>
-                        <a href="#" class="text-gray-400 hover:text-white transition-colors duration-300 text-sm">Conditions d'utilisation</a>
-                        <a href="#" class="text-gray-400 hover:text-white transition-colors duration-300 text-sm">Mentions légales</a>
+                    <div class="mt-4 md:mt-0">
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors duration-300 mx-2 text-sm">
+                            Français
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors duration-300 mx-2 text-sm">
+                            English
+                        </a>
                     </div>
                 </div>
             </div>
         </footer>
+        
+        @stack('scripts')
     </body>
 </html>

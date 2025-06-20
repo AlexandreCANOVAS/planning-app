@@ -828,6 +828,77 @@ use App\Models\Lieu;
         window.closeConfirmationModal = function() {
             document.getElementById('confirmationModal').style.display = 'none';
         };
+
+        // Fonction pour créer/modifier le planning
+        function creerPlanning() {
+            console.log('creerPlanning appelé');
+            
+            // Désactiver le bouton pour éviter les soumissions multiples
+            const btnCreerPlanning = document.getElementById('btnCreerPlanning');
+            btnCreerPlanning.disabled = true;
+            btnCreerPlanning.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Modification en cours...';
+            
+            // Préparer les données à envoyer
+            const data = {
+                employe_id: employeId,
+                mois: {{ $mois }},
+                annee: {{ $annee }},
+                plannings: temporaryPlannings
+            };
+            
+            // Envoyer les données au serveur
+            fetch('{{ route("plannings.update-monthly-calendar") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    showToast(data.error, 'error');
+                    btnCreerPlanning.disabled = false;
+                    btnCreerPlanning.innerHTML = '<i class="fas fa-save mr-2"></i> Modifier le planning';
+                } else {
+                    const employeNomPrenom = '{{ $employe->nom }} {{ $employe->prenom }}';
+                    const moisNom = '{{ Carbon\Carbon::create($annee, $mois, 1)->locale("fr")->monthName }}';
+                    
+                    // Afficher le message de succès dans le modal
+                    document.getElementById('confirmationModal').style.display = 'flex';
+                    
+                    // Mettre à jour le titre et le message du modal
+                    const modalTitle = document.querySelector('#confirmationModal h3');
+                    modalTitle.textContent = 'Planning modifié avec succès';
+                    
+                    const modalMessage = document.querySelector('#confirmationModal p');
+                    modalMessage.textContent = `Le planning de ${employeNomPrenom} pour le mois de ${moisNom} a été modifié avec succès. Voulez-vous télécharger le PDF du planning ?`;
+                    
+                    // Configurer les boutons du modal
+                    const buttonsContainer = document.querySelector('#confirmationModal .flex.justify-center');
+                    buttonsContainer.innerHTML = `
+                        <button onclick="exportPdfWithModifications(); closeConfirmationModal();" 
+                            class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors duration-200">
+                            <i class="fas fa-download mr-2"></i> Télécharger le PDF
+                        </button>
+                        <button onclick="closeConfirmationModal(); window.location.href = '{{ route("plannings.calendar") }}';" 
+                            class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 transition-colors duration-200">
+                            Retourner au calendrier
+                        </button>
+                    `;
+                    
+                    // Afficher également un toast pour plus de visibilité
+                    showToast(`Le planning de ${employeNomPrenom} pour le mois de ${moisNom} a été modifié avec succès.`, 'success');
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                showToast('Une erreur est survenue lors de la modification', 'error');
+                btnCreerPlanning.disabled = false;
+                btnCreerPlanning.innerHTML = '<i class="fas fa-save mr-2"></i> Modifier le planning';
+            });
+        }
         
         // Fonction wrapper pour déboguer l'appel à creerPlanning()
         window.creerPlanningWrapper = function() {

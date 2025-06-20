@@ -49,6 +49,33 @@ Route::get('/', function () {
     return view('welcome');
 })->name('welcome');
 
+Route::get('/tarifs', function () {
+    return view('pricing');
+})->name('pricing');
+
+Route::get('/a-propos', function () {
+    return view('about');
+})->name('about');
+
+Route::get('/contact', function () {
+    return view('contact');
+})->name('contact');
+
+// Routes des fonctionnalités
+Route::prefix('fonctionnalites')->name('features.')->group(function () {
+    Route::get('/planning', function () {
+        return view('features.planning');
+    })->name('planning');
+    
+    Route::get('/conges', function () {
+        return view('features.conges');
+    })->name('conges');
+    
+    Route::get('/suivi-temps', function () {
+        return view('features.temps');
+    })->name('temps');
+});
+
 Route::get('/fonctionnalites', function () {
     return view('fonctionnalites');
 })->name('fonctionnalites');
@@ -158,6 +185,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::prefix('plannings')->group(function () {
             Route::get('/calendar', [PlanningController::class, 'calendar'])->name('plannings.calendar');
             Route::get('/download-pdf', [PlanningController::class, 'downloadPdf'])->name('plannings.download-pdf');
+            Route::get('/export-pdf/{employe_id}/{mois}/{annee}', [PlanningController::class, 'exportPDF'])->name('plannings.export-pdf');
             Route::post('/export-pdf-with-modifications', [PlanningController::class, 'exportPdfWithModifications'])->name('plannings.export-pdf-with-modifications');
             Route::get('/create-monthly-calendar', [PlanningController::class, 'createMonthlyCalendar'])
                 ->name('plannings.create-monthly-calendar');

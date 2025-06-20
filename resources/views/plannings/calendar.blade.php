@@ -104,7 +104,7 @@
                                                         </a>
                                                         <a href="{{ route('plannings.export-pdf', [
                                                             'employe_id' => $stat['employe']->id,
-                                                            'mois' => $moisActuel,
+                                                            'mois' => $mois,
                                                             'annee' => $anneeActuelle
                                                         ]) }}" 
                                                         class="text-indigo-600 hover:text-indigo-800"
