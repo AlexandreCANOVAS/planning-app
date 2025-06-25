@@ -113,11 +113,19 @@ use App\Models\Lieu;
                         }
                     @endphp
 
-                    <div class="calendar-cell border p-2 {{ $bgClass }}" 
+                                        <div class="calendar-cell border p-2 h-28 relative {{ $bgClass }}" 
                          data-date="{{ $currentDateStr }}"
                          @if($isCurrentMonth) onclick="toggleDateSelection(this)" @endif>
                         <div class="text-right mb-2">{{ $currentDate->format('d') }}</div>
                         
+                        @if($isCurrentMonth)
+                        <div class="absolute bottom-1 right-1">
+                            <button onclick="event.stopPropagation(); showDayDetails('{{ $currentDateStr }}')" class="p-1 rounded-full hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                                <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                            </button>
+                        </div>
+                        @endif
+
                         @if($dayPlannings)
                             @if($dayPlannings['journee'])
                                 <div class="planning-details text-xs">
@@ -269,6 +277,24 @@ use App\Models\Lieu;
 
 </div>
 
+<!-- Modal pour les détails du jour -->
+<div id="day-details-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-1/2 shadow-lg rounded-md bg-white">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-medium">Détails du <span id="day-details-date"></span></h3>
+            <button onclick="closeDayDetailsModal()" class="text-gray-400 hover:text-gray-500">
+                <span class="sr-only">Fermer</span>
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+        <div id="day-details-content" class="max-h-96 overflow-y-auto">
+            <!-- Le contenu sera chargé ici via AJAX -->
+        </div>
+    </div>
+</div>
+
 <!-- Formulaire de planning -->
 <div id="planningForm" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
     <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
@@ -367,6 +393,38 @@ use App\Models\Lieu;
 
 @push('scripts')
 <script>
+    function showDayDetails(date) {
+        const modal = document.getElementById('day-details-modal');
+        const dateSpan = document.getElementById('day-details-date');
+        const contentDiv = document.getElementById('day-details-content');
+
+        // Clear previous content
+        contentDiv.innerHTML = '<div class="flex justify-center items-center p-6"><svg class="animate-spin h-8 w-8 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span class="ml-4 text-gray-600">Chargement des détails...</span></div>';
+        dateSpan.textContent = new Date(date + 'T00:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+        modal.classList.remove('hidden');
+
+        fetch(`/plannings/day-details/${date}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text(); // Get response as text (HTML)
+            })
+            .then(html => {
+                contentDiv.innerHTML = html; // Set the HTML content
+            })
+            .catch(error => {
+                console.error('Error fetching day details:', error);
+                contentDiv.innerHTML = '<p class="text-red-500 text-center">Erreur lors du chargement des détails. Veuillez réessayer.</p>';
+            });
+    }
+
+    function closeDayDetailsModal() {
+        const modal = document.getElementById('day-details-modal');
+        modal.classList.add('hidden');
+    }
+
     // Fonctions pour gérer les notifications modales
     window.showNotification = function(type, message) {
         const container = document.getElementById('notification-container');

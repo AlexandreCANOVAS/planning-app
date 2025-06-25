@@ -96,43 +96,30 @@ Route::get('/politique-confidentialite', function () {
     return view('politique-confidentialite');
 })->name('politique-confidentialite');
 
-// Routes d'authentification
-Route::middleware('guest')->group(function () {
-    Route::get('register', [RegisteredUserController::class, 'create'])->name('register');
-    Route::post('register', [RegisteredUserController::class, 'store']);
-    Route::get('login', [AuthenticatedSessionController::class, 'create'])->name('login');
-    Route::post('login', [AuthenticatedSessionController::class, 'store']);
-    Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])->name('password.request');
-    Route::post('forgot-password', [PasswordResetLinkController::class, 'store'])->name('password.email');
-    Route::get('reset-password/{token}', [NewPasswordController::class, 'create'])->name('password.reset');
-    Route::post('reset-password', [NewPasswordController::class, 'store'])->name('password.store');
-});
+// Les routes d'authentification (login, register, logout, etc.) sont gérées par le fichier routes/auth.php
 
+// Routes nécessitant une authentification
 Route::middleware('auth')->group(function () {
-    Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
-    Route::get('verify-email', [EmailVerificationPromptController::class, 'show'])->name('verification.notice');
-    Route::get('verify-email/{id}/{hash}', [VerifyEmailController::class, 'verify'])->name('verification.verify');
-    Route::post('email/verification-notification', [EmailVerificationNotificationController::class, 'store'])->name('verification.send');
-    
     // Route pour changer le thème
     Route::post('/theme/toggle', [ThemeController::class, 'toggleTheme'])->name('theme.toggle');
-    
+
     // Routes pour le profil utilisateur
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-        Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // Route pour l'export des données RGPD
     Route::get('/gdpr/export', [GDPRController::class, 'exportData'])->name('gdpr.export');
-});
 
-// Routes pour le changement de mot de passe (doivent être définies avant les autres routes authentifiées)
-Route::middleware(['auth'])->group(function () {
+    // Routes pour le changement de mot de passe
     Route::get('/change-password', [ChangePasswordController::class, 'show'])->name('change-password.show');
     Route::put('/change-password', [ChangePasswordController::class, 'update'])->name('change-password.update');
 });
 
-Route::middleware(['auth', 'verified'])->group(function () {
+
+    Route::middleware('verified')->group(function () {
+        Route::get('/home', [PlanningController::class, 'calendarIndex'])->name('home');
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/home', [PlanningController::class, 'calendarIndex'])->name('home');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
@@ -191,11 +178,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/download-pdf', [PlanningController::class, 'downloadPdf'])->name('plannings.download-pdf');
             Route::get('/export-pdf/{employe_id}/{mois}/{annee}', [PlanningController::class, 'exportPDF'])->name('plannings.export-pdf');
             Route::post('/export-pdf-with-modifications', [PlanningController::class, 'exportPdfWithModifications'])->name('plannings.export-pdf-with-modifications');
-            Route::get('/create-monthly-calendar', [PlanningController::class, 'createMonthlyCalendar'])
-                ->name('plannings.create-monthly-calendar');
+            
+            Route::get('/create-monthly-calendar', [PlanningController::class, 'createMonthlyCalendar'])->name('plannings.create-monthly-calendar');
+            
+                        Route::get('/day-details/{date}', [PlanningController::class, 'getDayDetails'])->name('plannings.dayDetails');
+            
             Route::get('/edit-monthly-calendar', [PlanningController::class, 'editMonthlyCalendar'])
                 ->name('plannings.edit-monthly-calendar')
                 ->withoutMiddleware([CheckEmployeur::class]);
+
             Route::post('/store-monthly', [PlanningController::class, 'storeMonthly'])
                 ->name('plannings.store_monthly');
             Route::post('/store-monthly-calendar', [PlanningController::class, 'storeMonthlyCalendar'])
@@ -215,6 +206,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 ->name('plannings.remplir-jours-non-travailles');
             Route::post('/ajouter-conge/{employe_id}/{annee}/{mois}', [PlanningController::class, 'ajouterConge'])
                 ->name('plannings.ajouter-conge');
+            Route::delete('/supprimer-conge/{conge_id}', [PlanningController::class, 'supprimerConge'])
+                ->name('plannings.supprimer-conge');
         });
         
         // Routes de la comptabilité

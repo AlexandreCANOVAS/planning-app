@@ -23,6 +23,26 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class PlanningController extends Controller
 {
+    public function getDayDetails($date)
+    {
+        try {
+            $plannings = Planning::where('date', $date)
+                ->with(['employe', 'lieu'])
+                ->get();
+
+            $dateFormatted = Carbon::parse($date)->locale('fr')->isoFormat('dddd D MMMM YYYY');
+
+            // Group plannings by employee
+            $planningsByEmploye = $plannings->groupBy('employe_id');
+
+            return view('plannings.partials.day-details', compact('planningsByEmploye', 'dateFormatted'));
+
+        } catch (\Exception $e) {
+            Log::error('Error fetching day details: ' . $e->getMessage());
+            return response()->json(['error' => 'Unable to fetch details. ' . $e->getMessage()], 500);
+        }
+    }
+
     /**
      * Affiche le planning mensuel de l'employé connecté sous forme de calendrier
      *
@@ -1660,6 +1680,8 @@ class PlanningController extends Controller
         $mois = $request->input('mois');
         $annee = $request->input('annee');
 
+        $isModification = false;
+
         // Récupérer l'employé
         $employe = Employe::where('id', $employe_id)
             ->where('societe_id', $user->societe_id)
@@ -1742,7 +1764,8 @@ class PlanningController extends Controller
             'anneePrecedente',
             'planningsByDatePrecedent',
             'debutPeriodePrecedent',
-            'finPeriodePrecedent'
+            'finPeriodePrecedent',
+            'isModification'
         ));
     }
     
@@ -1752,6 +1775,28 @@ class PlanningController extends Controller
         $employe_id = $request->input('employe_id');
         $mois = $request->input('mois');
         $annee = $request->input('annee');
+
+        // Déterminer si on est en mode création ou modification
+        $currentRouteName = \Illuminate\Support\Facades\Route::currentRouteName();
+        $isModification = true; // Par défaut, on est en modification
+
+        if ($currentRouteName === 'plannings.create-monthly-calendar') {
+            // Si la route est 'create', on vérifie si un planning existe déjà
+            $planningExists = Planning::where('employe_id', $employe_id)
+                ->where('societe_id', $user->societe_id)
+                ->whereYear('date', $annee)
+                ->whereMonth('date', $mois)
+                ->exists();
+
+            // Si un planning existe, on redirige vers la page de modification
+            if ($planningExists) {
+                return redirect()->route('plannings.edit-monthly-calendar', $request->query())
+                    ->with('info', 'Un planning existe déjà pour cette période. Vous êtes en mode modification.');
+            }
+            
+            // Sinon, on est bien en mode création
+            $isModification = false;
+        }
 
         // Récupérer l'employé
         $employe = Employe::where('id', $employe_id)
@@ -1765,9 +1810,9 @@ class PlanningController extends Controller
             ->get();
 
         // Créer les dates pour le mois
-        $dateDebut = Carbon::create($annee, $mois, 1);
-        $debutPeriode = $dateDebut->copy()->startOfWeek(Carbon::MONDAY);
-        $finPeriode = $dateDebut->copy()->endOfMonth()->endOfWeek(Carbon::SUNDAY);
+        $dateDebut = \Carbon\Carbon::create($annee, $mois, 1);
+        $debutPeriode = $dateDebut->copy()->startOfWeek(\Carbon\Carbon::MONDAY);
+        $finPeriode = $dateDebut->copy()->endOfMonth()->endOfWeek(\Carbon\Carbon::SUNDAY);
 
         // Récupérer les plannings existants pour ce mois
         $plannings = Planning::where('employe_id', $employe_id)
@@ -1790,10 +1835,8 @@ class PlanningController extends Controller
             }
             $planningsByDate[$date][$planning->periode] = $planning;
         }
-
-        // Indiquer que nous sommes en mode modification
-        $isModification = true;
         
+        // Le nom de la vue est le même pour la création et la modification
         return view('plannings.edit_monthly_calendar', compact(
             'employe',
             'lieux',
@@ -1805,7 +1848,7 @@ class PlanningController extends Controller
             'isModification'
         ));
     }
-    
+
     public function updateMonthlyCalendar(Request $request)
     {
         $user = auth()->user();
