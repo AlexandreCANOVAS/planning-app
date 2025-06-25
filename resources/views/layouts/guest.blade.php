@@ -102,7 +102,10 @@
                 </div>
             </div>
         </footer>
-        
+
+        <!-- Script de consentement aux cookies chargé manuellement -->
+        <script type="module" src="{{ asset('js/cookie-consent.js') }}"></script>
+
         @stack('scripts')
     </body>
 </html>

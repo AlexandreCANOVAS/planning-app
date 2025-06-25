@@ -11,6 +11,11 @@ window.notificationsDropdown = function() {
         refreshInterval: null,
         
         init() {
+            // Ne rien faire si l'utilisateur n'est pas sur une page authentifiée
+            if (!document.getElementById('notification-dropdown-trigger')) {
+                return;
+            }
+
             this.fetchNotifications();
             
             // Rafraîchir les notifications toutes les 30 secondes

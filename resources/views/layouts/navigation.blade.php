@@ -11,7 +11,7 @@
 
                 <!-- Navigation Links -->
                 <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
-                    @if(Auth::check() && Auth::user()->role === 'employe')
+                    @if(Auth::check() && Auth::user() && Auth::user()->role === 'employe')
                         <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" 
                             class="inline-flex items-center px-1 pt-1 text-sm font-medium leading-5 transition duration-150 ease-in-out text-white hover:text-purple-100">
                             <i class="fas fa-chart-line mr-2"></i>
@@ -24,7 +24,7 @@
                             {{ __('Plannings') }}
                         </x-nav-link>
                         
-                        <x-nav-link :href="route('employe.plannings.liste-echanges')" :active="request()->routeIs('employe.plannings.liste-echanges') || request()->routeIs('employe.plannings.comparer')"
+                        <x-nav-link :href="route('employe.echanges.index')" :active="request()->routeIs('employe.echanges.*') || request()->routeIs('employe.plannings.liste-echanges') || request()->routeIs('employe.plannings.comparer')"
                             class="inline-flex items-center px-1 pt-1 text-sm font-medium leading-5 transition duration-150 ease-in-out text-white hover:text-purple-100">
                             <i class="fas fa-exchange-alt mr-2"></i>
                             {{ __('Échanges') }}
@@ -95,7 +95,7 @@
                                         <i class="fas fa-user text-[rgb(131,44,207)]"></i>
                                     </div>
                                     <div>
-                                        @if(Auth::check())
+                                        @if(Auth::check() && Auth::user())
                                             <div class="font-medium text-white">{{ Auth::user()->name }}</div>
                                             <div class="text-xs text-purple-100">{{ Auth::user()->email }}</div>
                                         @else
@@ -117,6 +117,13 @@
                                 <i class="fas fa-user-cog mr-2"></i>
                                 {{ __('Profil') }}
                             </x-dropdown-link>
+
+                            @if(Auth::check() && Auth::user()->role !== 'employe')
+                            {{-- <x-dropdown-link :href="route('subscription.index')" class="flex items-center">
+                                <i class="fas fa-credit-card mr-2"></i>
+                                {{ __('Abonnement') }}
+                            </x-dropdown-link> --}}
+                            @endif
 
                             <!-- Bouton de basculement de thème -->
                             <form method="POST" action="{{ route('theme.toggle') }}">
@@ -162,7 +169,7 @@
     <!-- Responsive Navigation Menu -->
     <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
         <div class="pt-2 pb-3 space-y-1">
-            @if(Auth::check() && Auth::user()->role === 'employe')
+            @if(Auth::check() && Auth::user() && Auth::user()->role === 'employe')
                 <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" class="flex items-center">
                     <i class="fas fa-chart-line mr-2"></i>
                     {{ __('Tableau de bord') }}
@@ -171,6 +178,11 @@
                 <x-responsive-nav-link :href="route('employe.plannings.index')" :active="request()->routeIs('employe.plannings.*')" class="flex items-center">
                     <i class="fas fa-calendar-alt mr-2"></i>
                     {{ __('Plannings') }}
+                </x-responsive-nav-link>
+
+                <x-responsive-nav-link :href="route('employe.echanges.index')" :active="request()->routeIs('employe.echanges.*') || request()->routeIs('employe.plannings.liste-echanges') || request()->routeIs('employe.plannings.comparer')" class="flex items-center">
+                    <i class="fas fa-exchange-alt mr-2"></i>
+                    {{ __('Échanges') }}
                 </x-responsive-nav-link>
 
                 <x-responsive-nav-link :href="route('employe.conges.index')" :active="request()->routeIs('employe.conges.*')" class="flex items-center">
@@ -218,7 +230,7 @@
         <!-- Responsive Settings Options -->
         <div class="pt-4 pb-1 border-t border-gray-200">
             <div class="px-4">
-                @if(Auth::check())
+                @if(Auth::check() && Auth::user())
                     <div class="font-medium text-base text-gray-800">{{ Auth::user()->name }}</div>
                     <div class="font-medium text-sm text-gray-500">{{ Auth::user()->email }}</div>
                 @else
@@ -232,6 +244,13 @@
                     <i class="fas fa-user-cog mr-2"></i>
                     {{ __('Profil') }}
                 </x-responsive-nav-link>
+
+                @if(Auth::check() && Auth::user()->role !== 'employe')
+                {{-- <x-responsive-nav-link :href="route('subscription.index')" class="flex items-center">
+                    <i class="fas fa-credit-card mr-2"></i>
+                    {{ __('Abonnement') }}
+                </x-responsive-nav-link> --}}
+                @endif
 
                 <!-- Bouton de basculement de thème pour mobile -->
                 <form method="POST" action="{{ route('theme.toggle') }}">

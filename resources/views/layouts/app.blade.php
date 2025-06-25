@@ -422,6 +422,10 @@
         @include('partials.notification-scripts')
         
         @stack('scripts')
+
+        <!-- Script de consentement aux cookies chargé manuellement -->
+        <script type="module" src="{{ asset('js/cookie-consent.js') }}"></script>
+
         @hasSection('scripts')
             @yield('scripts')
         @endif

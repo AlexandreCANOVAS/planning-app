@@ -12,8 +12,9 @@ class LieuController extends Controller
 
     public function index()
     {
-        // Récupérer uniquement les lieux de travail de la société de l'employeur connecté
+        // Récupérer les lieux de travail de la société de l'employeur connecté, en excluant les lieux spéciaux
         $lieux = Lieu::where('societe_id', Auth::user()->societe->id)
+            ->whereNotIn('nom', $this->lieuxSpeciaux)
             ->orderBy('nom')
             ->paginate(10);
             

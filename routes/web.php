@@ -19,7 +19,8 @@ use App\Http\Controllers\{
     TauxHeuresSupController,
     TarifController,
     EchangeController,
-    SoldeCongeController
+    SoldeCongeController,
+    GDPRController
 };
 
 use App\Http\Controllers\Auth\{
@@ -119,7 +120,10 @@ Route::middleware('auth')->group(function () {
     // Routes pour le profil utilisateur
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+        Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Route pour l'export des données RGPD
+    Route::get('/gdpr/export', [GDPRController::class, 'exportData'])->name('gdpr.export');
 });
 
 // Routes pour le changement de mot de passe (doivent être définies avant les autres routes authentifiées)

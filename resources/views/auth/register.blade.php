@@ -94,6 +94,14 @@
                         </div>
                     </div>
 
+                    <div class="mt-6">
+                        <label for="terms" class="flex items-center">
+                            <input id="terms" type="checkbox" name="terms" required class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                            <span class="ml-2 text-sm text-gray-600">J'ai lu et j'accepte la <a href="{{ route('politique-confidentialite') }}" class="underline text-sm text-gray-600 hover:text-gray-900">politique de confidentialité</a>.</span>
+                        </label>
+                        <x-input-error :messages="$errors->get('terms')" class="mt-2" />
+                    </div>
+
                     <div class="mt-8">
                         <button type="submit" class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-xl text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transform transition-all duration-150 hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl">
                             S'inscrire

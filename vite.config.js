@@ -9,7 +9,8 @@ export default defineConfig({
                 'resources/js/app.js',
                 'resources/js/employee-stats.js',
                 'resources/js/dark-theme.js',
-                'resources/js/toast.js'
+                'resources/js/toast.js',
+                'resources/js/cookie-consent.js',
             ],
             refresh: true,
         }),
