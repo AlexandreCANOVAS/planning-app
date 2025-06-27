@@ -10,7 +10,6 @@ export default defineConfig({
                 'resources/js/employee-stats.js',
                 'resources/js/dark-theme.js',
                 'resources/js/toast.js',
-                'resources/js/cookie-consent.js',
             ],
             refresh: true,
         }),

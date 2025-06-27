@@ -25,7 +25,7 @@
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 
         <!-- Scripts -->
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @vite(['resources/css/app.css', 'resources/js/app.js'], 'defer')
         <script src="https://cdnjs.cloudflare.com/ajax/libs/luxon/2.3.1/luxon.min.js"></script>
         
         <!-- Variables globales pour JavaScript -->
@@ -368,43 +368,63 @@
         </div>
             
         <!-- Footer -->
-        <footer class="{{ request()->cookie('theme', 'light') === 'dark' ? 'bg-gray-900 border-t border-gray-800' : 'bg-purple-600 border-t border-purple-500' }} py-6 w-full mt-auto">
-                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div class="flex flex-col md:flex-row justify-between items-center">
-                        <div class="mb-4 md:mb-0">
-                            <div class="flex items-center">
-                                <img src="{{ asset('images/company/logo.png') }}" alt="Logo" class="h-8 w-auto mr-3" onerror="this.onerror=null; this.src='{{ asset("images/default-logo.png") }}'">
-                                <span class="text-lg font-semibold {{ request()->cookie('theme', 'light') === 'dark' ? 'text-white' : 'text-white' }}">{{ config('app.name', 'Planning App') }}</span>
-                            </div>
-                            <p class="mt-2 text-sm {{ request()->cookie('theme', 'light') === 'dark' ? 'text-gray-400' : 'text-white text-opacity-80' }}">
-                                &copy; {{ date('Y') }} {{ auth()->user()->societe->nom ?? config('app.name', 'Planning App') }}. Tous droits réservés.
-                            </p>
+        <footer class="bg-gray-900 text-gray-300">
+            <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <!-- Section Logo et Description -->
+                    <div class="space-y-4">
+                        <div class="flex items-center">
+                            <img src="{{ asset('images/logo.png') }}" alt="Planity Logo" class="h-12 w-auto">
                         </div>
-                        
-                        <div class="flex flex-col items-center md:items-end">
-                            <div class="flex space-x-4 mb-2">
-                                <a href="#" class="{{ request()->cookie('theme', 'light') === 'dark' ? 'text-gray-400 hover:text-white' : 'text-white hover:text-white hover:opacity-80' }} transition-colors">
-                                    <i class="fab fa-facebook-f"></i>
-                                </a>
-                                <a href="#" class="{{ request()->cookie('theme', 'light') === 'dark' ? 'text-gray-400 hover:text-white' : 'text-white hover:text-white hover:opacity-80' }} transition-colors">
-                                    <i class="fab fa-twitter"></i>
-                                </a>
-                                <a href="#" class="{{ request()->cookie('theme', 'light') === 'dark' ? 'text-gray-400 hover:text-white' : 'text-white hover:text-white hover:opacity-80' }} transition-colors">
-                                    <i class="fab fa-linkedin-in"></i>
-                                </a>
-                                <a href="#" class="{{ request()->cookie('theme', 'light') === 'dark' ? 'text-gray-400 hover:text-white' : 'text-white hover:text-white hover:opacity-80' }} transition-colors">
-                                    <i class="fab fa-instagram"></i>
-                                </a>
-                            </div>
-                            <div class="text-sm {{ request()->cookie('theme', 'light') === 'dark' ? 'text-gray-400' : 'text-white text-opacity-90' }}">
-                                <a href="{{ route('contact') }}" class="hover:underline mx-2">Contact</a>
-                                <a href="{{ route('mentions-legales') }}" class="hover:underline mx-2">Mentions légales</a>
-                                <a href="{{ route('politique-confidentialite') }}" class="hover:underline mx-2">Politique de confidentialité</a>
-                            </div>
+                        <p class="text-sm text-gray-400">Simplifiez la gestion de votre entreprise avec notre solution tout-en-un.</p>
+                        <div class="flex space-x-4">
+                            <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-facebook-f"></i></a>
+                            <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-twitter"></i></a>
+                            <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-linkedin-in"></i></a>
                         </div>
                     </div>
+
+                    <!-- Section Fonctionnalités -->
+                    <div>
+                        <h3 class="text-sm font-semibold text-gray-400 tracking-wider uppercase">Fonctionnalités</h3>
+                        <ul class="mt-4 space-y-2">
+                            <li><a href="#" class="text-base text-gray-300 hover:text-white">Planning</a></li>
+                            <li><a href="#" class="text-base text-gray-300 hover:text-white">Congés</a></li>
+                            <li><a href="#" class="text-base text-gray-300 hover:text-white">Suivi du temps</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- Section Entreprise -->
+                    <div>
+                        <h3 class="text-sm font-semibold text-gray-400 tracking-wider uppercase">Entreprise</h3>
+                        <ul class="mt-4 space-y-2">
+                            <li><a href="#" class="text-base text-gray-300 hover:text-white">À propos</a></li>
+                            <li><a href="#" class="text-base text-gray-300 hover:text-white">Tarifs</a></li>
+                            <li><a href="{{ route('contact') }}" class="text-base text-gray-300 hover:text-white">Contact</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- Section Support -->
+                    <div>
+                        <h3 class="text-sm font-semibold text-gray-400 tracking-wider uppercase">Support</h3>
+                        <ul class="mt-4 space-y-2">
+                            <li><a href="#" class="text-base text-gray-300 hover:text-white">Centre d'aide</a></li>
+                            <li><a href="#" class="text-base text-gray-300 hover:text-white">Documentation</a></li>
+                            <li><a href="#" class="text-base text-gray-300 hover:text-white">Statut du système</a></li>
+                        </ul>
+                    </div>
                 </div>
-            </footer>
+
+                <div class="mt-12 border-t border-gray-800 pt-8 flex flex-col sm:flex-row justify-between items-center">
+                    <p class="text-sm text-gray-400">&copy; {{ date('Y') }} Planify. Tous droits réservés.</p>
+                    <div class="flex space-x-6 mt-4 sm:mt-0">
+                        <a href="{{ route('politique-confidentialite') }}" class="text-sm text-gray-400 hover:text-white">Politique de confidentialité</a>
+                        <a href="#" class="text-sm text-gray-400 hover:text-white">Conditions d'utilisation</a>
+                        <a href="{{ route('mentions-legales') }}" class="text-sm text-gray-400 hover:text-white">Mentions légales</a>
+                    </div>
+                </div>
+            </div>
+        </footer>
 
         <script>
             window.Laravel = {!! json_encode([
@@ -424,10 +444,12 @@
         @stack('scripts')
 
         <!-- Script de consentement aux cookies chargé manuellement -->
-        <script type="module" src="{{ asset('js/cookie-consent.js') }}"></script>
 
         @hasSection('scripts')
             @yield('scripts')
         @endif
+        <x-cookie-consent />
+
+        @stack('scripts')
     </body>
 </html>

@@ -14,7 +14,10 @@ use App\Models\Planning;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use App\Models\EmployeeInvitation;
+use App\Notifications\EmployeeInvitationNotification;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 
 class EmployeController extends Controller
 {
@@ -53,6 +56,11 @@ class EmployeController extends Controller
         $employes = $query->orderBy('nom')
                          ->orderBy('prenom')
                          ->get();
+
+        // Récupérer les invitations en attente pour la même société
+        $invitations = EmployeeInvitation::where('societe_id', $user->societe_id)
+            ->where('expires_at', '>', now())
+            ->get();
         
         $totalEmployes = $employes->count();
         
@@ -72,10 +80,11 @@ class EmployeController extends Controller
         // Pour l'instant, on met des valeurs par défaut
             
         return view('employes.index', compact(
-            'employes', 
-            'totalEmployes', 
-            'tauxOccupation', 
-            'congesEnCours', 
+            'employes',
+            'invitations',
+            'totalEmployes',
+            'tauxOccupation',
+            'congesEnCours',
             'congesAVenir',
             'search',
             'viewMode'
@@ -101,10 +110,58 @@ class EmployeController extends Controller
         
         return view('employes.create', compact('formations'));
     }
-    
+
     /**
-     * Affiche les formations d'un employé ou de tous les employés
+     * Enregistre un nouvel employé (envoi d'une invitation)
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
      */
+    public function store(Request $request)
+    {
+        $user = auth()->user();
+        
+        if (!$user->societe) {
+            return redirect()->route('societes.create')
+                ->with('error', 'Vous devez d\'abord créer votre société.');
+        }
+        
+        $societe_id = $user->societe->id;
+
+        $validated = $request->validate([
+            'nom' => 'required|string|max:255',
+            'prenom' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email|unique:employes,email|unique:employee_invitations,email',
+            'poste' => 'required|string|max:255',
+        ]);
+
+        try {
+            $token = Str::uuid()->toString();
+
+            $invitation = EmployeeInvitation::create([
+                'email' => $validated['email'],
+                'token' => $token,
+                'societe_id' => $societe_id,
+                'nom' => $validated['nom'],
+                'prenom' => $validated['prenom'],
+                'poste' => $validated['poste'],
+                'expires_at' => now()->addDays(7),
+            ]);
+
+            Notification::route('mail', $validated['email'])
+                ->notify(new EmployeeInvitationNotification($invitation->token, $user->societe->nom));
+
+            return redirect()->route('employes.index')
+                ->with('success', 'L\'invitation a été envoyée avec succès à ' . $validated['email']);
+
+        } catch (\Exception $e) {
+            Log::error('Erreur lors de l\'envoi de l\'invitation : ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'Une erreur est survenue lors de l\'envoi de l\'invitation. Veuillez réessayer.')
+                ->withInput();
+        }
+    }
+    
     /**
      * Affiche les statistiques d'un employé
      *
@@ -390,235 +447,79 @@ class EmployeController extends Controller
                     ->with('error', 'Impossible de charger les formations de cet employé.');
             }
         } else {
-            // Charger tous les employés avec leurs formations et les données pivot complètes
+            // Si aucun employé n'est spécifié, afficher les formations de tous les employés
             $employes = Employe::where('societe_id', $user->societe_id)
-                ->with(['formations' => function($query) {
-                    $query->select('formations.*', 'employe_formation.date_obtention', 'employe_formation.date_recyclage', 'employe_formation.last_recyclage', 'employe_formation.commentaire');
+                ->with(['formations' => function ($query) {
+                    $query->withPivot('date_obtention', 'date_recyclage', 'last_recyclage', 'commentaire');
                 }])
+                ->orderBy('nom')
                 ->get();
-            
+
+            // On ne passe pas de variable $employe ou $formations spécifiques
             return view('employes.formations', compact('employes'));
         }
     }
 
     /**
-     * Enregistre un nouvel employé dans la base de données
+     * Met à jour les informations d'un employé.
      *
      * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function update(Request $request, $id)
     {
         $user = auth()->user();
-        
-        if (!$user->societe) {
-            return redirect()->route('societes.create')
-                ->with('error', 'Vous devez d\'abord créer votre société.');
-        }
-        
-        // Validation des données
+        $employe = Employe::where('id', $id)->where('societe_id', $user->societe_id)->firstOrFail();
+
         $validated = $request->validate([
             'nom' => 'required|string|max:255',
             'prenom' => 'required|string|max:255',
-            'email' => 'required|email|unique:employes,email',
+            'email' => 'required|email|unique:employes,email,' . $employe->id,
             'telephone' => 'nullable|string|max:20',
-            'adresse' => 'nullable|string|max:255',
-            'date_embauche' => 'nullable|date',
-            'date_naissance' => 'nullable|date',
-            'numero_securite_sociale' => 'nullable|string|max:21',
-            'situation_familiale' => 'nullable|string|max:50',
-            'nombre_enfants' => 'nullable|integer|min:0',
-            'contact_urgence_nom' => 'nullable|string|max:255',
-            'contact_urgence_telephone' => 'nullable|string|max:20',
             'poste' => 'required|string|max:255',
-            'type_contrat' => 'required|string|max:50',
-            'duree_contrat' => 'nullable|string|max:255',
-            'temps_travail' => 'required|string|in:plein,partiel',
-            'pourcentage_travail' => 'nullable|integer|min:1|max:99',
+            'date_naissance' => 'nullable|date',
+            'adresse' => 'nullable|string',
+            'numero_securite_sociale' => 'nullable|string',
+            'situation_familiale' => 'nullable|string',
+            'nombre_enfants' => 'nullable|integer|min:0',
+            'contact_urgence_nom' => 'nullable|string',
+            'contact_urgence_telephone' => 'nullable|string',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
-        
-        try {
-            // Début de la transaction
-            DB::beginTransaction();
-            
-            // Création de l'employé
-            $employe = new Employe();
-            $employe->nom = $request->nom;
-            $employe->prenom = $request->prenom;
-            $employe->email = $request->email;
-            $employe->telephone = $request->telephone;
-            $employe->adresse = $request->adresse;
-            $employe->date_embauche = $request->date_embauche;
-            $employe->date_naissance = $request->date_naissance;
-            $employe->numero_securite_sociale = $request->numero_securite_sociale;
-            $employe->situation_familiale = $request->situation_familiale;
-            $employe->nombre_enfants = $request->nombre_enfants;
-            $employe->contact_urgence_nom = $request->contact_urgence_nom;
-            $employe->contact_urgence_telephone = $request->contact_urgence_telephone;
-            $employe->poste = $request->poste;
-            $employe->type_contrat = $request->type_contrat;
-            
-            // Gérer les champs conditionnels
-            if ($request->type_contrat == 'CDD' || $request->type_contrat == 'Intérim' || $request->type_contrat == 'Stage' || $request->type_contrat == 'Alternance') {
-                $employe->duree_contrat = $request->duree_contrat;
+
+        if ($request->hasFile('photo')) {
+            // Supprimer l'ancienne photo si elle existe
+            if ($employe->photo_path) {
+                Storage::disk('public')->delete($employe->photo_path);
             }
-            
-            $employe->temps_travail = $request->temps_travail;
-            if ($request->temps_travail == 'partiel') {
-                $employe->pourcentage_travail = $request->pourcentage_travail;
-            }
-            
-            $employe->societe_id = $user->societe_id;
-            
-            // Traitement de la photo de profil
-            if ($request->hasFile('photo')) {
-                $photo = $request->file('photo');
-                $filename = time() . '_' . $photo->getClientOriginalName();
-                $path = $photo->storeAs('photos_profil', $filename, 'public');
-                $employe->photo_profil = $path;
-            }
-            
-            // Création d'un compte utilisateur avec mot de passe aléatoire
-            $password = Str::random(10); // Génère un mot de passe aléatoire de 10 caractères
-            $userAccount = new User();
-            $userAccount->name = $request->prenom . ' ' . $request->nom;
-            $userAccount->email = $request->email;
-            $userAccount->password = bcrypt($password);
-            $userAccount->role = 'employe';
-            $userAccount->societe_id = $user->societe_id;
-            $userAccount->password_changed = false;
-            $userAccount->save();
-            
-            // Association de l'utilisateur à l'employé
-            $employe->user_id = $userAccount->id;
-            $employe->save();
-            
-            // Stockage du mot de passe en session pour l'afficher à l'employeur
-            session(['temp_password' => $password]);
-            
-            // Traitement des formations
-            if ($request->has('formation_ids')) {
-                $formationIds = $request->formation_ids;
-                $formationDatesObtention = $request->formation_dates_obtention;
-                $formationDatesRecyclage = $request->formation_dates_recyclage;
-                $formationCommentaires = $request->formation_commentaires;
-                
-                foreach ($formationIds as $key => $formationId) {
-                    if (!empty($formationId)) {
-                        $employe->formations()->attach($formationId, [
-                            'date_obtention' => $formationDatesObtention[$key] ?? null,
-                            'date_recyclage' => $formationDatesRecyclage[$key] ?? null,
-                            'commentaire' => $formationCommentaires[$key] ?? null,
-                        ]);
-                    }
-                }
-            }
-            
-            // Traitement des documents administratifs
-            if ($request->hasFile('document_files')) {
-                $documentFiles = $request->file('document_files');
-                $documentTypes = $request->document_types;
-                $documentCommentaires = $request->document_commentaires;
-                
-                foreach ($documentFiles as $key => $file) {
-                    if ($file && $file->isValid()) {
-                        $filename = time() . '_' . $file->getClientOriginalName();
-                        $path = $file->storeAs('documents_employes/' . $employe->id, $filename, 'public');
-                        
-                        // Enregistrer le document dans la base de données
-                        $document = new DocumentAdministratif();
-                        $document->employe_id = $employe->id;
-                        $document->type = $documentTypes[$key] ?? 'Autre';
-                        $document->fichier = $path;
-                        $document->notes = $documentCommentaires[$key] ?? null;
-                        $document->save();
-                    }
-                }
-            }
-            
-            // Traitement du matériel attribué
-            if ($request->has('materiel_types')) {
-                $materielTypes = $request->materiel_types;
-                $materielNumeros = $request->materiel_numeros;
-                $materielCommentaires = $request->materiel_commentaires;
-                
-                foreach ($materielTypes as $key => $type) {
-                    if (!empty($type)) {
-                        $materiel = new Materiel();
-                        $materiel->employe_id = $employe->id;
-                        $materiel->type = $type;
-                        $materiel->numero_serie = $materielNumeros[$key] ?? null;
-                        $materiel->commentaire = $materielCommentaires[$key] ?? null;
-                        $materiel->save();
-                    }
-                }
-            }
-            
-            // Traitement des badges d'accès
-            if ($request->has('badge_types')) {
-                $badgeTypes = $request->badge_types;
-                $badgeNumeros = $request->badge_numeros;
-                $badgeDateDelivrance = $request->badge_dates_delivrance;
-                
-                foreach ($badgeTypes as $key => $type) {
-                    if (!empty($type)) {
-                        $badge = new BadgeAcces();
-                        $badge->employe_id = $employe->id;
-                        $badge->type = $type;
-                        $badge->numero_badge = $badgeNumeros[$key] ?? null;
-                        $badge->date_emission = $badgeDateDelivrance[$key] ?? null;
-                        $badge->actif = true;
-                        $badge->save();
-                    }
-                }
-            }
-            
-            // Traitement des accès informatiques
-            if ($request->has('acces_systemes')) {
-                $accesSystemes = $request->acces_systemes;
-                $accesIdentifiants = $request->acces_identifiants;
-                $accesCommentaires = $request->acces_commentaires;
-                
-                foreach ($accesSystemes as $key => $systeme) {
-                    if (!empty($systeme)) {
-                        $acces = new AccesInformatique();
-                        $acces->employe_id = $employe->id;
-                        $acces->systeme = $systeme;
-                        $acces->identifiant = $accesIdentifiants[$key] ?? null;
-                        $acces->notes = $accesCommentaires[$key] ?? null;
-                        $acces->actif = true;
-                        $acces->date_creation = now();
-                        $acces->save();
-                    }
-                }
-            }
-            
-            // Validation de la transaction
-            DB::commit();
-            
-            // Récupération du mot de passe temporaire généré
-            $tempPassword = session('temp_password');
-            session()->forget('temp_password'); // Suppression de la session après récupération
-            
-            return redirect()->route('employes.show', $employe->id)
-                ->with('success', 'L\'employé a été créé avec succès.')
-                ->with('password', $tempPassword);
-                
-        } catch (\Exception $e) {
-            // Annulation de la transaction en cas d'erreur
-            DB::rollBack();
-            
-            Log::error('Erreur lors de la création d\'un employé : ' . $e->getMessage());
-            
-            return redirect()->back()
-                ->withInput()
-                ->with('error', 'Une erreur est survenue lors de la création de l\'employé. Veuillez réessayer.');
+            $path = $request->file('photo')->store('photos_employes', 'public');
+            $validated['photo_path'] = $path;
         }
+
+        $employe->update($validated);
+
+        // Mettre à jour les formations
+        if ($request->has('formations')) {
+            $formationsData = [];
+            foreach ($request->formations as $formation_id => $pivot) {
+                $formationsData[$formation_id] = [
+                    'date_obtention' => $pivot['date_obtention'] ?? null,
+                    'date_recyclage' => $pivot['date_recyclage'] ?? null,
+                    'last_recyclage' => $pivot['last_recyclage'] ?? null,
+                    'commentaire' => $pivot['commentaire'] ?? null,
+                ];
+            }
+            $employe->formations()->sync($formationsData);
+        } else {
+            $employe->formations()->detach();
+        }
+
+        return redirect()->route('employes.show', $employe->id)->with('success', 'Employé mis à jour avec succès.');
     }
-    
+
     /**
-     * Supprime un employé de la base de données
+     * Supprime un employé.
      *
      * @param  int  $id
      * @return \Illuminate\Http\Response
@@ -626,72 +527,27 @@ class EmployeController extends Controller
     public function destroy($id)
     {
         $user = auth()->user();
-        
-        if (!$user->societe) {
-            return redirect()->route('societes.create')
-                ->with('error', 'Vous devez d\'abord créer votre société.');
+        $employe = Employe::where('id', $id)->where('societe_id', $user->societe_id)->firstOrFail();
+
+        // Supprimer la photo de l'employé
+        if ($employe->photo_path) {
+            Storage::disk('public')->delete($employe->photo_path);
         }
-        
-        try {
-            // Vérifier que l'employé appartient bien à la société de l'utilisateur connecté
-            $employe = Employe::where('id', $id)
-                ->where('societe_id', $user->societe_id)
-                ->firstOrFail();
-            
-            // Début de la transaction
-            DB::beginTransaction();
-            
-            // Supprimer le compte utilisateur associé si existant
-            if ($employe->user_id) {
-                User::where('id', $employe->user_id)->delete();
-            }
-            
-            // Supprimer les formations associées
-            $employe->formations()->detach();
-            
-            // Supprimer les documents administratifs
-            $documents = DocumentAdministratif::where('employe_id', $id)->get();
-            foreach ($documents as $document) {
-                // Supprimer le fichier physique si existant
-                if ($document->fichier && Storage::disk('public')->exists($document->fichier)) {
-                    Storage::disk('public')->delete($document->fichier);
-                }
-                $document->delete();
-            }
-            
-            // Supprimer le matériel attribué
-            Materiel::where('employe_id', $id)->delete();
-            
-            // Supprimer les badges d'accès
-            BadgeAcces::where('employe_id', $id)->delete();
-            
-            // Supprimer les accès informatiques
-            AccesInformatique::where('employe_id', $id)->delete();
-            
-            // Supprimer la photo de profil si existante
-            if ($employe->photo_profil && Storage::disk('public')->exists($employe->photo_profil)) {
-                Storage::disk('public')->delete($employe->photo_profil);
-            }
-            
-            // Supprimer l'employé
-            $employe->delete();
-            
-            // Valider la transaction
-            DB::commit();
-            
-            return redirect()->route('employes.index')
-                ->with('success', 'L\'employé a été supprimé avec succès.');
-                
-        } catch (\Exception $e) {
-            // Annuler la transaction en cas d'erreur
-            DB::rollBack();
-            
-            Log::error('Erreur lors de la suppression de l\'employé #' . $id . ': ' . $e->getMessage());
-            
-            return redirect()->route('employes.index')
-                ->with('error', 'Une erreur est survenue lors de la suppression de l\'employé.');
+
+        // Dissocier les formations
+        $employe->formations()->detach();
+
+        // Récupérer l'utilisateur associé s'il existe
+        $userAccount = User::find($employe->user_id);
+
+        // Supprimer l'employé
+        $employe->delete();
+
+        // Supprimer le compte utilisateur associé
+        if ($userAccount) {
+            $userAccount->delete();
         }
+
+        return redirect()->route('employes.index')->with('success', 'Employé supprimé avec succès.');
     }
-    
-    // Autres méthodes du contrôleur...
 }

@@ -18,9 +18,11 @@ use App\Http\Controllers\{
     ComptabiliteController,
     TauxHeuresSupController,
     TarifController,
+    PageController,
     EchangeController,
     SoldeCongeController,
-    GDPRController
+    GDPRController,
+    InvitationController
 };
 
 use App\Http\Controllers\Auth\{
@@ -46,6 +48,9 @@ use Illuminate\Support\Facades\Broadcast;
 Broadcast::routes();
 
 // Pages publiques
+Route::get('/politique-de-confidentialite', [PageController::class, 'privacy'])->name('pages.privacy');
+Route::get('/politique-de-cookies', [PageController::class, 'cookies'])->name('pages.cookies');
+
 Route::get('/', function () {
     return view('welcome');
 })->name('welcome');
@@ -58,9 +63,7 @@ Route::get('/a-propos', function () {
     return view('about');
 })->name('about');
 
-Route::get('/contact', function () {
-    return view('contact');
-})->name('contact');
+
 
 // Routes des fonctionnalités
 Route::prefix('fonctionnalites')->name('features.')->group(function () {
@@ -96,10 +99,23 @@ Route::get('/politique-confidentialite', function () {
     return view('politique-confidentialite');
 })->name('politique-confidentialite');
 
+// Routes pour l'invitation des employés
+Route::get('invitation/accept/{token}', [InvitationController::class, 'showAcceptanceForm'])->name('employee.invitation.accept');
+Route::post('invitation/accept', [InvitationController::class, 'processAcceptance'])->name('employee.invitation.process');
+
 // Les routes d'authentification (login, register, logout, etc.) sont gérées par le fichier routes/auth.php
 
-// Routes nécessitant une authentification
-Route::middleware('auth')->group(function () {
+// Routes nécessitant une authentification et une vérification d'email
+Route::middleware(['auth', 'verified'])->group(function () {
+    // Le groupe 'verified' implique 'auth', donc on peut tout mettre ici.
+    // Laravel redirigera automatiquement vers la page de vérification si l'email n'est pas vérifié.
+
+    Route::get('/home', function () {
+        return redirect()->route('dashboard');
+    })->name('home');
+
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
     // Route pour changer le thème
     Route::post('/theme/toggle', [ThemeController::class, 'toggleTheme'])->name('theme.toggle');
 
@@ -114,15 +130,7 @@ Route::middleware('auth')->group(function () {
     // Routes pour le changement de mot de passe
     Route::get('/change-password', [ChangePasswordController::class, 'show'])->name('change-password.show');
     Route::put('/change-password', [ChangePasswordController::class, 'update'])->name('change-password.update');
-});
 
-
-    Route::middleware('verified')->group(function () {
-        Route::get('/home', [PlanningController::class, 'calendarIndex'])->name('home');
-        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::get('/home', [PlanningController::class, 'calendarIndex'])->name('home');
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    
     // Routes des notifications
     Route::prefix('notifications')->name('notifications.')->group(function () {
         Route::get('/', [NotificationController::class, 'index'])->name('index');
@@ -130,7 +138,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/{id}/mark-as-read', [NotificationController::class, 'markAsRead'])->name('mark-as-read');
         Route::post('/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('mark-all-as-read');
     });
-    
+
     // Routes d'export PDF accessibles à tous les utilisateurs authentifiés
     Route::get('/plannings/export-pdf/{employe_id}/{mois}/{annee}', [PlanningController::class, 'exportPdf'])
         ->name('plannings.export-pdf');
@@ -140,7 +148,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/export/comptabilite/excel', [ExportController::class, 'exportComptabiliteExcel'])->name('export.comptabilite.excel');
         
     // Routes pour les employeurs
-    Route::middleware(['auth', CheckEmployeur::class])->group(function () {
+    // Le middleware 'auth' est redondant ici car déjà appliqué au groupe parent
+    Route::middleware(CheckEmployeur::class)->group(function () {
         Route::resource('societes', SocieteController::class)->only(['create', 'store', 'edit', 'update']);
         Route::post('/societe/upload-logo', [SocieteController::class, 'uploadLogo'])->name('societe.upload-logo');
         
@@ -273,7 +282,9 @@ Route::middleware('auth')->group(function () {
     // Routes pour les employés
     Route::middleware(CheckEmploye::class)->prefix('employe')->name('employe.')->group(function () {
         // Routes des plannings
-        Route::get('/plannings', [PlanningController::class, 'index'])->name('plannings.index');
+        Route::resource('plannings', PlanningController::class);
+
+
         Route::get('/plannings/calendar', [PlanningController::class, 'employeCalendar'])->name('plannings.calendar');
         Route::get('/plannings/download-pdf', [PlanningController::class, 'exportPdfEmploye'])->name('plannings.download-pdf');
         Route::get('/plannings/{planning}', [PlanningController::class, 'show'])->name('plannings.show');
@@ -418,9 +429,11 @@ Route::prefix('tests')->middleware(['auth'])->group(function () {
         }
         
         event(new \App\Events\SoldeCongeModified($employe, $historique));
-        
+
         return 'Evénement envoyé pour l\'employé ' . $employe->prenom . ' ' . $employe->nom;
     })->name('tests.event');
 });
+
+Route::post('/cookie-consent', [\App\Http\Controllers\CookieConsentController::class, 'accept'])->name('cookie-consent.accept');
 
 require __DIR__.'/auth.php';

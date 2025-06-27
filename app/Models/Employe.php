@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use App\Models\EmployeFormation;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Contracts\Encryption\DecryptException;
 
 class Employe extends Model
 {
@@ -49,6 +51,31 @@ class Employe extends Model
         'date_debut_contrat' => 'date',
         'date_fin_contrat' => 'date',
     ];
+
+    /**
+     * Chiffre le numéro de sécurité sociale avant de l'enregistrer.
+     */
+    public function setNumeroSecuriteSocialeAttribute($value)
+    {
+        $this->attributes['numero_securite_sociale'] = $value ? Crypt::encryptString($value) : null;
+    }
+
+    /**
+     * Déchiffre le numéro de sécurité sociale lors de sa lecture.
+     */
+    public function getNumeroSecuriteSocialeAttribute($value)
+    {
+        if (is_null($value)) {
+            return null;
+        }
+
+        try {
+            return Crypt::decryptString($value);
+        } catch (DecryptException $e) {
+            // Gère le cas où la donnée n'est pas chiffrée (ancienne donnée)
+            return $value; 
+        }
+    }
     
     /**
      * Get the user's display name (always returns prenom instead of nom)

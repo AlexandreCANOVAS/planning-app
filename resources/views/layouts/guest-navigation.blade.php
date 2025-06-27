@@ -4,11 +4,8 @@
             <div class="flex items-center">
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
-                    <a href="{{ route('welcome') }}" class="flex items-center">
-                        <div class="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center mr-2 shadow-md">
-                            <span class="text-white font-bold">P</span>
-                        </div>
-                        <span class="font-semibold text-xl text-gray-800">Planify</span>
+                    <a href="{{ route('welcome') }}">
+                        <img class="h-12 w-auto" src="{{ asset('images/logo.png') }}" alt="Planity">
                     </a>
                 </div>
 

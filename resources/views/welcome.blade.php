@@ -408,4 +408,5 @@
             animation: pulse 6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
     </style>
+    <x-cookie-consent />
 </x-guest-layout>

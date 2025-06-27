@@ -15,7 +15,7 @@
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
 
         <!-- Scripts -->
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @vite(['resources/css/app.css', 'resources/js/app.js'], 'defer')
         
         <!-- Alpine.js -->
         <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -35,10 +35,9 @@
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
                     <div>
                         <div class="flex items-center mb-4">
-                            <div class="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center mr-2 shadow-md">
-                                <span class="text-white font-bold text-xl">P</span>
-                            </div>
-                            <span class="font-bold text-2xl text-white">Planify</span>
+                            <a href="{{ route('welcome') }}">
+                                <img src="{{ asset('images/logo.png') }}" alt="Planity Logo" class="h-12 w-auto">
+                            </a>
                         </div>
                         <p class="text-gray-400 mb-4">
                             Simplifiez la gestion de votre entreprise avec notre solution tout-en-un.
@@ -104,8 +103,10 @@
         </footer>
 
         <!-- Script de consentement aux cookies chargé manuellement -->
-        <script type="module" src="{{ asset('js/cookie-consent.js') }}"></script>
+
+        <x-cookie-consent />
 
         @stack('scripts')
+
     </body>
 </html>

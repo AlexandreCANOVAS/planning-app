@@ -35,6 +35,13 @@
         </header>
 
         <main class="py-6">
+            @if (request()->query('verified'))
+                <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 mb-4">
+                    <div class="p-4 text-sm text-green-700 bg-green-100 rounded-lg dark:bg-green-200 dark:text-green-800" role="alert">
+                        <span class="font-medium">{{ __('Votre adresse e-mail a été vérifiée avec succès !') }}</span>
+                    </div>
+                </div>
+            @endif
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <!-- Statistiques principales -->
                 <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">

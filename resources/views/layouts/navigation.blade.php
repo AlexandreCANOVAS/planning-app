@@ -4,8 +4,8 @@
             <div class="flex">
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
-                    <a href="{{ route('dashboard') }}" class="flex items-center">
-                        <span class="font-semibold text-xl text-white">Planify</span>
+                    <a href="{{ route('dashboard') }}">
+                        <img class="h-12 w-auto" src="{{ asset('images/logo.png') }}" alt="Planity">
                     </a>
                 </div>
 

@@ -137,4 +137,5 @@
             </div>
         </div>
     </div>
+    <x-cookie-consent />
 </x-guest-layout>
