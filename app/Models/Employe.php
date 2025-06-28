@@ -166,6 +166,16 @@ class Employe extends Model
     {
         return $this->hasMany(AccesInformatique::class);
     }
+    
+    /**
+     * Relation avec les documents
+     */
+    public function documents()
+    {
+        return $this->belongsToMany(Document::class, 'document_employe')
+                    ->withPivot(['consulte_le', 'confirme_lecture', 'confirme_le'])
+                    ->withTimestamps();
+    }
 
     /**
      * Get the number of formations for the employee

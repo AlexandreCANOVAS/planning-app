@@ -5,6 +5,8 @@ use App\Http\Controllers\{
     ProfileController,
     SocieteController,
     EmployeController,
+    EmployeProfileController,
+    EmployeDocumentsController,
     LieuController,
     PlanningController,
     CongeController,
@@ -22,8 +24,11 @@ use App\Http\Controllers\{
     EchangeController,
     SoldeCongeController,
     GDPRController,
-    InvitationController
+    InvitationController,
+    TwoFactorAuthController
 };
+
+use App\Http\Controllers\Admin\DocumentController;
 
 use App\Http\Controllers\Auth\{
     RegisteredUserController,
@@ -98,6 +103,40 @@ Route::get('/mentions-legales', function () {
 Route::get('/politique-confidentialite', function () {
     return view('politique-confidentialite');
 })->name('politique-confidentialite');
+
+// Route de test pour Livewire
+Route::get('/test-livewire', function () {
+    return view('livewire-test');
+})->name('test-livewire');
+
+// Routes pour l'authentification à deux facteurs personnalisée
+Route::middleware(['auth'])->group(function () {
+    Route::get('/user/two-factor-auth', [TwoFactorAuthController::class, 'show'])
+        ->name('two-factor.show');
+        
+    // Routes de confirmation de mot de passe pour 2FA
+    Route::get('/user/two-factor-auth/confirm-password', [\App\Http\Controllers\Auth\ConfirmPassword2FAController::class, 'show'])
+        ->name('two-factor.confirm-password');
+    Route::post('/user/two-factor-auth/confirm-password', [\App\Http\Controllers\Auth\ConfirmPassword2FAController::class, 'confirm']);
+        
+    // Routes protégées par confirmation de mot de passe
+    Route::post('/user/two-factor-auth/enable', [TwoFactorAuthController::class, 'enable'])
+        ->middleware(['password.confirm'])
+        ->name('two-factor.custom.enable');
+    Route::post('/user/two-factor-auth/disable', [TwoFactorAuthController::class, 'disable'])
+        ->middleware(['password.confirm'])
+        ->name('two-factor.custom.disable');
+    Route::post('/user/two-factor-auth/recovery-codes', [TwoFactorAuthController::class, 'regenerateRecoveryCodes'])
+        ->middleware(['password.confirm'])
+        ->name('two-factor.custom.recovery-codes');
+    
+    // Routes pour la vérification 2FA
+    Route::get('/two-factor-challenge', [\App\Http\Controllers\Auth\TwoFactorVerificationController::class, 'show'])
+        ->name('two-factor.verify');
+    Route::post('/two-factor-challenge', [\App\Http\Controllers\Auth\TwoFactorVerificationController::class, 'verify']);
+    Route::post('/two-factor-challenge-recovery', [\App\Http\Controllers\Auth\TwoFactorVerificationController::class, 'verifyRecoveryCode'])
+        ->name('two-factor.verify-recovery');
+});
 
 // Routes pour l'invitation des employés
 Route::get('invitation/accept/{token}', [InvitationController::class, 'showAcceptanceForm'])->name('employee.invitation.accept');
@@ -264,6 +303,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Routes pour les formations
         Route::resource('formations', FormationController::class);
+        
+        // Routes de gestion des documents
+        Route::prefix('documents')->name('documents.')->group(function () {
+            Route::get('/', [DocumentController::class, 'index'])->name('index');
+            Route::get('/create', [DocumentController::class, 'create'])->name('create');
+            Route::post('/', [DocumentController::class, 'store'])->name('store');
+            Route::get('/stats', [DocumentController::class, 'stats'])->name('stats');
+            Route::get('/{id}', [DocumentController::class, 'show'])->name('show');
+            Route::get('/{id}/edit', [DocumentController::class, 'edit'])->name('edit');
+            Route::put('/{id}', [DocumentController::class, 'update'])->name('update');
+            Route::delete('/{id}', [DocumentController::class, 'destroy'])->name('destroy');
+            Route::post('/{id}/manage-employes', [DocumentController::class, 'manageEmployes'])->name('manage-employes');
+        });
 
         // Routes pour les exports
         Route::prefix('export')->name('export.')->group(function () {
@@ -281,13 +333,26 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Routes pour les employés
     Route::middleware(CheckEmploye::class)->prefix('employe')->name('employe.')->group(function () {
-        // Routes des plannings
-        Route::resource('plannings', PlanningController::class);
-
-
+        // Route du profil employé en lecture seule
+        Route::get('/profile', [EmployeProfileController::class, 'show'])->name('profile.show');
+        
+        // Routes des documents employé
+        Route::prefix('documents')->name('documents.')->group(function () {
+            Route::get('/', [EmployeDocumentsController::class, 'index'])->name('index');
+            Route::get('/{id}', [EmployeDocumentsController::class, 'show'])->name('show');
+            Route::get('/{id}/preview', [EmployeDocumentsController::class, 'preview'])->name('preview');
+            Route::get('/{id}/download', [EmployeDocumentsController::class, 'download'])->name('download');
+            Route::post('/{id}/confirm', [EmployeDocumentsController::class, 'confirmLecture'])->name('confirm');
+        });
+        
+        // Routes des formations
+        Route::resource('formations', FormationController::class);
+        Route::post('/formations/{formation}/upload-document', [FormationController::class, 'uploadDocument'])->name('formations.upload-document');
+        Route::delete('/formations/{formation}/documents/{document}', [FormationController::class, 'deleteDocument'])->name('formations.delete-document');
+        Route::post('/formations/{formation}/employes', [FormationController::class, 'updateEmployes'])->name('formations.update-employes');
+        Route::get('/plannings', [PlanningController::class, 'index'])->name('plannings.index');
         Route::get('/plannings/calendar', [PlanningController::class, 'employeCalendar'])->name('plannings.calendar');
         Route::get('/plannings/download-pdf', [PlanningController::class, 'exportPdfEmploye'])->name('plannings.download-pdf');
-        Route::get('/plannings/{planning}', [PlanningController::class, 'show'])->name('plannings.show');
         Route::get('/plannings/collegue/{employe}/calendar', [PlanningController::class, 'voirPlanningCollegueCalendar'])->name('plannings.collegue');
         Route::get('/plannings/collegue/{employe}/compare', [PlanningController::class, 'comparerPlannings'])->name('plannings.comparer');
         Route::post('/plannings/export-pdf-employe', [PlanningController::class, 'exportPdfEmploye'])->name('plannings.export-pdf-employe');
@@ -321,7 +386,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::delete('/{conge}', [CongeController::class, 'destroyEmploye'])->name('destroy');
             Route::delete('/{conge}/annuler', [CongeController::class, 'annulerConge'])->name('annuler');
         });
+        
     });
+
 });
 
 // Routes de test pour les événements WebSocket et emails

@@ -36,6 +36,7 @@ class Kernel extends HttpKernel
             \Illuminate\View\Middleware\ShareErrorsFromSession::class,
             \App\Http\Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            \App\Http\Middleware\EnsureTwoFactorEnabled::class,
         ],
 
         'api' => [
@@ -66,5 +67,6 @@ class Kernel extends HttpKernel
         'employe' => \App\Http\Middleware\CheckEmploye::class,
         'refresh.soldes' => \App\Http\Middleware\RefreshSoldeCongeData::class,
         'ensure.soldes.persistence' => \App\Http\Middleware\EnsureSoldeCongesPersistence::class,
+        '2fa' => \App\Http\Middleware\EnsureTwoFactorEnabled::class,
     ];
 }

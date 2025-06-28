@@ -18,7 +18,7 @@
                             {{ __('Tableau de bord') }}
                         </x-nav-link>
 
-                        <x-nav-link :href="route('employe.plannings.index')" :active="request()->routeIs('employe.plannings.index') || request()->routeIs('employe.plannings.calendar')"
+                        <x-nav-link :href="route('employe.plannings.index')" :active="request()->routeIs('employe.plannings.*')"
                             class="inline-flex items-center px-1 pt-1 text-sm font-medium leading-5 transition duration-150 ease-in-out text-white hover:text-purple-100">
                             <i class="fas fa-calendar-alt mr-2"></i>
                             {{ __('Plannings') }}
@@ -76,6 +76,12 @@
                             class="inline-flex items-center px-1 pt-1 text-sm font-medium leading-5 transition duration-150 ease-in-out text-white hover:text-purple-100">
                             <i class="fas fa-map-marker-alt mr-2"></i>
                             {{ __('Lieux de travail') }}
+                        </x-nav-link>
+                        
+                        <x-nav-link :href="route('documents.index')" :active="request()->routeIs('documents.*')"
+                            class="inline-flex items-center px-1 pt-1 text-sm font-medium leading-5 transition duration-150 ease-in-out text-white hover:text-purple-100">
+                            <i class="fas fa-file-alt mr-2"></i>
+                            {{ __('Documents') }}
                         </x-nav-link>
                     @endif
                 </div>
@@ -223,6 +229,11 @@
                 <x-responsive-nav-link :href="route('lieux.index')" :active="request()->routeIs('lieux.*')" class="flex items-center">
                     <i class="fas fa-map-marker-alt mr-2"></i>
                     {{ __('Lieux de travail') }}
+                </x-responsive-nav-link>
+                
+                <x-responsive-nav-link :href="route('documents.index')" :active="request()->routeIs('documents.*')" class="flex items-center">
+                    <i class="fas fa-file-alt mr-2"></i>
+                    {{ __('Documents') }}
                 </x-responsive-nav-link>
             @endif
         </div>

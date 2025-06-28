@@ -8,7 +8,7 @@
                 <div class="bg-gradient-to-r from-indigo-500 to-purple-600 p-6">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center space-x-4">
-                            <a href="{{ route('employe.plannings.index') }}" 
+                            <a href="{{ route('plannings.view-monthly-calendar', [Auth::id(), date('m'), date('Y')]) }}" 
                                class="inline-flex items-center px-3 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-white/20 hover:bg-white/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-indigo-600 focus:ring-white transition-all duration-200">
                                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>

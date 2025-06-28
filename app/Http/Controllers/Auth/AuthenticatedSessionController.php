@@ -28,6 +28,13 @@ class AuthenticatedSessionController extends Controller
         $request->authenticate();
 
         $request->session()->regenerate();
+        
+        // Vérifier si l'utilisateur a activé l'authentification à deux facteurs
+        $user = $request->user();
+        if ($user && $user->two_factor_secret) {
+            // Rediriger vers la page de vérification 2FA
+            return redirect()->route('two-factor.verify');
+        }
 
         return redirect()->intended(RouteServiceProvider::HOME);
     }

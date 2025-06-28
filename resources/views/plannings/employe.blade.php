@@ -272,7 +272,7 @@
                 </div>
             </div>
 
-            <form id="filter-form" method="GET" action="{{ route('employe.plannings.index') }}" class="hidden"></form>
+            <form id="filter-form" method="GET" action="{{ route('plannings.view-monthly-calendar', [Auth::id(), date('m'), date('Y')]) }}" class="hidden"></form>
 
             <!-- Planning Collègue -->
             <div class="bg-white shadow rounded-lg p-6">

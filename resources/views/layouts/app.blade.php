@@ -28,6 +28,9 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'], 'defer')
         <script src="https://cdnjs.cloudflare.com/ajax/libs/luxon/2.3.1/luxon.min.js"></script>
         
+        <!-- Livewire Styles -->
+        @livewireStyles
+        
         <!-- Variables globales pour JavaScript -->
         <script>
             window.userId = {{ auth()->id() ?? 'null' }};
@@ -449,6 +452,9 @@
             @yield('scripts')
         @endif
         <x-cookie-consent />
+        
+        <!-- Scripts Livewire -->
+        @livewireScripts
 
         @stack('scripts')
     </body>

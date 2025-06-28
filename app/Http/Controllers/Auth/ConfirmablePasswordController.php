@@ -35,6 +35,11 @@ class ConfirmablePasswordController extends Controller
 
         $request->session()->put('auth.password_confirmed_at', time());
 
+        // Utiliser le paramètre redirect_to s'il existe, sinon rediriger vers le tableau de bord
+        if ($request->has('redirect_to')) {
+            return redirect($request->input('redirect_to'));
+        }
+        
         return redirect()->intended(route('dashboard', absolute: false));
     }
 }

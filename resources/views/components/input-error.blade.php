@@ -1,6 +1,10 @@
-@props(['messages'])
+@props(['for' => null, 'messages' => null])
 
-@if ($messages)
+@php
+    $messages = $messages ?? $errors->get($for);
+@endphp
+
+@if ($messages && count($messages) > 0)
     <div {{ $attributes->merge(['class' => 'bg-red-50 border-l-4 border-red-500 p-4 rounded-md my-3']) }}>
         <div class="flex items-center">
             <div class="flex-shrink-0">

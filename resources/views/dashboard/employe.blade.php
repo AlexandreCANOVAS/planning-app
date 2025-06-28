@@ -113,7 +113,7 @@
                 <div>
                     <h2 class="text-lg font-medium text-gray-900 mb-4">Actions rapides</h2>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <a href="{{ route('employe.plannings.index') }}" class="bg-white rounded-xl shadow-sm p-4 flex items-start space-x-4 hover:bg-gray-50 transition">
+                        <a href="{{ route('plannings.view-monthly-calendar', [Auth::id(), date('m'), date('Y')]) }}" class="bg-white rounded-xl shadow-sm p-4 flex items-start space-x-4 hover:bg-gray-50 transition">
                             <div class="p-3 bg-blue-100 rounded-lg">
                                 <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
@@ -137,7 +137,7 @@
                             </div>
                         </a>
 
-                        <div class="bg-white rounded-xl shadow-sm p-4 flex items-start space-x-4">
+                        <a href="{{ route('employe.documents.index') }}" class="bg-white rounded-xl shadow-sm p-4 flex items-start space-x-4 hover:bg-gray-50">
                             <div class="p-3 bg-purple-100 rounded-lg">
                                 <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
@@ -145,11 +145,11 @@
                             </div>
                             <div>
                                 <div class="font-medium text-gray-900">Mes documents</div>
-                                <div class="text-sm text-gray-500">Bientôt disponible</div>
+                                <div class="text-sm text-gray-500">Consultez vos documents</div>
                             </div>
-                        </div>
+                        </a>
 
-                        <div class="bg-white rounded-xl shadow-sm p-4 flex items-start space-x-4">
+                        <a href="{{ route('employe.profile.show') }}" class="bg-white rounded-xl shadow-sm p-4 flex items-start space-x-4 hover:bg-gray-50">
                             <div class="p-3 bg-yellow-100 rounded-lg">
                                 <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
@@ -157,9 +157,9 @@
                             </div>
                             <div>
                                 <div class="font-medium text-gray-900">Mon profil</div>
-                                <div class="text-sm text-gray-500">Bientôt disponible</div>
+                                <div class="text-sm text-gray-500">Consultez vos informations</div>
                             </div>
-                        </div>
+                        </a>
                     </div>
                 </div>
 
@@ -306,10 +306,10 @@
                         </div>
                         <h3 class="text-lg font-medium text-gray-900 mb-1">Planning mensuel</h3>
                         <p class="text-sm text-gray-500 mb-4">Exportez votre planning au format PDF</p>
-                        <form action="{{ route('employe.plannings.download-pdf') }}" method="GET" class="space-y-4">
+                        <div class="space-y-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">Mois :</label>
-                                <select name="mois" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
+                                <select id="planning-mois" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
                                     @for($m = 1; $m <= 12; $m++)
                                         <option value="{{ $m }}" {{ $m == now()->month ? 'selected' : '' }}>
                                             {{ \Carbon\Carbon::create(null, $m, 1)->locale('fr')->monthName }}
@@ -319,13 +319,13 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">Année :</label>
-                                <select name="annee" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
+                                <select id="planning-annee" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
                                     @for($y = now()->year - 1; $y <= now()->year + 1; $y++)
                                         <option value="{{ $y }}" {{ $y == now()->year ? 'selected' : '' }}>{{ $y }}</option>
                                     @endfor
                                 </select>
                             </div>
-                            <button type="submit" class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <button type="button" onclick="downloadPlanning()" class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
                                 </svg>
@@ -372,7 +372,7 @@
                                                 {{ \Carbon\Carbon::parse($planning->heure_debut)->format('H:i') }} - {{ \Carbon\Carbon::parse($planning->heure_fin)->format('H:i') }}
                                             </p>
                                         </div>
-                                        <a href="{{ route('employe.plannings.show', $planning) }}" class="inline-flex items-center px-2 py-1 text-xs font-medium rounded text-[rgb(131,44,207)] hover:bg-purple-50">
+                                        <a href="{{ route('plannings.view-monthly-calendar', [Auth::id(), Carbon\Carbon::parse($planning->date)->format('m'), Carbon\Carbon::parse($planning->date)->format('Y')]) }}" class="inline-flex items-center px-2 py-1 text-xs font-medium rounded text-[rgb(131,44,207)] hover:bg-purple-50">
                                             <i class="fas fa-eye mr-1"></i>Voir
                                         </a>
                                     </div>
@@ -383,7 +383,7 @@
                                 @endforelse
                                 
                                 <div class="text-center pt-2">
-                                    <a href="{{ route('employe.plannings.calendar') }}" class="text-sm text-[rgb(131,44,207)] hover:text-[rgb(151,64,227)] font-medium">
+                                    <a href="{{ route('plannings.view-monthly-calendar', [Auth::id(), date('m'), date('Y')]) }}" class="text-sm text-[rgb(131,44,207)] hover:text-[rgb(151,64,227)] font-medium">
                                         Voir tous mes plannings
                                     </a>
                                 </div>
@@ -467,6 +467,15 @@
     </div>
 @push('scripts')
 <script>
+    function downloadPlanning() {
+        const mois = document.getElementById('planning-mois').value;
+        const annee = document.getElementById('planning-annee').value;
+        const userId = {{ Auth::id() }};
+        const url = '{{ route("plannings.export-pdf", [":userId", ":mois", ":annee"]) }}';
+        const finalUrl = url.replace(':userId', userId).replace(':mois', mois).replace(':annee', annee);
+        window.location.href = finalUrl;
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         // Écouter les événements de notification pour les soldes de congés
         window.Echo.private(`App.Models.User.${window.userId}`)

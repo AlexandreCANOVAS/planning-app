@@ -5,10 +5,10 @@
                 {{ __('Mon Planning - Vue Calendrier') }}
             </h2>
             <div class="flex space-x-4">
-                <a href="{{ route('employe.plannings.index') }}" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700">
+                <a href="{{ route('plannings.view-monthly-calendar', [Auth::id(), date('m'), date('Y')]) }}" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700">
                     {{ __('Vue Liste') }}
                 </a>
-                <a href="{{ route('employe.plannings.download-pdf') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-500">
+                <a href="javascript:void(0)" onclick="downloadPlanning()" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-500">
                     {{ __('Télécharger PDF') }}
                 </a>
             </div>
@@ -20,7 +20,7 @@
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 bg-white border-b border-gray-200">
                     <!-- Filtres -->
-                    <form method="GET" action="{{ route('employe.plannings.calendar') }}" class="mb-6">
+                    <form method="GET" action="{{ route('plannings.view-monthly-calendar', [Auth::id(), ':mois', ':annee']) }}" class="mb-6" id="calendar-filter-form">
                         <div class="flex space-x-4">
                             <div>
                                 <label for="mois" class="block text-sm font-medium text-gray-700">Mois</label>
@@ -97,4 +97,29 @@
             </div>
         </div>
     </div>
+@push('scripts')
+<script>
+    function downloadPlanning() {
+        const mois = document.getElementById('mois').value;
+        const annee = document.getElementById('annee').value;
+        const userId = {{ Auth::id() }};
+        const url = '{{ route("plannings.export-pdf", [":userId", ":mois", ":annee"]) }}';
+        const finalUrl = url.replace(':userId', userId).replace(':mois', mois).replace(':annee', annee);
+        window.location.href = finalUrl;
+    }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('calendar-filter-form');
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const mois = document.getElementById('mois').value;
+            const annee = document.getElementById('annee').value;
+            const userId = {{ Auth::id() }};
+            const url = '{{ route("plannings.view-monthly-calendar", [":userId", ":mois", ":annee"]) }}';
+            const finalUrl = url.replace(':userId', userId).replace(':mois', mois).replace(':annee', annee);
+            window.location.href = finalUrl;
+        });
+    });
+</script>
+@endpush
 </x-app-layout>
