@@ -62,8 +62,8 @@
                             <div class="flex items-center space-x-6">
                                 <div class="flex-shrink-0">
                                     <div class="w-16 h-16 bg-white bg-opacity-10 rounded-xl flex items-center justify-center shadow-inner overflow-hidden relative group">
-                                        @if(file_exists(public_path('images/company/logo.png')))
-                                            <img src="{{ asset('images/company/logo.' . pathinfo(glob(public_path('images/company/logo.*'))[0] ?? 'png', PATHINFO_EXTENSION)) }}" 
+                                        @if(file_exists(public_path('images/company/logo.svg')))
+                                            <img src="{{ asset('images/company/logo.svg') }}" 
                                                  alt="{{ auth()->user()->societe->nom }}" 
                                                  class="w-12 h-12 object-contain">
                                         @else

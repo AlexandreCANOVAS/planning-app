@@ -36,7 +36,7 @@
                     <div>
                         <div class="flex items-center mb-4">
                             <a href="{{ route('welcome') }}">
-                                <img src="{{ asset('images/logo.png') }}" alt="Planity Logo" class="h-12 w-auto">
+                                <img src="{{ asset('images/logo.svg') }}" alt="Planify Logo" class="h-12 w-auto">
                             </a>
                         </div>
                         <p class="text-gray-400 mb-4">

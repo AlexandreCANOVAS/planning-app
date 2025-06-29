@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Convertisseur de Logo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        .logo-preview {
+            margin: 20px 0;
+            border: 1px solid #ddd;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        canvas {
+            display: block;
+            margin: 10px 0;
+            border: 1px solid #eee;
+        }
+        button {
+            background-color: #8B5CF6;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #7C3AED;
+        }
+        .instructions {
+            background-color: #f0f0f0;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Convertisseur de Logo "P" Encerclé</h1>
+    
+    <div class="instructions">
+        <h2>Instructions</h2>
+        <p>1. Cliquez sur les boutons pour générer les différentes tailles de logo.</p>
+        <p>2. Téléchargez chaque image et placez-la dans le dossier approprié :</p>
+        <ul>
+            <li><strong>Logo principal</strong> : public/images/logo.png</li>
+            <li><strong>Logo entreprise</strong> : public/images/company/logo.png</li>
+        </ul>
+    </div>
+    
+    <div class="logo-preview">
+        <h2>Logo Principal (200x200px)</h2>
+        <canvas id="canvas200" width="200" height="200"></canvas>
+        <button onclick="downloadImage('canvas200', 'logo.png')">Télécharger logo.png</button>
+    </div>
+    
+    <div class="logo-preview">
+        <h2>Logo Entreprise (150x150px)</h2>
+        <canvas id="canvas150" width="150" height="150"></canvas>
+        <button onclick="downloadImage('canvas150', 'company-logo.png')">Télécharger company-logo.png</button>
+    </div>
+    
+    <script>
+        // Fonction pour dessiner le logo sur un canvas
+        function drawLogo(canvasId, size) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+            
+            // Fond transparent
+            ctx.clearRect(0, 0, size, size);
+            
+            // Cercle violet
+            ctx.fillStyle = '#8B5CF6';
+            ctx.beginPath();
+            ctx.arc(size/2, size/2, size/2 - 5, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Lettre P en blanc
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = `bold ${size * 0.6}px Arial, sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('P', size/2, size/2 + size*0.05);
+        }
+        
+        // Fonction pour télécharger l'image
+        function downloadImage(canvasId, filename) {
+            const canvas = document.getElementById(canvasId);
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+        
+        // Dessiner les logos au chargement de la page
+        window.onload = function() {
+            drawLogo('canvas200', 200);
+            drawLogo('canvas150', 150);
+        };
+    </script>
+</body>
+</html>

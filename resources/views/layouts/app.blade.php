@@ -11,6 +11,10 @@
         <meta name="theme-color" content="{{ request()->cookie('theme', 'light') === 'dark' ? '#111827' : '#ffffff' }}">
         <meta name="apple-mobile-web-app-status-bar-style" content="{{ request()->cookie('theme', 'light') === 'dark' ? 'black-translucent' : 'default' }}">
         
+        <!-- Favicon -->
+        <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
+        <link rel="alternate icon" href="{{ asset('favicon.ico') }}">
+        <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
 
         <title>{{ config('app.name', 'Laravel') }}</title>
 
@@ -377,7 +381,7 @@
                     <!-- Section Logo et Description -->
                     <div class="space-y-4">
                         <div class="flex items-center">
-                            <img src="{{ asset('images/logo.png') }}" alt="Planity Logo" class="h-12 w-auto">
+                            <img src="{{ asset('images/logo.svg') }}" alt="Planify Logo" class="h-12 w-auto">
                         </div>
                         <p class="text-sm text-gray-400">Simplifiez la gestion de votre entreprise avec notre solution tout-en-un.</p>
                         <div class="flex space-x-4">

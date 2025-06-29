@@ -169,6 +169,17 @@
         </div>
     </div>
 
+    @php
+    $chartData = $documents->map(function($doc) {
+        return [
+            'titre' => \Illuminate\Support\Str::limit($doc->titre, 30),
+            'employes_count' => $doc->employes_count,
+            'vus_count' => $doc->vus_count,
+            'confirmes_count' => $doc->confirmes_count
+        ];
+    });
+    @endphp
+
     @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
@@ -176,14 +187,7 @@
             const ctx = document.getElementById('consultationChart').getContext('2d');
             
             // Préparer les données pour le graphique
-            const documents = @json($documents->map(function($doc) {
-                return [
-                    'titre' => Str::limit($doc->titre, 30),
-                    'employes_count' => $doc->employes_count,
-                    'vus_count' => $doc->vus_count,
-                    'confirmes_count' => $doc->confirmes_count
-                ];
-            }));
+            const documents = @json($chartData);
             
             const chart = new Chart(ctx, {
                 type: 'bar',
@@ -227,7 +231,7 @@
                             ticks: {
                                 autoSkip: false,
                                 maxRotation: 45,
-                                minRotation: 45
+                                minRotation: 45,
                             }
                         }
                     }

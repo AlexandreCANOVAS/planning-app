@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Favicon Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        canvas {
+            border: 1px solid #ccc;
+            margin: 20px 0;
+        }
+        .button {
+            background-color: #8B5CF6;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .button:hover {
+            background-color: #7C3AED;
+        }
+    </style>
+</head>
+<body>
+    <h1>Favicon Generator</h1>
+    <p>Cet outil vous permet de générer un favicon avec un "P" sur fond violet.</p>
+    
+    <div>
+        <canvas id="canvas" width="32" height="32"></canvas>
+    </div>
+    
+    <button class="button" id="downloadPng">Télécharger PNG (32x32)</button>
+    <button class="button" id="downloadIco">Télécharger ICO</button>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Dessiner le cercle violet
+            ctx.fillStyle = '#8B5CF6';
+            ctx.beginPath();
+            ctx.arc(16, 16, 15, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Dessiner le "P" en blanc
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = 'bold 22px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('P', 16, 16);
+            
+            // Fonction pour télécharger l'image PNG
+            document.getElementById('downloadPng').addEventListener('click', function() {
+                const link = document.createElement('a');
+                link.download = 'favicon.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+            
+            // Note: La conversion en ICO nécessite généralement un service côté serveur
+            // Cette fonction est juste pour télécharger le PNG qui pourra être converti en ICO avec un outil externe
+            document.getElementById('downloadIco').addEventListener('click', function() {
+                alert('Pour convertir en ICO, utilisez le PNG téléchargé avec un outil de conversion en ligne comme favicon.io');
+                const link = document.createElement('a');
+                link.download = 'favicon.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+        });
+    </script>
+</body>
+</html>

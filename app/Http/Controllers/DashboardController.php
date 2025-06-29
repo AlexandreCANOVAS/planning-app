@@ -120,7 +120,7 @@ class DashboardController extends Controller
                 ->with('employe')
                 ->get();
                 
-            // Identifier les employés en service aujourd'hui
+            // Identifier les employés en service aujourd'hui (en excluant ceux en RH)
             $employesEnService = $planningsDuJour
                 ->groupBy('employe_id')
                 ->map(function ($plannings) {
@@ -130,21 +130,36 @@ class DashboardController extends Controller
                         'heures' => $plannings->map(function ($planning) {
                             return [
                                 'debut' => $planning->heure_debut,
-                                'fin' => $planning->heure_fin
+                                'fin' => $planning->heure_fin,
+                                'lieu_nom' => $planning->lieu ? $planning->lieu->nom : null
                             ];
                         })
                     ];
+                })
+                ->filter(function ($data) {
+                    // Exclure les employés affectés à un lieu nommé "RH" (Repos Hebdomadaire)
+                    return !$data['heures']->contains('lieu_nom', 'RH');
                 });
                 
             // Identifier les employés en congé aujourd'hui
             $employesEnConge = $congesDuJour->pluck('employe');
             
-            // Identifier les employés en repos (ni en service, ni en congé)
+            // Identifier les employés en RH aujourd'hui
+            $employesEnRH = $planningsDuJour
+                ->filter(function ($planning) {
+                    return $planning->lieu && $planning->lieu->nom === 'RH';
+                })
+                ->pluck('employe')
+                ->unique('id');
+
+            // Identifier les employés en repos (ni en service, ni en congé, ou explicitement en RH)
             $employesEnRepos = $allEmployes
                 ->filter(function ($employe) use ($employesEnService, $employesEnConge) {
                     return !$employesEnService->has($employe->id) && 
                            !$employesEnConge->contains('id', $employe->id);
                 })
+                ->merge($employesEnRH)
+                ->unique('id')
                 ->values();
 
             // Récupérer tous les employés de la société pour les sélecteurs d'export

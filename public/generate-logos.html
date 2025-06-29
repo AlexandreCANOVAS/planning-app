@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Générateur de Logo P</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        canvas {
+            border: 1px solid #ccc;
+            margin: 10px 0;
+        }
+        button {
+            background-color: #8B5CF6;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .logo-container {
+            margin-bottom: 30px;
+        }
+        h1, h2 {
+            color: #8B5CF6;
+        }
+    </style>
+</head>
+<body>
+    <h1>Générateur de Logo P Encerclé</h1>
+    <p>Utilisez les boutons ci-dessous pour générer et télécharger les logos.</p>
+    
+    <div class="logo-container">
+        <h2>Logo Principal (200x200)</h2>
+        <canvas id="mainLogo" width="200" height="200"></canvas>
+        <div>
+            <button onclick="downloadLogo('mainLogo', 'logo.png')">Télécharger logo.png</button>
+        </div>
+    </div>
+    
+    <div class="logo-container">
+        <h2>Logo Entreprise (150x150)</h2>
+        <canvas id="companyLogo" width="150" height="150"></canvas>
+        <div>
+            <button onclick="downloadLogo('companyLogo', 'company-logo.png')">Télécharger company-logo.png</button>
+        </div>
+    </div>
+    
+    <script>
+        // Fonction pour dessiner le logo sur un canvas
+        function drawPLogo(canvasId, size) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+            
+            // Effacer le canvas
+            ctx.clearRect(0, 0, size, size);
+            
+            // Dessiner le cercle violet
+            ctx.fillStyle = '#8B5CF6';
+            ctx.beginPath();
+            ctx.arc(size/2, size/2, size/2 - 2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Dessiner la lettre P en blanc
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = `bold ${size * 0.6}px Arial, sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('P', size/2, size/2 + size*0.05);
+        }
+        
+        // Fonction pour télécharger le logo
+        function downloadLogo(canvasId, filename) {
+            const canvas = document.getElementById(canvasId);
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+        
+        // Dessiner les logos au chargement de la page
+        window.onload = function() {
+            drawPLogo('mainLogo', 200);
+            drawPLogo('companyLogo', 150);
+        };
+    </script>
+</body>
+</html>

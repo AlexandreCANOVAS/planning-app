@@ -19,7 +19,7 @@ window.Echo = new Echo({
     encrypted: true,
     forceTLS: (import.meta.env.VITE_PUSHER_SCHEME ?? 'https') === 'https',
     enabledTransports: ['ws', 'wss'],
-    authEndpoint: '/planning-app/broadcasting/auth',
+    authEndpoint: '/broadcasting/auth',
     disabledTransports: ['xhr_streaming', 'xhr_polling'],
     auth: {
         headers: {
@@ -31,7 +31,7 @@ window.Echo = new Echo({
         return {
             authorize: (socketId, callback) => {
                 console.log(`Demande d'authentification pour socketId: ${socketId}`);
-                axios.post('/planning-app/broadcasting/auth', {
+                axios.post('/broadcasting/auth', {
                     socket_id: socketId,
                     channel_name: channel.name
                 })

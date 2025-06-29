@@ -249,15 +249,56 @@ class ExportController extends Controller
                 
                 // Calculer les heures de nuit (21h-06h)
                 if (!empty($planning->heure_debut) && !empty($planning->heure_fin)) {
-                    // Simplifié pour éviter les erreurs : si le planning est entre 21h et 6h, on compte 2h de nuit
-                    $heureDebut = \Carbon\Carbon::parse($planning->heure_debut)->format('H');
-                    $heureFin = \Carbon\Carbon::parse($planning->heure_fin)->format('H');
+                    $heureDebut = \Carbon\Carbon::parse($planning->heure_debut);
+                    $heureFin = \Carbon\Carbon::parse($planning->heure_fin);
                     
-                    if (($heureDebut >= 21 || $heureDebut < 6) || ($heureFin > 21 || $heureFin <= 6)) {
-                        // Estimation simplifiée des heures de nuit
-                        $heuresNuit = min(2, $heuresTravaillees);
-                        $heuresNuitSemaine += $heuresNuit;
+                    // Convertir en minutes depuis minuit pour faciliter les calculs
+                    $debutMinutes = $heureDebut->hour * 60 + $heureDebut->minute;
+                    $finMinutes = $heureFin->hour * 60 + $heureFin->minute;
+                    
+                    // Si l'heure de fin est avant l'heure de début, on ajoute 24h (passage à minuit)
+                    if ($finMinutes < $debutMinutes) {
+                        $finMinutes += 24 * 60;
                     }
+                    
+                    // Définir les plages de nuit en minutes (21h-06h)
+                    $debutNuit = 21 * 60; // 21h00
+                    $finNuit = 6 * 60;    // 06h00
+                    $finNuitAjuste = $finNuit + 24 * 60; // 06h00 le lendemain
+                    
+                    $heuresNuit = 0;
+                    
+                    // Cas 1: Le shift commence avant 21h et finit après 21h mais avant 6h du matin
+                    if ($debutMinutes < $debutNuit && $finMinutes > $debutNuit && $finMinutes <= $finNuitAjuste) {
+                        $heuresNuit = ($finMinutes - $debutNuit) / 60;
+                    }
+                    // Cas 2: Le shift commence après 21h et finit avant 6h du matin
+                    else if ($debutMinutes >= $debutNuit && $finMinutes <= $finNuitAjuste) {
+                        $heuresNuit = ($finMinutes - $debutMinutes) / 60;
+                    }
+                    // Cas 3: Le shift commence après 21h et finit après 6h du matin
+                    else if ($debutMinutes >= $debutNuit && $debutMinutes < 24 * 60 && $finMinutes > $finNuitAjuste) {
+                        $heuresNuit = ((24 * 60) - $debutMinutes + $finNuit) / 60;
+                    }
+                    // Cas 4: Le shift commence avant 6h du matin et finit après 6h du matin
+                    else if ($debutMinutes < $finNuit && $finMinutes > $finNuit) {
+                        $heuresNuit = ($finNuit - $debutMinutes) / 60;
+                    }
+                    // Cas 5: Le shift commence avant 21h et finit après 6h du matin le lendemain
+                    else if ($debutMinutes < $debutNuit && $finMinutes > $finNuitAjuste) {
+                        $heuresNuit = ((24 * 60) - $debutNuit + $finNuit) / 60;
+                    }
+                    
+                    // Ajouter les heures de nuit calculées
+                    $heuresNuitSemaine += $heuresNuit;
+                    
+                    // Log pour débogage
+                    \Log::info('Calcul heures de nuit', [
+                        'date' => $planning->date,
+                        'debut' => $planning->heure_debut,
+                        'fin' => $planning->heure_fin,
+                        'heures_nuit' => $heuresNuit
+                    ]);
                 }
                 
                 // Vérifier si c'est un dimanche
@@ -330,7 +371,9 @@ class ExportController extends Controller
         
         // Générer le PDF avec les données calculées
         $nomEmploye = $employe->prenom . ' ' . $employe->nom;
-        $annee = \Carbon\Carbon::createFromFormat('Y-m', $mois)->format('Y');
+        $date = \Carbon\Carbon::createFromFormat('Y-m', $mois);
+        $annee = $date->format('Y');
+        $mois = $date->locale('fr')->isoFormat('MMMM');
         
         // Créer le récapitulatif mensuel pour le template
         $recapMensuel = [
@@ -434,7 +477,9 @@ class ExportController extends Controller
         if ($employe_id) {
             $filename .= '-' . Str::slug($employe->nom . '-' . $employe->prenom);
         }
-        $filename .= '-' . $mois . '.pdf';
+        // Utiliser le format original pour le nom du fichier
+        $moisFichier = \Carbon\Carbon::createFromFormat('Y-m', $request->input('mois'))->format('m-Y');
+        $filename .= '-' . $moisFichier . '.pdf';
         
         return $pdf->download($filename);
     }

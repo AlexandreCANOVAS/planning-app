@@ -23,6 +23,7 @@ class Document extends Model
         'fichier_path',
         'type_fichier',
         'categorie',
+        'category_id',
         'visible_pour_tous',
         'societe_id',
         'uploaded_by',
@@ -63,6 +64,14 @@ class Document extends Model
         return $this->belongsToMany(Employe::class, 'document_employe')
                     ->withPivot(['consulte_le', 'confirme_lecture', 'confirme_le'])
                     ->withTimestamps();
+    }
+    
+    /**
+     * Obtenir la catégorie du document.
+     */
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(DocumentCategory::class, 'category_id');
     }
     
     /**

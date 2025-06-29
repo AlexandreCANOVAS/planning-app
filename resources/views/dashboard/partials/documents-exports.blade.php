@@ -48,7 +48,7 @@
             <h4 class="text-gray-900 font-medium mb-2">Documents comptables</h4>
             <p class="text-gray-500 text-sm mb-4">Générez les documents comptables par employé</p>
             
-            <form action="{{ route('export.compta') }}" method="GET" class="space-y-3">
+            <form action="{{ route('export.comptabilite') }}" method="GET" class="space-y-3">
                 <div class="space-y-2">
                     <label class="text-sm text-gray-600 block">Employé :</label>
                     <select name="employe_id" class="text-sm rounded-lg border-gray-200 w-full focus:ring-2 focus:ring-green-500">

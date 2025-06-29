@@ -64,12 +64,47 @@ class EmployeController extends Controller
         
         $totalEmployes = $employes->count();
         
-        // Calcul du taux d'occupation (valeur par défaut pour l'instant)
+        // Calcul du taux d'occupation réel basé sur les plannings
         $tauxOccupation = 0;
         if ($totalEmployes > 0) {
-            // On pourrait calculer le taux d'occupation réel en fonction des plannings
-            // Pour l'instant, on met une valeur par défaut
-            $tauxOccupation = 75;
+            // Récupérer le mois et l'année en cours
+            $moisActuel = now()->month;
+            $anneeActuelle = now()->year;
+            
+            // Récupérer tous les plannings du mois en cours
+            $plannings = \App\Models\Planning::whereMonth('date', $moisActuel)
+                ->whereYear('date', $anneeActuelle)
+                ->where('societe_id', $user->societe_id)
+                ->get();
+            
+            // Calculer le nombre total d'heures planifiées
+            $heuresPlanifiees = $plannings->sum('heures_travaillees');
+            
+            // Calculer le nombre total d'heures possibles pour tous les employés
+            // On considère qu'un employé à temps plein travaille 35h par semaine
+            // et qu'il y a en moyenne 4.33 semaines par mois
+            $heuresPossibles = 0;
+            
+            foreach ($employes as $employe) {
+                // Vérifier si l'employé a un temps partiel
+                $pourcentageTravail = 100; // Par défaut, temps plein
+                
+                if ($employe->temps_travail === 'Temps partiel' && !is_null($employe->pourcentage_travail)) {
+                    $pourcentageTravail = $employe->pourcentage_travail;
+                }
+                
+                // Calculer les heures possibles pour cet employé
+                $heuresPossiblesEmploye = 35 * 4.33 * ($pourcentageTravail / 100);
+                $heuresPossibles += $heuresPossiblesEmploye;
+            }
+            
+            // Calculer le taux d'occupation
+            if ($heuresPossibles > 0) {
+                $tauxOccupation = round(($heuresPlanifiees / $heuresPossibles) * 100);
+                
+                // Limiter à 100% maximum pour éviter les valeurs aberrantes
+                $tauxOccupation = min($tauxOccupation, 100);
+            }
         }
         
         // Nombre de congés en cours et à venir (valeurs par défaut pour l'instant)

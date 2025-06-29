@@ -189,6 +189,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Routes pour les employeurs
     // Le middleware 'auth' est redondant ici car déjà appliqué au groupe parent
     Route::middleware(CheckEmployeur::class)->group(function () {
+        // Routes pour les documents (admin)
+        Route::prefix('admin')->name('admin.')->group(function () {
+            Route::resource('documents', DocumentController::class);
+            Route::get('documents/{document}/manage-employes', [DocumentController::class, 'manageEmployes'])->name('documents.manage-employes');
+            Route::post('documents/{document}/update-employes', [DocumentController::class, 'updateEmployes'])->name('documents.update-employes');
+            Route::get('documents/stats', [DocumentController::class, 'stats'])->name('documents.stats');
+            
+            // Routes pour les catégories de documents
+            Route::resource('document-categories', DocumentCategoryController::class);
+            Route::get('get-document-categories', [DocumentCategoryController::class, 'getCategories'])->name('document-categories.get');
+        });
+        
         Route::resource('societes', SocieteController::class)->only(['create', 'store', 'edit', 'update']);
         Route::post('/societe/upload-logo', [SocieteController::class, 'uploadLogo'])->name('societe.upload-logo');
         

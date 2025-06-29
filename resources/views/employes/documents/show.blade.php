@@ -166,7 +166,7 @@
                                 <div class="ml-3">
                                     <h3 class="text-sm font-medium text-green-800">Lecture confirmée</h3>
                                     <div class="mt-2 text-sm text-green-700">
-                                        <p>Vous avez confirmé avoir lu et compris ce document le {{ \Carbon\Carbon::parse($document->pivot->lecture_confirmee)->format('d/m/Y à H:i') }}.</p>
+                                        <p>Vous avez confirmé avoir lu et compris ce document le {{ \Carbon\Carbon::parse($document->pivot->lecture_confirmee)->setTimezone('Europe/Paris')->format('d/m/Y à H:i') }}.</p>
                                     </div>
                                 </div>
                             </div>

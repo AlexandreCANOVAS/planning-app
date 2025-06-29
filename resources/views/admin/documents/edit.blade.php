@@ -38,21 +38,24 @@
                             
                             <!-- Catégorie -->
                             <div>
-                                <label for="categorie" class="block text-sm font-medium text-gray-700 mb-1">Catégorie <span class="text-red-500">*</span></label>
+                                <label for="category_id" class="block text-sm font-medium text-gray-700 mb-1">Catégorie <span class="text-red-500">*</span></label>
                                 <div class="flex">
-                                    <select name="categorie" id="categorie" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring focus:ring-purple-500 focus:ring-opacity-50">
+                                    <select name="category_id" id="category_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring focus:ring-purple-500 focus:ring-opacity-50">
                                         <option value="">Sélectionner une catégorie</option>
-                                        @foreach($categories as $categorie)
-                                            <option value="{{ $categorie }}" {{ old('categorie', $document->categorie) == $categorie ? 'selected' : '' }}>{{ $categorie }}</option>
+                                        @foreach($categories as $category)
+                                            <option value="{{ $category->id }}" {{ old('category_id', $document->category_id) == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
                                         @endforeach
-                                        <option value="autre">Autre...</option>
+                                        <option value="nouvelle">Ajouter une nouvelle catégorie...</option>
                                     </select>
                                 </div>
-                                <div id="autre-categorie" class="mt-2 hidden">
-                                    <input type="text" name="nouvelle_categorie" id="nouvelle_categorie" placeholder="Nouvelle catégorie" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring focus:ring-purple-500 focus:ring-opacity-50">
+                                <div id="nouvelle-categorie" class="mt-2 hidden">
+                                    <input type="text" name="nouvelle_categorie" id="nouvelle_categorie" placeholder="Nom de la nouvelle catégorie" class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-purple-500 focus:ring focus:ring-purple-500 focus:ring-opacity-50">
                                 </div>
-                                @error('categorie')
-                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @error('category_id')
+                                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                                @enderror
+                                @error('nouvelle_categorie')
+                                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                                 @enderror
                             </div>
                         </div>
@@ -190,21 +193,24 @@
     @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Gestion de la catégorie "Autre"
-            const categorieSelect = document.getElementById('categorie');
-            const autreCategorieDiv = document.getElementById('autre-categorie');
+            // Gestion de la nouvelle catégorie
+            const categorySelect = document.getElementById('category_id');
+            const nouvelleCategorieDiv = document.getElementById('nouvelle-categorie');
             
-            categorieSelect.addEventListener('change', function() {
-                if (this.value === 'autre') {
-                    autreCategorieDiv.classList.remove('hidden');
+            categorySelect.addEventListener('change', function() {
+                if (this.value === 'nouvelle') {
+                    nouvelleCategorieDiv.classList.remove('hidden');
+                    document.getElementById('nouvelle_categorie').setAttribute('required', 'required');
                 } else {
-                    autreCategorieDiv.classList.add('hidden');
+                    nouvelleCategorieDiv.classList.add('hidden');
+                    document.getElementById('nouvelle_categorie').removeAttribute('required');
                 }
             });
             
-            // Vérifier si "autre" est déjà sélectionné au chargement
-            if (categorieSelect.value === 'autre') {
-                autreCategorieDiv.classList.remove('hidden');
+            // Vérifier l'état initial
+            if (categorySelect.value === 'nouvelle') {
+                nouvelleCategorieDiv.classList.remove('hidden');
+                document.getElementById('nouvelle_categorie').setAttribute('required', 'required');
             }
             
             // Gestion de la visibilité pour tous

@@ -138,7 +138,7 @@
                                                 <td class="px-6 py-4 whitespace-nowrap">
                                                     @if($employe->pivot->consulte_le)
                                                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                                            {{ \Carbon\Carbon::parse($employe->pivot->consulte_le)->format('d/m/Y H:i') }}
+                                                            {{ \Carbon\Carbon::parse($employe->pivot->consulte_le)->setTimezone('Europe/Paris')->format('d/m/Y H:i') }}
                                                         </span>
                                                     @else
                                                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">

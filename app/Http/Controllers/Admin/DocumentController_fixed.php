@@ -20,17 +20,9 @@ class DocumentController extends Controller
     {
         $documents = Document::where('societe_id', Auth::user()->societe_id)
                            ->orderBy('created_at', 'desc')
-                           ->paginate(10);
+                           ->get();
         
-        // Récupérer les catégories distinctes pour le filtre
-        // Utiliser les catégories du modèle Document pour la rétrocompatibilité
-        $categories = Document::where('societe_id', Auth::user()->societe_id)
-                           ->whereNotNull('categorie')
-                           ->distinct()
-                           ->pluck('categorie')
-                           ->toArray();
-        
-        return view('admin.documents.index', compact('documents', 'categories'));
+        return view('admin.documents.index', compact('documents'));
     }
 
     /**
@@ -50,11 +42,7 @@ class DocumentController extends Controller
                           ->orderBy('nom')
                           ->get();
         
-        // Récupérer la société de l'utilisateur actuel
-        $societe = Auth::user()->societe()->first();
-        $societes = [$societe];
-        
-        return view('admin.documents.create', compact('categories', 'employes', 'societes'));
+        return view('admin.documents.create', compact('categories', 'employes'));
     }
 
     /**
@@ -63,26 +51,16 @@ class DocumentController extends Controller
     public function store(Request $request)
     {
         // Valider les données
-        $validator = validator($request->all(), [
+        $request->validate([
             'titre' => 'required|string|max:255',
             'description' => 'nullable|string',
             'fichier' => 'required|file|max:10240', // 10MB max
             'category_id' => 'required|string',
-            'nouvelle_categorie' => 'nullable|string|max:255',
+            'nouvelle_categorie' => 'required_if:category_id,nouvelle|string|max:255',
             'date_expiration' => 'nullable|date',
             'employes' => 'required_if:visible_pour_tous,null|array',
             'societe_id' => 'required|exists:societes,id',
         ]);
-        
-        // Vérifier manuellement si nouvelle_categorie est requis
-        if ($request->category_id === 'nouvelle' && empty($request->nouvelle_categorie)) {
-            $validator->errors()->add('nouvelle_categorie', 'Le champ nouvelle catégorie est obligatoire lorsque vous ajoutez une nouvelle catégorie.');
-            return redirect()->back()->withErrors($validator)->withInput();
-        }
-        
-        if ($validator->fails()) {
-            return redirect()->back()->withErrors($validator)->withInput();
-        }
         
         // Gérer le fichier
         $fichier = $request->file('fichier');
@@ -146,7 +124,7 @@ class DocumentController extends Controller
             $document->employes()->attach($request->employes);
         }
 
-        return redirect()->route('documents.index')
+        return redirect()->route('documents.show', $document->id)
                          ->with('success', 'Document créé avec succès.');
     }
 
@@ -188,11 +166,7 @@ class DocumentController extends Controller
         // Récupérer les IDs des employés associés à ce document
         $employesIds = $document->employes->pluck('id')->toArray();
         
-        // Récupérer la société de l'utilisateur actuel
-        $societe = Auth::user()->societe()->first();
-        $societes = [$societe];
-        
-        return view('admin.documents.edit', compact('document', 'categories', 'employes', 'employesIds', 'societes'));
+        return view('admin.documents.edit', compact('document', 'categories', 'employes', 'employesIds'));
     }
 
     /**
@@ -206,25 +180,15 @@ class DocumentController extends Controller
         }
         
         // Valider les données
-        $validator = validator($request->all(), [
+        $request->validate([
             'titre' => 'required|string|max:255',
             'description' => 'nullable|string',
             'fichier' => 'nullable|file|max:10240', // 10MB max
             'category_id' => 'required|string',
-            'nouvelle_categorie' => 'nullable|string|max:255',
+            'nouvelle_categorie' => 'required_if:category_id,nouvelle|string|max:255',
             'date_expiration' => 'nullable|date',
             'employes' => 'required_if:visible_pour_tous,null|array',
         ]);
-        
-        // Vérifier manuellement si nouvelle_categorie est requis
-        if ($request->category_id === 'nouvelle' && empty($request->nouvelle_categorie)) {
-            $validator->errors()->add('nouvelle_categorie', 'Le champ nouvelle catégorie est obligatoire lorsque vous ajoutez une nouvelle catégorie.');
-            return redirect()->back()->withErrors($validator)->withInput();
-        }
-        
-        if ($validator->fails()) {
-            return redirect()->back()->withErrors($validator)->withInput();
-        }
         
         // Gérer le fichier si un nouveau fichier est fourni
         $cheminFichier = $document->fichier_path;
@@ -299,7 +263,7 @@ class DocumentController extends Controller
             $document->employes()->sync($request->employes ?? []);
         }
         
-        return redirect()->route('documents.index')
+        return redirect()->route('documents.show', $document->id)
                          ->with('success', 'Document mis à jour avec succès.');
     }
 

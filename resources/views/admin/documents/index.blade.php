@@ -102,7 +102,16 @@
                                                 </span>
                                             @else
                                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200">
-                                                    Employés spécifiques
+                                                    @if($document->employes->count() > 0)
+                                                        @php
+                                                            $employesList = $document->employes->map(function($employe) {
+                                                                return $employe->prenom . ' ' . $employe->nom;
+                                                            })->implode(', ');
+                                                        @endphp
+                                                        {{ $employesList }}
+                                                    @else
+                                                        Aucun employé assigné
+                                                    @endif
                                                 </span>
                                             @endif
                                         </td>

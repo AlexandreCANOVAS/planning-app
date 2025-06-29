@@ -5,7 +5,7 @@
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
                     <a href="{{ route('welcome') }}">
-                        <img class="h-12 w-auto" src="{{ asset('images/logo.png') }}" alt="Planity">
+                        <img class="h-12 w-auto" src="{{ asset('images/logo.svg') }}" alt="Planify">
                     </a>
                 </div>
 
