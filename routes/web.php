@@ -334,6 +334,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/plannings', [ExportController::class, 'exportPlannings'])->name('plannings');
             Route::get('/compta', [ExportController::class, 'exportCompta'])->name('compta');
             Route::get('/comptabilite', [ExportController::class, 'exportComptabilite'])->name('comptabilite');
+            Route::get('/comptabilite/excel', [ExportController::class, 'exportComptabiliteExcel'])->name('comptabilite.excel');
         });
     });
 

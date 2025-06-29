@@ -484,6 +484,337 @@ class ExportController extends Controller
         return $pdf->download($filename);
     }
     
+    public function exportComptabiliteExcel(Request $request)
+    {
+        $mois = $request->input('mois', now()->format('Y-m'));
+        $employe_id = $request->input('employe_id');
+        $societe = Auth::user()->societe;
+        
+        // Vérifier si l'employé existe et appartient à la société de l'utilisateur
+        if ($employe_id) {
+            $employe = \App\Models\Employe::where('id', $employe_id)
+                ->where('societe_id', $societe->id)
+                ->with('user')
+                ->first();
+                
+            if (!$employe) {
+                return back()->with('error', 'Employé non trouvé.');
+            }
+            
+            $nomEmploye = $employe->prenom . ' ' . $employe->nom;
+        } else {
+            return back()->with('error', 'Veuillez sélectionner un employé.');
+        }
+        
+        // Convertir le mois en objet Carbon pour les comparaisons
+        $dateDebut = \Carbon\Carbon::createFromFormat('Y-m', $mois)->startOfMonth();
+        $dateFin = \Carbon\Carbon::createFromFormat('Y-m', $mois)->endOfMonth();
+        
+        // Récupérer tous les plannings du mois pour l'employé
+        $plannings = Planning::where('employe_id', $employe_id)
+            ->whereBetween('date', [$dateDebut, $dateFin])
+            ->with('lieu')
+            ->orderBy('date')
+            ->get();
+            
+        // Initialiser les totaux du mois
+        $totalHeuresMois = 0;
+        $totalHeuresSup25 = 0;
+        $totalHeuresSup50 = 0;
+        $totalHeuresNuit = 0;
+        $totalHeuresDimanche = 0;
+        $totalHeuresJoursFeries = 0;
+        $totalAbsences = 0;
+        
+        // Récupérer les plannings par semaine pour l'affichage
+        $detailHeuresSupp = [];
+        $date = $dateDebut->copy()->startOfWeek(\Carbon\Carbon::MONDAY);
+        $finMoisEtSemaine = $dateFin->copy()->endOfWeek(\Carbon\Carbon::SUNDAY);
+        $semaine = 1; // Initialisation du compteur de semaines
+        
+        while ($date <= $finMoisEtSemaine) {
+            $debutSemaine = $date->copy()->startOfWeek(\Carbon\Carbon::MONDAY);
+            $finSemaine = $debutSemaine->copy()->endOfWeek(\Carbon\Carbon::SUNDAY);
+            
+            // Calculer les heures de la semaine
+            $heuresSemaine = 0;
+            $heuresNuitSemaine = 0;
+            $heuresDimancheSemaine = 0;
+            $heuresJoursFeriesSemaine = 0;
+            $absencesSemaine = 0;
+            
+            $planningsSemaine = $plannings->filter(function($planning) use ($debutSemaine, $finSemaine) {
+                $datePlanning = \Carbon\Carbon::parse($planning->date);
+                return $datePlanning->between($debutSemaine, $finSemaine);
+            });
+            
+            foreach ($planningsSemaine as $planning) {
+                $heures = $this->calculerHeures($planning);
+                $heuresSemaine += $heures['total'];
+                $heuresNuitSemaine += $heures['nuit'];
+                
+                // Vérifier si le planning est un dimanche
+                $datePlanning = \Carbon\Carbon::parse($planning->date);
+                if ($datePlanning->dayOfWeek === 0) { // 0 = dimanche
+                    $heuresDimancheSemaine += $heures['total'];
+                }
+                
+                // Vérifier si le planning est un jour férié
+                if ($this->estJourFerie($datePlanning)) {
+                    $heuresJoursFeriesSemaine += $heures['total'];
+                }
+            }
+            
+            // Calculer les absences pour cette semaine
+            $absencesSemaine = $this->calculerAbsencesSemaine($employe_id, $debutSemaine, $finSemaine);
+            
+            // Calculer les heures supplémentaires
+            $heuresSup = $this->calculerHeuresSupplementaires($heuresSemaine);
+            
+            // Ajouter les résultats de la semaine au tableau
+            $detailHeuresSupp[] = [
+                'semaine' => 'Semaine ' . $semaine . ' (' . $debutSemaine->format('d/m') . ' - ' . $finSemaine->format('d/m') . ')',
+                'heures_travaillees' => $heuresSemaine,
+                'heures_25' => $heuresSup['heures_25'],
+                'heures_50' => $heuresSup['heures_50'],
+                'heures_nuit' => $heuresNuitSemaine,
+                'heures_dimanche' => $heuresDimancheSemaine,
+                'heures_jours_feries' => $heuresJoursFeriesSemaine,
+                'absences' => $absencesSemaine
+            ];
+            
+            // Ajouter au total du mois
+            $totalHeuresMois += $heuresSemaine;
+            $totalHeuresSup25 += $heuresSup['heures_25'];
+            $totalHeuresSup50 += $heuresSup['heures_50'];
+            $totalHeuresNuit += $heuresNuitSemaine;
+            $totalHeuresDimanche += $heuresDimancheSemaine;
+            $totalHeuresJoursFeries += $heuresJoursFeriesSemaine;
+            $totalAbsences += $absencesSemaine;
+            
+            // Passer à la semaine suivante
+            $date->addWeek();
+            $semaine++;
+        }
+        
+        // Créer un nouveau classeur Excel
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Comptabilité');
+        
+        // En-tête avec informations de l'employé et de la société
+        $sheet->setCellValue('A1', 'Rapport comptable');
+        $sheet->setCellValue('A2', 'Société: ' . $societe->nom);
+        $sheet->setCellValue('A3', 'Employé: ' . $nomEmploye);
+        $sheet->setCellValue('A4', 'Période: ' . \Carbon\Carbon::createFromFormat('Y-m', $mois)->locale('fr')->isoFormat('MMMM YYYY'));
+        
+        // Style pour les en-têtes
+        $headerStyle = [
+            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+            'fill' => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'color' => ['rgb' => '4C1D95']],
+            'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER]
+        ];
+        
+        // En-têtes des colonnes pour le récapitulatif hebdomadaire
+        $sheet->setCellValue('A6', 'Semaine');
+        $sheet->setCellValue('B6', 'Total Heures');
+        $sheet->setCellValue('C6', 'Heures Sup 25%');
+        $sheet->setCellValue('D6', 'Heures Sup 50%');
+        $sheet->setCellValue('E6', 'Heures de Nuit');
+        $sheet->setCellValue('F6', 'Heures Dimanche');
+        $sheet->setCellValue('G6', 'Heures Jours Fériés');
+        $sheet->setCellValue('H6', 'Absences (jours)');
+        
+        $sheet->getStyle('A6:H6')->applyFromArray($headerStyle);
+        
+        // Remplir les données hebdomadaires
+        $row = 7;
+        foreach ($detailHeuresSupp as $semaine) {
+            $sheet->setCellValue('A' . $row, $semaine['semaine']);
+            $sheet->setCellValue('B' . $row, $this->convertToHHMM($semaine['heures_travaillees']));
+            $sheet->setCellValue('C' . $row, $this->convertToHHMM($semaine['heures_25']));
+            $sheet->setCellValue('D' . $row, $this->convertToHHMM($semaine['heures_50']));
+            $sheet->setCellValue('E' . $row, $this->convertToHHMM($semaine['heures_nuit']));
+            $sheet->setCellValue('F' . $row, $this->convertToHHMM($semaine['heures_dimanche']));
+            $sheet->setCellValue('G' . $row, $this->convertToHHMM($semaine['heures_jours_feries']));
+            $sheet->setCellValue('H' . $row, $semaine['absences']);
+            $row++;
+        }
+        
+        // Total mensuel
+        $totalRow = $row;
+        $sheet->setCellValue('A' . $totalRow, 'TOTAL MENSUEL');
+        $sheet->setCellValue('B' . $totalRow, $this->convertToHHMM($totalHeuresMois));
+        $sheet->setCellValue('C' . $totalRow, $this->convertToHHMM($totalHeuresSup25));
+        $sheet->setCellValue('D' . $totalRow, $this->convertToHHMM($totalHeuresSup50));
+        $sheet->setCellValue('E' . $totalRow, $this->convertToHHMM($totalHeuresNuit));
+        $sheet->setCellValue('F' . $totalRow, $this->convertToHHMM($totalHeuresDimanche));
+        $sheet->setCellValue('G' . $totalRow, $this->convertToHHMM($totalHeuresJoursFeries));
+        $sheet->setCellValue('H' . $totalRow, $totalAbsences);
+        
+        $sheet->getStyle('A' . $totalRow . ':H' . $totalRow)->applyFromArray([
+            'font' => ['bold' => true],
+            'fill' => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'color' => ['rgb' => 'E9D5FF']]
+        ]);
+        
+        // Ajuster la largeur des colonnes automatiquement
+        foreach (range('A', 'H') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+        
+        // Créer le fichier Excel
+        $writer = new Xlsx($spreadsheet);
+        $filename = 'comptabilite-' . Str::slug($employe->nom . '-' . $employe->prenom) . '-' . \Carbon\Carbon::createFromFormat('Y-m', $mois)->format('m-Y') . '.xlsx';
+        
+        // Enregistrer le fichier temporairement et le télécharger
+        $tempFile = tempnam(sys_get_temp_dir(), 'excel');
+        $writer->save($tempFile);
+        
+        return response()->download($tempFile, $filename, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ])->deleteFileAfterSend(true);
+    }
+    
+    /**
+     * Calcule les heures normales et de nuit pour un planning
+     * 
+     * @param Planning $planning
+     * @return array
+     */
+    private function calculerHeures($planning) {
+        $heuresTravaillees = $planning->heures_travaillees ?? 0;
+        $heuresNuit = 0;
+        
+        // Calculer les heures de nuit (21h-06h)
+        if (!empty($planning->heure_debut) && !empty($planning->heure_fin)) {
+            $heureDebut = \Carbon\Carbon::parse($planning->heure_debut);
+            $heureFin = \Carbon\Carbon::parse($planning->heure_fin);
+            
+            // Convertir en minutes depuis minuit pour faciliter les calculs
+            $debutMinutes = $heureDebut->hour * 60 + $heureDebut->minute;
+            $finMinutes = $heureFin->hour * 60 + $heureFin->minute;
+            
+            // Si l'heure de fin est avant l'heure de début, on ajoute 24h (passage à minuit)
+            if ($finMinutes < $debutMinutes) {
+                $finMinutes += 24 * 60;
+            }
+            
+            // Définir les plages de nuit en minutes (21h-06h)
+            $debutNuit = 21 * 60; // 21h00
+            $finNuit = 6 * 60;    // 06h00
+            $finNuitAjuste = $finNuit + 24 * 60; // 06h00 le lendemain
+            
+            // Cas 1: Le shift commence avant 21h et finit après 21h mais avant 6h du matin
+            if ($debutMinutes < $debutNuit && $finMinutes > $debutNuit && $finMinutes <= $finNuitAjuste) {
+                $heuresNuit = ($finMinutes - $debutNuit) / 60;
+            }
+            // Cas 2: Le shift commence après 21h et finit avant 6h du matin
+            else if ($debutMinutes >= $debutNuit && $finMinutes <= $finNuitAjuste) {
+                $heuresNuit = ($finMinutes - $debutMinutes) / 60;
+            }
+            // Cas 3: Le shift commence après 21h et finit après 6h du matin
+            else if ($debutMinutes >= $debutNuit && $debutMinutes < 24 * 60 && $finMinutes > $finNuitAjuste) {
+                $heuresNuit = ((24 * 60) - $debutMinutes + $finNuit) / 60;
+            }
+            // Cas 4: Le shift commence avant 6h du matin et finit après 6h du matin
+            else if ($debutMinutes < $finNuit && $finMinutes > $finNuit) {
+                $heuresNuit = ($finNuit - $debutMinutes) / 60;
+            }
+            // Cas 5: Le shift commence avant 21h et finit après 6h du matin le lendemain
+            else if ($debutMinutes < $debutNuit && $finMinutes > $finNuitAjuste) {
+                $heuresNuit = ((24 * 60) - $debutNuit + $finNuit) / 60;
+            }
+        }
+        
+        return [
+            'total' => $heuresTravaillees,
+            'nuit' => $heuresNuit
+        ];
+    }
+    
+    /**
+     * Calcule les heures supplémentaires pour une semaine
+     * 
+     * @param float $heuresSemaine
+     * @return array
+     */
+    private function calculerHeuresSupplementaires($heuresSemaine) {
+        $heures25 = 0;
+        $heures50 = 0;
+        
+        // Heures sup 25% : entre 35h et 43h
+        if ($heuresSemaine > 35) {
+            $heures25 = min($heuresSemaine, 43) - 35;
+        }
+        
+        // Heures sup 50% : au-delà de 43h
+        if ($heuresSemaine > 43) {
+            $heures50 = $heuresSemaine - 43;
+        }
+        
+        return [
+            'heures_25' => $heures25,
+            'heures_50' => $heures50
+        ];
+    }
+    
+    /**
+     * Calcule les absences pour une semaine
+     * 
+     * @param int $employe_id
+     * @param Carbon $debutSemaine
+     * @param Carbon $finSemaine
+     * @return int
+     */
+    private function calculerAbsencesSemaine($employe_id, $debutSemaine, $finSemaine) {
+        // Récupérer tous les plannings du mois pour cet employé
+        $plannings = Planning::where('employe_id', $employe_id)
+            ->whereBetween('date', [$debutSemaine->copy()->startOfMonth(), $finSemaine->copy()->endOfMonth()])
+            ->get();
+        
+        // Pour le mois de janvier, on ne compte pas les absences
+        $moisActuel = $debutSemaine->format('m');
+        
+        if ($moisActuel == '01') { // Janvier
+            return 0;
+        }
+        
+        // Vérifier les jours où l'employé est censé travailler
+        // On se base sur les plannings pour déterminer les jours habituels de travail
+        $joursHabituels = [];
+        
+        foreach ($plannings as $planning) {
+            $jourSemaine = \Carbon\Carbon::parse($planning->date)->dayOfWeek;
+            $joursHabituels[$jourSemaine] = true;
+        }
+        
+        // Calculer les jours où l'employé aurait dû travailler cette semaine
+        $joursSemaine = [];
+        $currentDay = $debutSemaine->copy();
+        while ($currentDay <= $finSemaine) {
+            $jourSemaine = $currentDay->dayOfWeek;
+            // On ne compte que les jours où l'employé travaille habituellement
+            if (isset($joursHabituels[$jourSemaine])) {
+                $joursSemaine[] = $currentDay->format('Y-m-d');
+            }
+            $currentDay->addDay();
+        }
+        
+        // Jours avec plannings dans cette semaine
+        $planningsSemaine = $plannings->filter(function($planning) use ($debutSemaine, $finSemaine) {
+            $datePlanning = \Carbon\Carbon::parse($planning->date);
+            return $datePlanning->between($debutSemaine, $finSemaine);
+        });
+        
+        $joursAvecPlannings = $planningsSemaine->pluck('date')->toArray();
+        
+        // Jours d'absence = jours où l'employé aurait dû travailler mais n'a pas de planning
+        $joursAbsence = array_diff($joursSemaine, $joursAvecPlannings);
+        return count($joursAbsence);
+    }
+    
+    // La méthode convertToHHMM existe déjà plus bas dans le fichier
+    
     private function estJourFerie($date) {
         // Liste des jours fériés en France
         $joursFeries = [
