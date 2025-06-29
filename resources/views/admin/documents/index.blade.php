@@ -5,13 +5,13 @@
                 {{ __('Gestion des documents') }}
             </h2>
             <div class="flex space-x-2">
-                <a href="{{ route('documents.create') }}" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg flex items-center">
+                <a href="{{ route('admin.documents.create') }}" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg flex items-center">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                     </svg>
                     Ajouter un document
                 </a>
-                <a href="{{ route('documents.stats') }}" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg flex items-center">
+                <a href="{{ route('admin.documents.stats') }}" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg flex items-center">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                     </svg>
@@ -26,7 +26,7 @@
             <!-- Filtres -->
             <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
                 <h3 class="text-lg font-medium text-gray-800 mb-4">Filtres</h3>
-                <form action="{{ route('documents.index') }}" method="GET" class="flex flex-wrap gap-4">
+                <form action="{{ route('admin.documents.index') }}" method="GET" class="flex flex-wrap gap-4">
                     <div class="w-full md:w-1/3">
                         <label for="categorie" class="block text-sm font-medium text-gray-700 mb-1">Catégorie</label>
                         <select id="categorie" name="categorie" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring focus:ring-purple-500 focus:ring-opacity-50">
@@ -44,7 +44,7 @@
                         <button type="submit" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg">
                             Filtrer
                         </button>
-                        <a href="{{ route('documents.index') }}" class="ml-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg">
+                        <a href="{{ route('admin.documents.index') }}" class="ml-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg">
                             Réinitialiser
                         </a>
                     </div>
@@ -134,18 +134,18 @@
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                             <div class="flex space-x-2">
-                                                <a href="{{ route('documents.show', $document->id) }}" class="text-purple-600 hover:text-purple-900">
+                                                <a href="{{ route('admin.documents.show', $document->id) }}" class="text-purple-600 hover:text-purple-900">
                                                     <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                                                     </svg>
                                                 </a>
-                                                <a href="{{ route('documents.edit', $document->id) }}" class="text-purple-600 hover:text-purple-900">
+                                                <a href="{{ route('admin.documents.edit', $document->id) }}" class="text-purple-600 hover:text-purple-900">
                                                     <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                                     </svg>
                                                 </a>
-                                                <form action="{{ route('documents.destroy', $document->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce document ?');">
+                                                <form action="{{ route('admin.documents.destroy', $document->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce document ?');">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit" class="text-red-600 hover:text-red-900">

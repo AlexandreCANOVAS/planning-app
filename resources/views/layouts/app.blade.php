@@ -457,9 +457,12 @@
         @endif
         <x-cookie-consent />
         
-        <!-- Scripts Livewire -->
+        <!-- Livewire Scripts -->
         @livewireScripts
-
+        
+        <!-- Composant de notification pour les téléchargements -->
+        @include('components.download-toast')
+        
         @stack('scripts')
     </body>
 </html>

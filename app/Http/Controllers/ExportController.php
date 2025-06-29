@@ -871,4 +871,238 @@ class ExportController extends Controller
         $dateFormat = $date->format('d-m');
         return $joursFeries[$dateFormat] ?? "Jour férié";
     }
+    
+    /**
+     * Génère un rapport d'activité détaillé
+     * 
+     * @param Request $request
+     * @return \Illuminate\Http\Response
+     */
+    public function exportActivityReport(Request $request)
+    {
+        // Validation des entrées
+        $request->validate([
+            'employe_id' => 'nullable|exists:employes,id',
+            'mois' => 'required|string',
+        ]);
+        
+        $employe_id = $request->input('employe_id');
+        $mois = $request->input('mois');
+        
+        // Gérer le format "YYYY-MM"
+        try {
+            if (preg_match('/^\d{4}-\d{2}$/', $mois)) {
+                $date = Carbon::createFromFormat('Y-m', $mois);
+            } else {
+                $date = Carbon::parse($mois);
+            }
+        } catch (\Exception $e) {
+            \Log::error('Erreur de parsing de date', [
+                'mois' => $mois,
+                'error' => $e->getMessage()
+            ]);
+            $date = now();
+        }
+        
+        $date_debut = $date->copy()->startOfMonth();
+        $date_fin = $date->copy()->endOfMonth();
+        
+        // Récupérer la société de l'utilisateur connecté
+        $societe = Auth::user()->societe;
+        
+        // Récupérer les plannings pour le mois
+        $query = Planning::with(['employe', 'lieu'])
+            ->where('societe_id', $societe->id)
+            ->whereBetween('date', [$date_debut->format('Y-m-d'), $date_fin->format('Y-m-d')]);
+            
+        if ($employe_id) {
+            $query->where('employe_id', $employe_id);
+            $employe = Employe::find($employe_id);
+        }
+        
+        $plannings = $query->get();
+        
+        // Analyser les données pour le rapport
+        $stats = $this->analyzeActivityData($plannings, $date_debut, $date_fin);
+        
+        // Générer le PDF
+        $pdf = PDF::loadView('exports.activity-report', [
+            'stats' => $stats,
+            'societe' => $societe,
+            'dateDebut' => $date_debut,
+            'dateFin' => $date_fin,
+            'employe' => $employe ?? null,
+            'mois' => $date->format('F Y')
+        ]);
+        
+        $filename = 'rapport-activite-' . $date->format('m-Y');
+        if ($employe_id) {
+            $filename .= '-' . Str::slug($employe->nom . '-' . $employe->prenom);
+        }
+        $filename .= '.pdf';
+        
+        return $pdf->download($filename);
+    }
+    
+    /**
+     * Analyse les données d'activité pour générer des statistiques
+     * 
+     * @param Collection $plannings
+     * @param Carbon $dateDebut
+     * @param Carbon $dateFin
+     * @return array
+     */
+    private function analyzeActivityData($plannings, $dateDebut, $dateFin)
+    {
+        // Structure de données pour l'analyse
+        $stats = [
+            'resume' => [
+                'total_heures' => 0,
+                'heures_standard' => 0,
+                'heures_supplementaires' => 0,
+                'heures_nuit' => 0,
+                'heures_dimanche' => 0,
+                'heures_feries' => 0,
+                'nb_employes_actifs' => 0,
+                'nb_lieux_utilises' => 0,
+                'taux_occupation' => 0,
+            ],
+            'par_employe' => [],
+            'par_lieu' => [],
+            'par_jour_semaine' => [
+                'Lundi' => 0, 'Mardi' => 0, 'Mercredi' => 0, 
+                'Jeudi' => 0, 'Vendredi' => 0, 'Samedi' => 0, 'Dimanche' => 0
+            ],
+            'absences' => [
+                'conges' => 0,
+                'maladie' => 0,
+                'autres' => 0,
+            ],
+        ];
+        
+        // Compteurs pour les statistiques
+        $employesActifs = [];
+        $lieuxUtilises = [];
+        
+        foreach ($plannings as $planning) {
+            // Calculer les heures totales
+            $heures = $this->prepareHeuresActivite($planning);
+            $stats['resume']['total_heures'] += $heures['total'];
+            $stats['resume']['heures_standard'] += $heures['standard'];
+            $stats['resume']['heures_supplementaires'] += $heures['supplementaires'];
+            $stats['resume']['heures_nuit'] += $heures['nuit'];
+            
+            // Ajouter l'employé aux actifs s'il n'est pas déjà compté
+            if (!in_array($planning->employe_id, $employesActifs)) {
+                $employesActifs[] = $planning->employe_id;
+            }
+            
+            // Ajouter le lieu aux utilisés s'il n'est pas déjà compté
+            if (!in_array($planning->lieu_id, $lieuxUtilises)) {
+                $lieuxUtilises[] = $planning->lieu_id;
+            }
+            
+            // Statistiques par jour de la semaine
+            $jourSemaine = Carbon::parse($planning->date)->locale('fr_FR')->isoFormat('dddd');
+            $stats['par_jour_semaine'][ucfirst($jourSemaine)] += $heures['total'];
+            
+            // Vérifier si c'est un dimanche
+            if (Carbon::parse($planning->date)->isSunday()) {
+                $stats['resume']['heures_dimanche'] += $heures['total'];
+            }
+            
+            // Vérifier si c'est un jour férié
+            if ($this->estJourFerie(Carbon::parse($planning->date))) {
+                $stats['resume']['heures_feries'] += $heures['total'];
+            }
+            
+            // Statistiques par employé
+            if (!isset($stats['par_employe'][$planning->employe_id])) {
+                $stats['par_employe'][$planning->employe_id] = [
+                    'nom' => $planning->employe->nom . ' ' . $planning->employe->prenom,
+                    'heures' => 0,
+                ];
+            }
+            $stats['par_employe'][$planning->employe_id]['heures'] += $heures['total'];
+            
+            // Statistiques par lieu
+            if (!isset($stats['par_lieu'][$planning->lieu_id])) {
+                $stats['par_lieu'][$planning->lieu_id] = [
+                    'nom' => $planning->lieu->nom,
+                    'heures' => 0,
+                ];
+            }
+            $stats['par_lieu'][$planning->lieu_id]['heures'] += $heures['total'];
+        }
+        
+        // Finaliser les statistiques
+        $stats['resume']['nb_employes_actifs'] = count($employesActifs);
+        $stats['resume']['nb_lieux_utilises'] = count($lieuxUtilises);
+        
+        // Calculer le taux d'occupation (nombre de jours travaillés / nombre de jours ouvrables)
+        $joursOuvrables = $this->calculerJoursOuvrables($dateDebut, $dateFin);
+        $joursTravailles = $plannings->pluck('date')->unique()->count();
+        $stats['resume']['jours_ouvrables'] = $joursOuvrables;
+        $stats['resume']['taux_occupation'] = $joursOuvrables > 0 ? round(($joursTravailles / $joursOuvrables) * 100, 1) : 0;
+        
+        return $stats;
+    }
+    
+    /**
+     * Calcule le nombre de jours ouvrables dans une période
+     * 
+     * @param Carbon $debut
+     * @param Carbon $fin
+     * @return int
+     */
+    private function calculerJoursOuvrables($debut, $fin)
+    {
+        $joursOuvrables = 0;
+        $current = $debut->copy();
+        
+        while ($current->lte($fin)) {
+            // Si ce n'est pas un weekend et pas un jour férié
+            if (!$current->isWeekend() && !$this->estJourFerie($current)) {
+                $joursOuvrables++;
+            }
+            $current->addDay();
+        }
+        
+        return $joursOuvrables;
+    }
+    
+    /**
+     * Prépare les données d'heures pour le rapport d'activité
+     * 
+     * @param Planning $planning
+     * @return array
+     */
+    private function prepareHeuresActivite($planning)
+    {
+        // Utiliser la méthode existante pour les calculs de base
+        $heuresBase = $this->calculerHeures($planning);
+        
+        // Calculer les heures totales
+        $heureDebut = Carbon::parse($planning->heure_debut);
+        $heureFin = Carbon::parse($planning->heure_fin);
+        
+        // Si l'heure de fin est avant l'heure de début, on ajoute 24h (passage à minuit)
+        if ($heureFin < $heureDebut) {
+            $heureFin->addDay();
+        }
+        
+        // Calculer la durée totale en heures décimales
+        $dureeMinutes = $heureFin->diffInMinutes($heureDebut);
+        $dureeHeures = $dureeMinutes / 60;
+        
+        // Préparer le tableau de résultat pour le rapport d'activité
+        $heures = [
+            'total' => $dureeHeures,
+            'standard' => min($dureeHeures, 7), // 7h = journée standard
+            'supplementaires' => max(0, $dureeHeures - 7),
+            'nuit' => $heuresBase['heures_nuit'] ?? 0,
+        ];
+        
+        return $heures;
+    }
 }

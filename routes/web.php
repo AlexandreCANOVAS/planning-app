@@ -185,6 +185,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Routes d'export pour la comptabilité
     Route::get('/export/comptabilite', [ExportController::class, 'exportComptabilitePDF'])->name('export.comptabilite');
     Route::get('/export/comptabilite/excel', [ExportController::class, 'exportComptabiliteExcel'])->name('export.comptabilite.excel');
+    
+    // Route pour les rapports d'activité
+    Route::get('/export/activity-report', [ExportController::class, 'exportActivityReport'])->name('export.activity-report');
         
     // Routes pour les employeurs
     // Le middleware 'auth' est redondant ici car déjà appliqué au groupe parent

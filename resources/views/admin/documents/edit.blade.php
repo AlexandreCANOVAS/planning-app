@@ -162,7 +162,7 @@
                                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                                     @foreach($employes as $employe)
                                         <div class="employe-item flex items-center p-2 rounded-md hover:bg-gray-50">
-                                            <input id="employe-{{ $employe->id }}" name="employes[]" value="{{ $employe->id }}" type="checkbox" {{ in_array($employe->id, old('employes', $employesSelectionnes)) ? 'checked' : '' }} class="focus:ring-purple-500 h-4 w-4 text-purple-600 border-gray-300 rounded">
+                                            <input id="employe-{{ $employe->id }}" name="employes[]" value="{{ $employe->id }}" type="checkbox" {{ in_array($employe->id, old('employes', $employesIds)) ? 'checked' : '' }} class="focus:ring-purple-500 h-4 w-4 text-purple-600 border-gray-300 rounded">
                                             <label for="employe-{{ $employe->id }}" class="ml-3 block text-sm font-medium text-gray-700 cursor-pointer">
                                                 {{ $employe->user->name }} {{ $employe->user->prenom }}
                                             </label>

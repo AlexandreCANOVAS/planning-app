@@ -352,8 +352,11 @@ class DocumentController extends Controller
     {
         $societeId = Auth::user()->societe_id;
         
+        // Récupérer tous les documents de la société
+        $documents = Document::where('societe_id', $societeId)->get();
+        
         // Nombre total de documents
-        $totalDocuments = Document::where('societe_id', $societeId)->count();
+        $totalDocuments = $documents->count();
         
         // Documents par catégorie
         $documentsByCategory = Document::where('societe_id', $societeId)
@@ -382,6 +385,7 @@ class DocumentController extends Controller
             ->get();
         
         return view('admin.documents.stats', compact(
+            'documents',
             'totalDocuments',
             'documentsByCategory',
             'documentsByType',
