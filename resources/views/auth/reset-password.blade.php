@@ -67,6 +67,7 @@
                                 <span>Touche Majuscule (Caps Lock) activée</span>
                             </div>
                             <x-input-error :messages="$errors->get('password')" class="mt-2" />
+                            <!-- L'indicateur de force sera inséré ici par le script -->
                         </div>
 
                         <!-- Confirmation du mot de passe -->
@@ -121,4 +122,6 @@
         }
     });
     </script>
+    <!-- Script pour l'indicateur de force du mot de passe -->
+    <script src="{{ asset('js/password-strength.js') }}"></script>
 </x-guest-layout>

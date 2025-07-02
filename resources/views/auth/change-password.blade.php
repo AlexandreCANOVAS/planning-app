@@ -65,7 +65,7 @@
                                     class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent transition duration-150 ease-in-out" 
                                     placeholder="Créez un nouveau mot de passe sécurisé">
                             </div>
-                            <p class="mt-2 text-sm text-gray-500">Utilisez au moins 8 caractères avec des lettres, chiffres et symboles</p>
+                            <!-- L'indicateur de force sera inséré ici par le script -->
                             <x-input-error :messages="$errors->get('password')" class="mt-2" />
                         </div>
 
@@ -101,4 +101,6 @@
             </div>
         </div>
     </div>
+    <!-- Script pour l'indicateur de force du mot de passe -->
+    <script src="{{ asset('js/password-strength.js') }}"></script>
 </x-app-layout>
