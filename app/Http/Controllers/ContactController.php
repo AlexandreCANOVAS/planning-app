@@ -21,8 +21,17 @@ class ContactController extends Controller
             'message' => 'required|string',
         ]);
 
-        // TODO: Implement email sending logic here
-        // Mail::to('contact@planningapp.com')->send(new ContactMail($validated));
+        // Envoyer l'email en utilisant le template HTML
+        Mail::send('emails.contact.message', [
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'subject' => $validated['subject'],
+            'messageContent' => $validated['message']
+        ], function ($message) use ($validated) {
+            $message->to('contact@planningapp.com')
+                ->subject("[Contact Site Web] {$validated['subject']}")
+                ->replyTo($validated['email'], $validated['name']);
+        });
 
         return back()->with('success', 'Votre message a été envoyé avec succès !');
     }

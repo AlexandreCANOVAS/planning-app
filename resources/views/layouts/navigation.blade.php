@@ -75,6 +75,10 @@
                                         <i class="fas fa-graduation-cap mr-2"></i>
                                         {{ __('Formations') }}
                                     </a>
+                                    <a href="{{ route('fiches-paie.index') }}" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-purple-100 hover:text-purple-800 {{ request()->routeIs('fiches-paie.*') ? 'bg-purple-100 text-purple-800' : '' }}">
+                                        <i class="fas fa-file-invoice-dollar mr-2"></i>
+                                        {{ __('Fiches de paie') }}
+                                    </a>
                                 </div>
                             </div>
                         </div>
@@ -179,6 +183,11 @@
                                 <x-dropdown-link :href="route('profile.edit')" class="flex items-center">
                                     <i class="fas fa-user-cog mr-2 text-purple-600"></i>
                                     {{ __('Profil') }}
+                                </x-dropdown-link>
+
+                                <x-dropdown-link :href="route('subscription.manage')" class="flex items-center">
+                                    <i class="fas fa-credit-card mr-2 text-purple-600"></i>
+                                    {{ __('Mon abonnement') }}
                                 </x-dropdown-link>
 
                                 @if(Auth::check() && Auth::user()->role !== 'employe')
@@ -286,6 +295,12 @@
                     {{ __('Formations') }}
                 </x-responsive-nav-link>
 
+                <x-responsive-nav-link :href="route('fiches-paie.index')" :active="request()->routeIs('fiches-paie.*')" 
+                    class="flex items-center px-4 py-2 text-white hover:bg-purple-600/40 transition-all duration-200">
+                    <i class="fas fa-file-invoice-dollar w-6 text-center mr-2"></i>
+                    {{ __('Fiches de paie') }}
+                </x-responsive-nav-link>
+
                 <!-- Séparateur avec titre de section -->
                 <div class="px-4 py-2 text-xs font-semibold text-purple-200 bg-purple-700/30 uppercase tracking-wider">
                     Planification
@@ -352,6 +367,12 @@
                     class="flex items-center px-4 py-2 text-white hover:bg-purple-600/40 transition-all duration-200">
                     <i class="fas fa-user-cog w-6 text-center mr-2"></i>
                     {{ __('Profil') }}
+                </x-responsive-nav-link>
+
+                <x-responsive-nav-link :href="route('subscription.manage')" 
+                    class="flex items-center px-4 py-2 text-white hover:bg-purple-600/40 transition-all duration-200">
+                    <i class="fas fa-credit-card w-6 text-center mr-2"></i>
+                    {{ __('Mon abonnement') }}
                 </x-responsive-nav-link>
 
                 @if(Auth::check() && Auth::user()->role !== 'employe')

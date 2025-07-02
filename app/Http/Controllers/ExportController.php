@@ -808,39 +808,17 @@ class ExportController extends Controller
         
         $joursAvecPlannings = $planningsSemaine->pluck('date')->toArray();
         
-        // Jours d'absence = jours où l'employé aurait dû travailler mais n'a pas de planning
-        $joursAbsence = array_diff($joursSemaine, $joursAvecPlannings);
-        return count($joursAbsence);
-    }
-    
-    // La méthode convertToHHMM existe déjà plus bas dans le fichier
-    
-    private function estJourFerie($date) {
-        // Liste des jours fériés en France
-        $joursFeries = [
             // Jours fériés fixes
-            '01-01', // Jour de l'an
-            '01-05', // Fête du travail
-            '08-05', // Victoire 1945
-            '14-07', // Fête nationale
-            '15-08', // Assomption
-            '01-11', // Toussaint
-            '11-11', // Armistice
-            '25-12', // Noël
-        ];
-        
-        // Vérifier si la date est un jour férié fixe
-        $dateFormat = $date->format('d-m');
-        if (in_array($dateFormat, $joursFeries)) {
-            return true;
-        }
-        
-        return false;
-    }
-    
-    private function convertToHHMM($decimal)
-    {
-        // Enlever le signe négatif pour l'affichage
+            $joursFeries = [
+                $annee . '-01-01', // Jour de l'an
+                $annee . '-05-01', // Fête du travail
+                $annee . '-05-08', // Victoire 1945
+                $annee . '-07-14', // Fête nationale
+                $annee . '-08-15', // Assomption
+                $annee . '-11-01', // Toussaint
+                $annee . '-11-11', // Armistice
+                $annee . '-12-25', // Noël
+            ];
         $decimal = abs($decimal);
         
         $hours = floor($decimal);
@@ -870,6 +848,46 @@ class ExportController extends Controller
         
         $dateFormat = $date->format('d-m');
         return $joursFeries[$dateFormat] ?? "Jour férié";
+    }
+    
+    /**
+     * Vérifie si une date est un jour férié en France
+     * 
+     * @param Carbon $date
+     * @return bool
+     */
+    private function estJourFerie($date)
+    {
+        $annee = $date->year;
+        
+        // Jours fériés fixes
+        $joursFeries = [
+            $annee . '-01-01', // Jour de l'an
+            $annee . '-05-01', // Fête du travail
+            $annee . '-05-08', // Victoire 1945
+            $annee . '-07-14', // Fête nationale
+            $annee . '-08-15', // Assomption
+            $annee . '-11-01', // Toussaint
+            $annee . '-11-11', // Armistice
+            $annee . '-12-25', // Noël
+        ];
+        
+        // Pâques (date variable)
+        $paques = new \DateTime("$annee-03-21");
+        $paques->add(new \DateInterval('P' . easter_days($annee) . 'D'));
+        $lundiPaques = clone $paques;
+        $lundiPaques->add(new \DateInterval('P1D'));
+        $ascension = clone $paques;
+        $ascension->add(new \DateInterval('P39D'));
+        $pentecote = clone $paques;
+        $pentecote->add(new \DateInterval('P50D'));
+        
+        // Ajout des jours fériés variables
+        $joursFeries[] = $lundiPaques->format('Y-m-d'); // Lundi de Pâques
+        $joursFeries[] = $ascension->format('Y-m-d'); // Jeudi de l'Ascension
+        $joursFeries[] = $pentecote->format('Y-m-d'); // Lundi de Pentecôte
+        
+        return in_array($date->format('Y-m-d'), $joursFeries);
     }
     
     /**
@@ -1104,5 +1122,241 @@ class ExportController extends Controller
         ];
         
         return $heures;
+    }
+    
+    /**
+     * Génère une fiche de paie pour un employé et une période donnée
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\Response
+     */
+    public function exportFichesPaie(Request $request)
+    {
+        // Récupérer les paramètres du formulaire
+        $employe_id = $request->input('employe_id');
+        $mois = $request->input('mois', now()->format('Y-m'));
+        $format = $request->input('format', 'pdf');
+        $societe = Auth::user()->societe;
+
+        // Vérifier si un employé spécifique est demandé
+        if ($employe_id) {
+            $employes = Employe::where('id', $employe_id)
+                ->where('societe_id', $societe->id)
+                ->get();
+        } else {
+            // Sinon récupérer tous les employés de la société
+            $employes = Employe::where('societe_id', $societe->id)->get();
+        }
+
+        if ($employes->isEmpty()) {
+            return back()->with('error', 'Aucun employé trouvé.');
+        }
+
+        // Convertir le mois en objet Carbon pour les calculs
+        $dateDebut = Carbon::createFromFormat('Y-m', $mois)->startOfMonth();
+        $dateFin = Carbon::createFromFormat('Y-m', $mois)->endOfMonth();
+        $nomMois = $dateDebut->locale('fr')->isoFormat('MMMM YYYY');
+
+        // Préparer les données pour chaque employé
+        $fichesPaie = [];
+        foreach ($employes as $employe) {
+            // Récupérer les plannings du mois pour cet employé
+            $plannings = Planning::where('employe_id', $employe->id)
+                ->whereBetween('date', [$dateDebut->format('Y-m-d'), $dateFin->format('Y-m-d')])
+                ->with('lieu')
+                ->orderBy('date')
+                ->get();
+
+            // Calculer les heures travaillées et les différentes majorations
+            $totalHeures = 0;
+            $totalHeuresSup25 = 0;
+            $totalHeuresSup50 = 0;
+            $totalHeuresNuit = 0;
+            $totalHeuresDimanche = 0;
+            $totalHeuresJoursFeries = 0;
+
+            // Analyser les plannings par semaine pour calculer les heures supplémentaires
+            $planningsParSemaine = $plannings->groupBy(function ($planning) {
+                return Carbon::parse($planning->date)->startOfWeek()->format('Y-m-d');
+            });
+
+            foreach ($planningsParSemaine as $semaine => $planningsSemaine) {
+                $heuresSemaine = $planningsSemaine->sum('heures_travaillees');
+                
+                // Calculer les heures supplémentaires de la semaine
+                if ($heuresSemaine > 35) {
+                    if ($heuresSemaine <= 43) {
+                        $totalHeuresSup25 += ($heuresSemaine - 35);
+                    } else {
+                        $totalHeuresSup25 += 8; // de 36h à 43h
+                        $totalHeuresSup50 += ($heuresSemaine - 43); // au-delà de 43h
+                    }
+                }
+
+                // Calculer les heures de nuit, dimanche et jours fériés
+                foreach ($planningsSemaine as $planning) {
+                    $totalHeures += $planning->heures_travaillees;
+                    $datePlanning = Carbon::parse($planning->date);
+                    
+                    // Heures de nuit (21h-6h)
+                    if (!empty($planning->heure_debut) && !empty($planning->heure_fin)) {
+                        $heureDebut = Carbon::parse($planning->heure_debut);
+                        $heureFin = Carbon::parse($planning->heure_fin);
+                        
+                        // Convertir en minutes depuis minuit
+                        $debutMinutes = $heureDebut->hour * 60 + $heureDebut->minute;
+                        $finMinutes = $heureFin->hour * 60 + $heureFin->minute;
+                        
+                        // Si l'heure de fin est avant l'heure de début, on ajoute 24h
+                        if ($finMinutes < $debutMinutes) {
+                            $finMinutes += 24 * 60;
+                        }
+                        
+                        // Définir les plages de nuit en minutes (21h-06h)
+                        $debutNuit = 21 * 60; // 21h00
+                        $finNuit = 6 * 60;    // 06h00
+                        $finNuitAjuste = $finNuit + 24 * 60; // 06h00 le lendemain
+                        
+                        $heuresNuit = 0;
+                        
+                        // Calculer les heures de nuit selon différents cas
+                        if ($debutMinutes < $debutNuit && $finMinutes > $debutNuit && $finMinutes <= $finNuitAjuste) {
+                            $heuresNuit = ($finMinutes - $debutNuit) / 60;
+                        } else if ($debutMinutes >= $debutNuit && $finMinutes <= $finNuitAjuste) {
+                            $heuresNuit = ($finMinutes - $debutMinutes) / 60;
+                        } else if ($debutMinutes >= $debutNuit && $debutMinutes < 24 * 60 && $finMinutes > $finNuitAjuste) {
+                            $heuresNuit = ((24 * 60) - $debutMinutes + $finNuit) / 60;
+                        } else if ($debutMinutes < $finNuit && $finMinutes > $finNuit) {
+                            $heuresNuit = ($finNuit - $debutMinutes) / 60;
+                        } else if ($debutMinutes < $debutNuit && $finMinutes > $finNuitAjuste) {
+                            $heuresNuit = ((24 * 60) - $debutNuit + $finNuit) / 60;
+                        }
+                        
+                        $totalHeuresNuit += $heuresNuit;
+                    }
+                    
+                    // Vérifier si c'est un dimanche
+                    if ($datePlanning->isDayOfWeek(0)) {
+                        $totalHeuresDimanche += $planning->heures_travaillees;
+                    }
+                    
+                    // Vérifier si c'est un jour férié
+                    if ($this->estJourFerie($datePlanning)) {
+                        $totalHeuresJoursFeries += $planning->heures_travaillees;
+                    }
+                }
+            }
+
+            // Calculer les montants
+            $tauxHoraire = $employe->taux_horaire ?? 0;
+            $salaireBase = ($totalHeures - $totalHeuresSup25 - $totalHeuresSup50) * $tauxHoraire;
+            $montantHeuresSup25 = $totalHeuresSup25 * $tauxHoraire * 1.25;
+            $montantHeuresSup50 = $totalHeuresSup50 * $tauxHoraire * 1.5;
+            $montantHeuresNuit = $totalHeuresNuit * $tauxHoraire * 1.1;
+            $montantHeuresDimanche = $totalHeuresDimanche * $tauxHoraire * 1.5;
+            $montantHeuresJoursFeries = $totalHeuresJoursFeries * $tauxHoraire * 2;
+            
+            // Calculer les cotisations (approximatives)
+            $salaireBrut = $salaireBase + $montantHeuresSup25 + $montantHeuresSup50 + 
+                          $montantHeuresNuit + $montantHeuresDimanche + $montantHeuresJoursFeries;
+            $cotisationsSalariales = $salaireBrut * 0.22; // Environ 22% de cotisations salariales
+            $salaireNet = $salaireBrut - $cotisationsSalariales;
+            
+            // Ajouter la fiche de paie à la liste
+            $fichesPaie[] = [
+                'employe' => $employe,
+                'mois' => $nomMois,
+                'heures_normales' => $totalHeures - $totalHeuresSup25 - $totalHeuresSup50,
+                'heures_sup_25' => $totalHeuresSup25,
+                'heures_sup_50' => $totalHeuresSup50,
+                'heures_nuit' => $totalHeuresNuit,
+                'heures_dimanche' => $totalHeuresDimanche,
+                'heures_jours_feries' => $totalHeuresJoursFeries,
+                'taux_horaire' => $tauxHoraire,
+                'salaire_base' => $salaireBase,
+                'montant_heures_sup_25' => $montantHeuresSup25,
+                'montant_heures_sup_50' => $montantHeuresSup50,
+                'montant_heures_nuit' => $montantHeuresNuit,
+                'montant_heures_dimanche' => $montantHeuresDimanche,
+                'montant_heures_jours_feries' => $montantHeuresJoursFeries,
+                'salaire_brut' => $salaireBrut,
+                'cotisations_salariales' => $cotisationsSalariales,
+                'salaire_net' => $salaireNet
+            ];
+        }
+
+        // Générer le document selon le format demandé
+        if ($format === 'pdf') {
+            $pdf = PDF::loadView('exports.fiches-paie', [
+                'fichesPaie' => $fichesPaie,
+                'societe' => $societe,
+                'mois' => $nomMois
+            ]);
+            
+            // Définir le nom du fichier
+            $filename = 'fiches-paie';
+            if ($employe_id) {
+                $employe = $employes->first();
+                $filename .= '-' . Str::slug($employe->nom . '-' . $employe->prenom);
+            }
+            $filename .= '-' . $dateDebut->format('m-Y') . '.pdf';
+            
+            return $pdf->download($filename);
+        } else {
+            // Générer un fichier Excel
+            $spreadsheet = new Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
+            
+            // En-têtes
+            $sheet->setCellValue('A1', 'Employé');
+            $sheet->setCellValue('B1', 'Mois');
+            $sheet->setCellValue('C1', 'Heures normales');
+            $sheet->setCellValue('D1', 'Heures sup. 25%');
+            $sheet->setCellValue('E1', 'Heures sup. 50%');
+            $sheet->setCellValue('F1', 'Heures de nuit');
+            $sheet->setCellValue('G1', 'Heures dimanche');
+            $sheet->setCellValue('H1', 'Heures jours fériés');
+            $sheet->setCellValue('I1', 'Taux horaire');
+            $sheet->setCellValue('J1', 'Salaire brut');
+            $sheet->setCellValue('K1', 'Cotisations');
+            $sheet->setCellValue('L1', 'Salaire net');
+            
+            // Données
+            $row = 2;
+            foreach ($fichesPaie as $fiche) {
+                $sheet->setCellValue('A' . $row, $fiche['employe']->prenom . ' ' . $fiche['employe']->nom);
+                $sheet->setCellValue('B' . $row, $fiche['mois']);
+                $sheet->setCellValue('C' . $row, $fiche['heures_normales']);
+                $sheet->setCellValue('D' . $row, $fiche['heures_sup_25']);
+                $sheet->setCellValue('E' . $row, $fiche['heures_sup_50']);
+                $sheet->setCellValue('F' . $row, $fiche['heures_nuit']);
+                $sheet->setCellValue('G' . $row, $fiche['heures_dimanche']);
+                $sheet->setCellValue('H' . $row, $fiche['heures_jours_feries']);
+                $sheet->setCellValue('I' . $row, $fiche['taux_horaire'] . ' €');
+                $sheet->setCellValue('J' . $row, number_format($fiche['salaire_brut'], 2) . ' €');
+                $sheet->setCellValue('K' . $row, number_format($fiche['cotisations_salariales'], 2) . ' €');
+                $sheet->setCellValue('L' . $row, number_format($fiche['salaire_net'], 2) . ' €');
+                $row++;
+            }
+            
+            // Ajuster la largeur des colonnes
+            foreach (range('A', 'L') as $col) {
+                $sheet->getColumnDimension($col)->setAutoSize(true);
+            }
+            
+            // Créer le fichier Excel
+            $writer = new Xlsx($spreadsheet);
+            $filename = 'fiches-paie';
+            if ($employe_id) {
+                $employe = $employes->first();
+                $filename .= '-' . Str::slug($employe->nom . '-' . $employe->prenom);
+            }
+            $filename .= '-' . $dateDebut->format('m-Y') . '.xlsx';
+            
+            $tempFile = tempnam(sys_get_temp_dir(), 'excel');
+            $writer->save($tempFile);
+            
+            return response()->download($tempFile, $filename)->deleteFileAfterSend(true);
+        }
     }
 }

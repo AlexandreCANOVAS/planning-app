@@ -217,6 +217,21 @@
                                 </div>
                             </a>
 
+                            <a href="{{ route('fiches-paie.index') }}" class="group relative bg-white hover:bg-gray-50 rounded-xl border border-gray-200 p-5 flex items-start space-x-4 transition-all duration-200 hover:shadow-md">
+                                <div class="flex-shrink-0">
+                                    <div class="p-3 rounded-lg bg-indigo-50 group-hover:bg-indigo-100 transition-colors duration-200">
+                                        <i class="fas fa-file-invoice-dollar text-indigo-600"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <h4 class="text-base font-medium text-gray-900 mb-1">Fiches de paie</h4>
+                                    <p class="text-sm text-gray-500">Gérer les fiches de paie</p>
+                                </div>
+                                <div class="absolute top-1/2 right-4 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                    <i class="fas fa-arrow-right text-indigo-600"></i>
+                                </div>
+                            </a>
+
                             <a href="{{ route('plannings.calendar') }}" class="group relative bg-white hover:bg-gray-50 rounded-xl border border-gray-200 p-5 flex items-start space-x-4 transition-all duration-200 hover:shadow-md">
                                 <div class="flex-shrink-0">
                                     <div class="p-3 rounded-lg bg-purple-50 group-hover:bg-purple-100 transition-colors duration-200">
@@ -244,6 +259,21 @@
                                 </div>
                                 <div class="absolute top-1/2 right-4 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                                     <i class="fas fa-arrow-right text-yellow-600"></i>
+                                </div>
+                            </a>
+
+                            <a href="{{ route('comptabilite.index') }}" class="group relative bg-white hover:bg-gray-50 rounded-xl border border-gray-200 p-5 flex items-start space-x-4 transition-all duration-200 hover:shadow-md">
+                                <div class="flex-shrink-0">
+                                    <div class="p-3 rounded-lg bg-red-50 group-hover:bg-red-100 transition-colors duration-200">
+                                        <i class="fas fa-chart-line text-red-600"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <h4 class="text-base font-medium text-gray-900 mb-1">Comptabilité</h4>
+                                    <p class="text-sm text-gray-500">Suivi des heures et statistiques</p>
+                                </div>
+                                <div class="absolute top-1/2 right-4 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                    <i class="fas fa-arrow-right text-red-600"></i>
                                 </div>
                             </a>
                         </div>

@@ -415,9 +415,9 @@
                     <div>
                         <h3 class="text-sm font-semibold text-gray-400 tracking-wider uppercase">Support</h3>
                         <ul class="mt-4 space-y-2">
-                            <li><a href="#" class="text-base text-gray-300 hover:text-white">Centre d'aide</a></li>
-                            <li><a href="#" class="text-base text-gray-300 hover:text-white">Documentation</a></li>
-                            <li><a href="#" class="text-base text-gray-300 hover:text-white">Statut du système</a></li>
+                            <li><a href="{{ route('pages.help') }}" class="text-base text-gray-300 hover:text-white">Centre d'aide</a></li>
+                            <li><a href="{{ route('pages.documentation') }}" class="text-base text-gray-300 hover:text-white">Documentation</a></li>
+                            <li><a href="{{ route('pages.system-status') }}" class="text-base text-gray-300 hover:text-white">Statut du système</a></li>
                         </ul>
                     </div>
                 </div>
@@ -432,6 +432,68 @@
                 </div>
             </div>
         </footer>
+
+        <!-- Modal d'avertissement de session expirée -->
+        @auth
+        <div id="session-timeout-modal" class="fixed inset-0 z-[9999] flex items-center justify-center" style="display: none;">
+            <div class="relative w-full max-w-md mx-auto p-2">
+                <div class="bg-white border-2 border-gray-300 rounded-lg shadow-2xl overflow-hidden">
+                    <!-- En-tête de la modal -->
+                    <div class="p-4 border-b border-gray-200 flex items-center bg-gray-50">
+                        <div class="flex-shrink-0 w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center mr-3">
+                            <i class="fas fa-exclamation-triangle text-yellow-600"></i>
+                        </div>
+                        <h5 class="text-lg font-bold text-gray-800" id="session-timeout-modal-title">
+                            Avertissement d'inactivité
+                        </h5>
+                    </div>
+                    
+                    <!-- Corps de la modal -->
+                    <div class="p-5 bg-white text-gray-700">
+                        <p class="mb-3 text-base">Votre session est inactive depuis un moment.</p>
+                        <p class="mb-3 text-base">Pour des raisons de sécurité, vous serez automatiquement déconnecté dans <span id="session-countdown" class="font-bold text-red-600 text-lg">30</span> secondes.</p>
+                        <p class="text-base font-medium">Souhaitez-vous rester connecté ?</p>
+                    </div>
+                    
+                    <!-- Pied de la modal -->
+                    <div class="p-4 border-t border-gray-200 flex justify-between bg-gray-50">
+                        <form id="logout-form" action="{{ route('logout') }}" method="POST" class="inline">
+                            @csrf
+                            <button id="session-logout" type="button" class="px-5 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium rounded-md transition-colors duration-200 flex items-center shadow-sm">
+                                <i class="fas fa-sign-out-alt mr-2"></i> Se déconnecter
+                            </button>
+                        </form>
+                        <button id="session-continue" type="button" class="px-5 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-md transition-colors duration-200 flex items-center shadow-sm">
+                            <i class="fas fa-redo-alt mr-2"></i> Continuer la session
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Script de gestion du timeout de session -->
+        <script src="{{ asset('js/session-timeout.js') }}"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Initialiser le gestionnaire de timeout de session
+                new SessionTimeoutHandler({
+                    warningTime: 10 * 1000, // 10 secondes d'inactivité avant l'avertissement (pour test)
+                    redirectTime: 10 * 1000,    // 10 secondes avant déconnexion après l'avertissement (pour test)
+                    onWarning: function() {
+                        console.log('Session inactive - Avertissement affiché');
+                    },
+                    onTimeout: function() {
+                        console.log('Session expirée - Redirection vers la déconnexion');
+                    }
+                });
+                
+                // Gestion spécifique du bouton de déconnexion
+                document.getElementById('session-logout').addEventListener('click', function() {
+                    document.getElementById('logout-form').submit();
+                });
+            });
+        </script>
+        @endauth
 
         <script>
             window.Laravel = {!! json_encode([

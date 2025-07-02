@@ -19,6 +19,17 @@
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-16">
                 <!-- Contact Form -->
                 <div class="bg-white rounded-2xl shadow-xl p-8">
+                    @if (session('success'))
+                        <div class="mb-6 bg-green-50 border border-green-200 text-green-800 rounded-lg p-4">
+                            <div class="flex items-center">
+                                <svg class="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <span>{{ session('success') }}</span>
+                            </div>
+                        </div>
+                    @endif
+                    
                     <form action="{{ route('contact.send') }}" method="POST" class="space-y-6">
                         @csrf
                         

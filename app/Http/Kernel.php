@@ -68,5 +68,6 @@ class Kernel extends HttpKernel
         'refresh.soldes' => \App\Http\Middleware\RefreshSoldeCongeData::class,
         'ensure.soldes.persistence' => \App\Http\Middleware\EnsureSoldeCongesPersistence::class,
         '2fa' => \App\Http\Middleware\EnsureTwoFactorEnabled::class,
+        'subscribed' => \App\Http\Middleware\CheckSubscription::class,
     ];
 }

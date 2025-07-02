@@ -25,13 +25,44 @@ class ComptabiliteController extends Controller
     public function calculerHeures(Request $request)
     {
         try {
-            $request->validate([
-                'employe_id' => 'required|exists:employes,id',
-                'mois' => 'required|date_format:Y-m'
-            ]);
-
-            $employeId = $request->employe_id;
-            $mois = $request->mois;
+            // Récupérer et valider les paramètres de la requête
+            $employe_id = $request->input('employe_id');
+            $moisAnnee = $request->input('mois'); // Format YYYY-MM
+            
+            if (empty($employe_id) || empty($moisAnnee)) {
+                return response()->json([
+                    'error' => 'Paramètres manquants: employe_id ou mois'
+                ], 400);
+            }
+            
+            // Extraire le mois et l'année du format YYYY-MM
+            if (preg_match('/^(\d{4})-(\d{1,2})$/', $moisAnnee, $matches)) {
+                $annee = $matches[1];
+                $mois = $matches[2];
+            } else {
+                return response()->json([
+                    'error' => 'Format de date invalide. Format attendu: YYYY-MM'
+                ], 400);
+            }
+            
+            if (!is_numeric($employe_id) || !is_numeric($mois) || !is_numeric($annee)) {
+                return response()->json([
+                    'error' => 'Paramètres invalides'
+                ], 400);
+            }
+            
+            // Vérifier que l'employé existe
+            $employe = Employe::find($employe_id);
+            if (!$employe) {
+                return response()->json([
+                    'error' => 'Employé non trouvé'
+                ], 404);
+            }
+            
+            // Formater le mois au format Y-m
+            $mois = sprintf('%04d-%02d', $annee, $mois);
+            
+            $employeId = $employe_id;
 
             // Convertir le mois en objet Carbon pour les comparaisons
             $dateDebut = Carbon::createFromFormat('Y-m', $mois)->startOfMonth();

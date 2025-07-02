@@ -18,6 +18,7 @@ use App\Http\Controllers\{
     ContactController,
     AuthenticatedSessionController,
     ComptabiliteController,
+    FichePaieController,
     TauxHeuresSupController,
     TarifController,
     PageController,
@@ -25,7 +26,8 @@ use App\Http\Controllers\{
     SoldeCongeController,
     GDPRController,
     InvitationController,
-    TwoFactorAuthController
+    TwoFactorAuthController,
+    SubscriptionController
 };
 
 use App\Http\Controllers\Admin\DocumentController;
@@ -55,6 +57,9 @@ Broadcast::routes();
 // Pages publiques
 Route::get('/politique-de-confidentialite', [PageController::class, 'privacy'])->name('pages.privacy');
 Route::get('/politique-de-cookies', [PageController::class, 'cookies'])->name('pages.cookies');
+Route::get('/centre-aide', [PageController::class, 'help'])->name('pages.help');
+Route::get('/documentation', [PageController::class, 'documentation'])->name('pages.documentation');
+Route::get('/statut-systeme', [PageController::class, 'systemStatus'])->name('pages.system-status');
 
 Route::get('/', function () {
     return view('welcome');
@@ -148,12 +153,20 @@ Route::post('invitation/accept', [InvitationController::class, 'processAcceptanc
 Route::middleware(['auth', 'verified'])->group(function () {
     // Le groupe 'verified' implique 'auth', donc on peut tout mettre ici.
     // Laravel redirigera automatiquement vers la page de vérification si l'email n'est pas vérifié.
+    
+    // Routes d'abonnement
+    Route::get('/subscription', [SubscriptionController::class, 'show'])->name('subscription.show');
+    Route::post('/subscription', [SubscriptionController::class, 'subscribe'])->name('subscription.create');
+    Route::get('/subscription/manage', [SubscriptionController::class, 'manage'])->name('subscription.manage');
+    Route::post('/subscription/cancel', [SubscriptionController::class, 'cancel'])->name('subscription.cancel');
+    Route::post('/subscription/resume', [SubscriptionController::class, 'resume'])->name('subscription.resume');
 
     Route::get('/home', function () {
         return redirect()->route('dashboard');
     })->name('home');
 
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    // Route du dashboard protégée par le middleware CheckSubscription
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard')->middleware(\App\Http\Middleware\CheckSubscription::class);
 
     // Route pour changer le thème
     Route::post('/theme/toggle', [ThemeController::class, 'toggleTheme'])->name('theme.toggle');
@@ -277,6 +290,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/comptabilite', [ComptabiliteController::class, 'index'])->name('comptabilite.index');
         Route::post('/comptabilite/calculer-heures', [ComptabiliteController::class, 'calculerHeures'])->name('comptabilite.calculer-heures');
         
+        // Routes pour les fiches de paie
+        Route::prefix('fiches-paie')->name('fiches-paie.')->group(function () {
+            Route::get('/', [FichePaieController::class, 'index'])->name('index');
+            Route::get('/create', [FichePaieController::class, 'create'])->name('create');
+            Route::post('/', [FichePaieController::class, 'store'])->name('store');
+            Route::get('/{id}', [FichePaieController::class, 'show'])->name('show');
+            Route::get('/{id}/edit', [FichePaieController::class, 'edit'])->name('edit');
+            Route::put('/{id}', [FichePaieController::class, 'update'])->name('update');
+            Route::delete('/{id}', [FichePaieController::class, 'destroy'])->name('destroy');
+            Route::post('/{id}/valider', [FichePaieController::class, 'valider'])->name('valider');
+            Route::post('/{id}/publier', [FichePaieController::class, 'publier'])->name('publier');
+            Route::get('/{id}/export-pdf', [FichePaieController::class, 'exportPDF'])->name('export-pdf');
+        });
+        
         // Routes des congés pour employeur
         Route::prefix('conges')->group(function () {
             Route::get('/', [CongeController::class, 'index'])->name('conges.index');
@@ -338,6 +365,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/compta', [ExportController::class, 'exportCompta'])->name('compta');
             Route::get('/comptabilite', [ExportController::class, 'exportComptabilite'])->name('comptabilite');
             Route::get('/comptabilite/excel', [ExportController::class, 'exportComptabiliteExcel'])->name('comptabilite.excel');
+            Route::get('/fiches-paie', [ExportController::class, 'exportFichesPaie'])->name('fiches-paie');
         });
     });
 
@@ -401,6 +429,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::put('/{conge}', [CongeController::class, 'updateEmploye'])->name('update');
             Route::delete('/{conge}', [CongeController::class, 'destroyEmploye'])->name('destroy');
             Route::delete('/{conge}/annuler', [CongeController::class, 'annulerConge'])->name('annuler');
+        });
+        
+        // Routes des fiches de paie pour employé
+        Route::prefix('fiches-paie')->name('fiches-paie.')->group(function () {
+            Route::get('/', [FichePaieController::class, 'indexEmploye'])->name('index');
+            Route::get('/{id}', [FichePaieController::class, 'showEmploye'])->name('show');
+            Route::get('/{id}/export-pdf', [FichePaieController::class, 'exportPDFEmploye'])->name('export-pdf');
         });
         
     });
@@ -516,6 +551,11 @@ Route::prefix('tests')->middleware(['auth'])->group(function () {
         return 'Evénement envoyé pour l\'employé ' . $employe->prenom . ' ' . $employe->nom;
     })->name('tests.event');
 });
+
+// Routes pour les pages statiques
+Route::get('/faq', function () {
+    return view('pages.faq');
+})->name('faq');
 
 Route::post('/cookie-consent', [\App\Http\Controllers\CookieConsentController::class, 'accept'])->name('cookie-consent.accept');
 

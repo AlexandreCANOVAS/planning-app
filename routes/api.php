@@ -2,6 +2,8 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ComptabiliteController;
+use App\Http\Controllers\Api\ComptabiliteController as ApiComptabiliteController;
 
 /*
 |--------------------------------------------------------------------------
@@ -26,4 +28,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/employe/soldes-conges', [App\Http\Controllers\Api\EmployeController::class, 'getSoldesConges']);
 });
 
-Route::get('/comptabilite/calcul', [App\Http\Controllers\Api\ComptabiliteController::class, 'calcul']);
+Route::get('/comptabilite/calcul', [ApiComptabiliteController::class, 'calcul']);
+
+// Route pour calculer les heures d'un employé pour un mois spécifique
+Route::get('/calculer-heures/{employe_id}/{mois}/{annee}', [ComptabiliteController::class, 'calculerHeures']);

@@ -118,6 +118,14 @@ class Employe extends Model
     }
 
     /**
+     * Relation avec les fiches de paie
+     */
+    public function fichesPaie()
+    {
+        return $this->hasMany(FichePaie::class);
+    }
+
+    /**
      * Relation avec les formations
      */
     public function formations()

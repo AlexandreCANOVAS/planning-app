@@ -71,20 +71,42 @@
             </form>
         </div>
 
-        <!-- Fiches de paie (à venir) -->
-        <div class="bg-gray-50 rounded-xl p-5 border border-gray-100 opacity-60">
+        <!-- Fiches de paie -->
+        <div class="bg-gray-50 rounded-xl p-5 border border-gray-100 hover:shadow-md transition-shadow">
             <div class="flex items-center justify-center w-12 h-12 bg-purple-100 rounded-lg mb-4">
                 <i class="fas fa-file-invoice-dollar text-purple-600 text-xl"></i>
             </div>
             <h4 class="text-gray-900 font-medium mb-2">Fiches de paie</h4>
             <p class="text-gray-500 text-sm mb-4">Générez les fiches de paie de vos employés</p>
             
-            <div class="mt-auto">
-                <button disabled class="w-full bg-gray-100 text-gray-400 rounded-lg px-4 py-2 text-sm font-medium cursor-not-allowed flex items-center justify-center">
-                    <i class="fas fa-clock mr-2"></i>
-                    Bientôt disponible
+            <form action="{{ route('export.fiches-paie') }}" method="GET" class="space-y-3">
+                <div class="space-y-2">
+                    <label class="text-sm text-gray-600 block">Employé :</label>
+                    <select name="employe_id" class="text-sm rounded-lg border-gray-200 w-full focus:ring-2 focus:ring-purple-500">
+                        <option value="">Tous les employés</option>
+                        @foreach($employes as $employe)
+                            <option value="{{ $employe->id }}">{{ $employe->nom }} {{ $employe->prenom }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="space-y-2">
+                    <label class="text-sm text-gray-600 block">Mois :</label>
+                    <input type="month" name="mois" 
+                           class="text-sm rounded-lg border-gray-200 w-full focus:ring-2 focus:ring-purple-500"
+                           value="{{ now()->format('Y-m') }}">
+                </div>
+                <div class="space-y-2">
+                    <label class="text-sm text-gray-600 block">Format :</label>
+                    <select name="format" class="text-sm rounded-lg border-gray-200 w-full focus:ring-2 focus:ring-purple-500">
+                        <option value="pdf">PDF</option>
+                        <option value="excel">Excel</option>
+                    </select>
+                </div>
+                <button type="submit" class="w-full bg-purple-50 hover:bg-purple-100 text-purple-600 rounded-lg px-4 py-2 text-sm font-medium transition-colors flex items-center justify-center">
+                    <i class="fas fa-file-export mr-2"></i>
+                    Générer
                 </button>
-            </div>
+            </form>
         </div>
 
         <!-- Rapports d'activité -->

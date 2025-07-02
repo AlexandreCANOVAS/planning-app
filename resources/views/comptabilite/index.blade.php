@@ -284,46 +284,62 @@
                 tbody.innerHTML = '';
 
                 // Afficher les résultats par semaine
-                data.semaines.forEach(semaine => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${semaine.periode}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-medium">${semaine.total_heures}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-right ${parseFloat(semaine.heures_sup_25.replace(':', '.')) > 0 ? 'text-orange-600' : ''}">${semaine.heures_sup_25}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-right ${parseFloat(semaine.heures_sup_50.replace(':', '.')) > 0 ? 'text-red-600' : ''}">${semaine.heures_sup_50}</td>
-                    `;
-                    tbody.appendChild(row);
-                });
+                if (data.semaines && Array.isArray(data.semaines)) {
+                    data.semaines.forEach(semaine => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${semaine.periode}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-medium">${semaine.total_heures}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-right ${parseFloat(semaine.heures_sup_25.replace(':', '.')) > 0 ? 'text-orange-600' : ''}">${semaine.heures_sup_25}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-right ${parseFloat(semaine.heures_sup_50.replace(':', '.')) > 0 ? 'text-red-600' : ''}">${semaine.heures_sup_50}</td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                }
 
                 // Mettre à jour les totaux avec les classes CSS appropriées
                 const totalHeuresElement = document.getElementById('totalHeures');
                 const totalHS25Element = document.getElementById('totalHS25');
                 const totalHS50Element = document.getElementById('totalHS50');
 
-                totalHeuresElement.textContent = data.total_mois.heures + 'h';
-                totalHS25Element.textContent = data.total_mois.heures_sup_25 + 'h';
-                totalHS50Element.textContent = data.total_mois.heures_sup_50 + 'h';
+                // Vérifier que les données existent avant de les afficher
+                if (data.total_mois) {
+                    totalHeuresElement.textContent = data.total_mois.heures ? data.total_mois.heures + 'h' : '0h';
+                    totalHS25Element.textContent = data.total_mois.heures_sup_25 ? data.total_mois.heures_sup_25 + 'h' : '0h';
+                    totalHS50Element.textContent = data.total_mois.heures_sup_50 ? data.total_mois.heures_sup_50 + 'h' : '0h';
+                } else {
+                    totalHeuresElement.textContent = '0h';
+                    totalHS25Element.textContent = '0h';
+                    totalHS50Element.textContent = '0h';
+                }
 
                 // Ajouter les classes pour la coloration des heures supplémentaires
-                totalHS25Element.className = parseFloat(data.total_mois.heures_sup_25) > 0 ? 'px-6 py-4 text-right text-sm font-medium total-sup-25' : 'px-6 py-4 text-right text-sm font-medium';
-                totalHS50Element.className = parseFloat(data.total_mois.heures_sup_50) > 0 ? 'px-6 py-4 text-right text-sm font-medium total-sup-50' : 'px-6 py-4 text-right text-sm font-medium';
+                if (data.total_mois) {
+                    totalHS25Element.className = data.total_mois.heures_sup_25 && parseFloat(data.total_mois.heures_sup_25) > 0 ? 'px-6 py-4 text-right text-sm font-medium total-sup-25' : 'px-6 py-4 text-right text-sm font-medium';
+                    totalHS50Element.className = data.total_mois.heures_sup_50 && parseFloat(data.total_mois.heures_sup_50) > 0 ? 'px-6 py-4 text-right text-sm font-medium total-sup-50' : 'px-6 py-4 text-right text-sm font-medium';
+                } else {
+                    totalHS25Element.className = 'px-6 py-4 text-right text-sm font-medium';
+                    totalHS50Element.className = 'px-6 py-4 text-right text-sm font-medium';
+                }
                 
                 // Remplir le tableau des heures spéciales et absences
                 const tbodySpecial = document.getElementById('heuresSpecialesBody');
                 tbodySpecial.innerHTML = '';
                 
                 // Afficher les résultats par semaine pour les heures spéciales
-                data.semaines.forEach(semaine => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${semaine.periode}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-right ${parseFloat(semaine.heures_nuit || '0') > 0 ? 'heures-nuit' : ''}">${semaine.heures_nuit || '00:00'}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-right ${parseFloat(semaine.heures_dimanche || '0') > 0 ? 'heures-dimanche' : ''}">${semaine.heures_dimanche || '00:00'}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-right ${parseFloat(semaine.heures_jours_feries || '0') > 0 ? 'heures-jours-feries' : ''}">${semaine.heures_jours_feries || '00:00'}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-right ${parseFloat(semaine.absences || '0') > 0 ? 'absences' : ''}">${semaine.absences || '0'}</td>
-                    `;
-                    tbodySpecial.appendChild(row);
-                });
+                if (data.semaines && Array.isArray(data.semaines)) {
+                    data.semaines.forEach(semaine => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${semaine.periode}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-right ${parseFloat(semaine.heures_nuit || '0') > 0 ? 'heures-nuit' : ''}">${semaine.heures_nuit || '00:00'}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-right ${parseFloat(semaine.heures_dimanche || '0') > 0 ? 'heures-dimanche' : ''}">${semaine.heures_dimanche || '00:00'}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-right ${parseFloat(semaine.heures_jours_feries || '0') > 0 ? 'heures-jours-feries' : ''}">${semaine.heures_jours_feries || '00:00'}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-right ${parseFloat(semaine.absences || '0') > 0 ? 'absences' : ''}">${semaine.absences || '0'}</td>
+                        `;
+                        tbodySpecial.appendChild(row);
+                    });
+                }
                 
                 // Mettre à jour les totaux des heures spéciales
                 const totalHeuresNuitElement = document.getElementById('totalHeuresNuit');
@@ -331,23 +347,34 @@
                 const totalHeuresJoursFeriesElement = document.getElementById('totalHeuresJoursFeries');
                 const totalAbsencesElement = document.getElementById('totalAbsences');
                 
-                totalHeuresNuitElement.textContent = data.total_mois.heures_nuit ? data.total_mois.heures_nuit + 'h' : '0h';
-                totalHeuresDimancheElement.textContent = data.total_mois.heures_dimanche ? data.total_mois.heures_dimanche + 'h' : '0h';
-                totalHeuresJoursFeriesElement.textContent = data.total_mois.heures_jours_feries ? data.total_mois.heures_jours_feries + 'h' : '0h';
-                totalAbsencesElement.textContent = data.total_mois.absences ? data.total_mois.absences + ' jour(s)' : '0 jour';
+                if (data.total_mois) {
+                    totalHeuresNuitElement.textContent = data.total_mois.heures_nuit ? data.total_mois.heures_nuit + 'h' : '0h';
+                    totalHeuresDimancheElement.textContent = data.total_mois.heures_dimanche ? data.total_mois.heures_dimanche + 'h' : '0h';
+                    totalHeuresJoursFeriesElement.textContent = data.total_mois.heures_jours_feries ? data.total_mois.heures_jours_feries + 'h' : '0h';
+                    totalAbsencesElement.textContent = data.total_mois.absences ? data.total_mois.absences + ' jour(s)' : '0 jour';
+                } else {
+                    totalHeuresNuitElement.textContent = '0h';
+                    totalHeuresDimancheElement.textContent = '0h';
+                    totalHeuresJoursFeriesElement.textContent = '0h';
+                    totalAbsencesElement.textContent = '0 jour';
+                }
 
                 // Afficher le tableau des résultats
                 document.getElementById('resultats').classList.remove('hidden');
                 
-                // Afficher les détails des jours spéciaux
+                // Afficher les détails des jours spéciaux seulement si les données existent
                 const detailsJoursSpeciaux = document.getElementById('detailsJoursSpeciaux');
-                detailsJoursSpeciaux.style.display = 'block';
+                if (data.details) {
+                    detailsJoursSpeciaux.style.display = 'block';
+                } else {
+                    detailsJoursSpeciaux.style.display = 'none';
+                }
                 
                 // Remplir le tableau des dimanches
                 const tbodyDimanches = document.getElementById('detailsDimanchesBody');
                 tbodyDimanches.innerHTML = '';
                 
-                if (data.details.dimanches.length > 0) {
+                if (data.details && data.details.dimanches && data.details.dimanches.length > 0) {
                     data.details.dimanches.forEach(dimanche => {
                         const row = document.createElement('tr');
                         row.innerHTML = `
@@ -368,7 +395,7 @@
                 const tbodyJoursFeries = document.getElementById('detailsJoursFeriesBody');
                 tbodyJoursFeries.innerHTML = '';
                 
-                if (data.details.jours_feries.length > 0) {
+                if (data.details && data.details.jours_feries && data.details.jours_feries.length > 0) {
                     data.details.jours_feries.forEach(jourFerie => {
                         const row = document.createElement('tr');
                         row.innerHTML = `
@@ -390,7 +417,7 @@
                 const tbodyHeuresNuit = document.getElementById('detailsHeuresNuitBody');
                 tbodyHeuresNuit.innerHTML = '';
                 
-                if (data.details.heures_nuit.length > 0) {
+                if (data.details && data.details.heures_nuit && data.details.heures_nuit.length > 0) {
                     data.details.heures_nuit.forEach(nuit => {
                         const row = document.createElement('tr');
                         row.innerHTML = `
@@ -408,9 +435,13 @@
                     tbodyHeuresNuit.appendChild(row);
                 }
                 
-                // Afficher et initialiser le graphique
+                // Afficher et initialiser le graphique seulement si les données existent
                 const graphiqueSection = document.getElementById('graphiqueSection');
-                graphiqueSection.style.display = 'block';
+                if (data.graphique) {
+                    graphiqueSection.style.display = 'block';
+                } else {
+                    graphiqueSection.style.display = 'none';
+                }
                 
                 // Détruire le graphique existant s'il y en a un
                 if (window.heuresChart && typeof window.heuresChart.destroy === 'function') {
@@ -424,10 +455,10 @@
                 window.heuresChart = new Chart(ctx, {
                     type: 'doughnut',
                     data: {
-                        labels: data.graphique.labels,
+                        labels: data.graphique && data.graphique.labels ? data.graphique.labels : [],
                         datasets: [{
-                            data: data.graphique.data,
-                            backgroundColor: data.graphique.backgroundColor,
+                            data: data.graphique && data.graphique.data ? data.graphique.data : [],
+                            backgroundColor: data.graphique && data.graphique.backgroundColor ? data.graphique.backgroundColor : [],
                             borderWidth: 1
                         }]
                     },
